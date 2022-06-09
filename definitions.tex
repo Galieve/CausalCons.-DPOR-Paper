@@ -1,0 +1,269 @@
+\section{Definitions}
+
+In this section we describe the basic concepts STMC is built on along with the assumptions required for its correctness.
+
+%During the whole paper, we will work between different finite well-ordered domains: $\mathcal{I}$, $\mathcal{P}$,$\mathcal{P}$, $\mathcal{X}$, $\mathcal{V}$, $\mathcal{E}$ and $\mathcal{T}$ which represent 
+\begin{definition}
+An \callout{event} $e$ is a tuple $\langle id, t \rangle$ where $id$ is its \callout{identifier} and $t$ its \callout{type}. The set of all events will be denoted $\mathcal{E}$.
+\end{definition}
+
+Intuitively, an event $e$ represents an instruction on the program and its identifier is the line number this instruction has on it. However, this description forces us to have a wide range of possible types; one per instruction types. As we want to model check transactional programs, only those instructions related with our database are actually meaningful. Therefore, an event $e$ would represent a succession of local instructions followed by a database instruction; instruction of type $\ibegin, \iend, \iwrite$ or $\iread$. 
+
+Further, we define a function called \callout{variable}, $\texttt{var}: \mathcal{E} \to \mathcal{V}$, which if $e$'s type is $\iwrite$ or $\iread$ returns the variable it writes/reads in the database and another function called \callout{value}, $\texttt{val}: \mathcal{E} \to \mathbb{N}$, that for every $\iwrite$ $w$ event returns the value that $\variable{w}$ will store after its execution. Note that for simplicity we assume $\valEvent{\mathcal{E}} \subseteq \mathbb{N}$, but the actual value of the instruction could be any computable binary string; string representable in $\mathbb{N}$. Nonetheless, for clarity during our examples we may write `` $a \gets \rd{x}$'' or ``$\wrt{x}{0}$'' as a succinct notation for indicate an event's type, its variable or its value.
+
+
+%Every event can be unequivocally identified thanks to $id$ and $t$ is one of the following values $\{\ibegin, \iend, \iwrite, \iread\}$. Moreover, only $\iread$ and $\iwrite$ events involve variables, and only the latter has a value; so in every other case, its variable and/or value would be $\bot$.%Moreover, if $t$ is $\ibegin$ or $\iend$, $x$ and $v$ have the special value $\bot$; while if $t = \iread$, only $v$ ha $\bot$. If $e.type() = \iread$ and $e.value() = \bot$ we say that $e$ is \callout{free}; otherwise the event is \callout{fixed}. 
+
+\begin{definition}
+A \callout{transaction} $T$ is a finite sequence of events totally ordered by $\po_T$ where $\min_{\po_T}T$ has type $\ibegin$, $\max_{\po_T}T$ has type $\iend$ and every other event in $T$ is either a $\iread$ or $\iwrite$ event. Any $\po$-closed prefix of a transaction is called \callout{pending transaction}.
+\end{definition}
+
+%For every transaction $T$, we denote $\po_T$ the total order existing between the events in $T$.
+During the whole paper we will assume that every pair of transactions are disjoint and that both $\mathcal{E}$ and $\mathcal{T}$ are finite. Therefore, we denote the function $tr: \mathcal{E} \to \mathcal{T}$ that associates every event to the unique transaction it belongs to. %Moreover, we will assume there is a special transaction called \callout{initial} that contains exactly one write event for every possible variable.
+
+\begin{definition}
+A \callout{program} $\mathcal{P}_{n, \mathcal{T}}$ is the collection of $n$ parallel threads that execute each a sequence of transactions. %execute in isolation every transaction in $\mathcal{T}$. Two different threads don't share any event in common, every thread enforce a total order between its transactions and the program's execution is always preceded by an \callout{initial transaction} (which gives an initial value to every variable). %Every thread execute its own set of transactions, producing a strict partial order $\so$ in $\mathcal{T}$ called \callout{session order}.
+\end{definition}
+
+In what follows, we will assume a fixed program $\mathcal{P}$ in order to slightly relax the notation. We also assume that every transaction is included in exactly one thread, so we can map every event to the thread it belongs to via the function $\texttt{th}_{\mathcal{P}} : \mathcal{E} \to \mathbb{Z}_n$.
+
+For representing executions in a program we rely on the definition \ref{def:histories}, which allow us representing executions as execution graphs \textcolor{red}{cite paper} where the vertices are transactions and the edges are their relations.
+
+\begin{definition}
+\label{def:histories}
+A \callout{history} $h = \langle T, \so, \wro \rangle$ is a tuple composed by a set of (pending) transactions $T$ (constructed over an event set $E \subseteq \mathcal{E}$) along with a strict partial order $\so$ called \callout{session order} and a relation $\wro \subseteq \writeOp{E} \times \readOp{E}$ called \callout{write-read} s.t.
+\begin{itemize}
+\item $\wro^{-1}$ is a total function,
+\item $\so$ corresponds to the strict partial order defined by every thread in $\mathcal{P}$ restricted to $T$,
+\item $\so \cup \wro$ is acyclic.
+\end{itemize}
+
+\end{definition}
+
+We denote by $\emptyset$ the history with no vertices and we also write, with an abuse of notation, $T \ [\wro] \  T'$ whenever $\exists w, r \in T \times T'$ such that $w \ [\wro] \ r $. Finally, we briefly define several type of histories in next definition:
+
+%From this point onward, we will assume that histories are $(\so \cup \bigcup\limits_{T \in \mathcal{T}}{\po_T})$-maximal, i.e. for every pair of events $e,e'$, if $e \ [\po_T] \ e'$ for some $T$ or $e \ [\so] \ e'$ and $e' \in h$, then $e \in h$. Moreover, we will also assume that every event in $h$ is fixed and for every pair of events $w,r$ $\wro$-related such that $r \in h$, $w$ is also in $h$. Those histories will be called \callout{coherent}. We will also denote by $\emptyset$ to the empty history, i.e. the one with no vertices. 
+
+%The order enforced to the $T$ (and therefore, to $E$) is called \callout{history order} and denoted as $<_h$.
+
+%In addition, we also write with an abuse of notation $T \ [\wro] \  T'$ whenever $\exists w, r \in T \times T'$ such that $w \ [\wro] \ r $. 
+
+\begin{definition}
+Let $h$ be a history:
+\begin{itemize}
+\item $h$ is called \callout{complete} if every transaction is non-pending and \callout{incomplete} otherwise;
+\item $h$ is \callout{executed in isolation} if it contains at most one pending transaction;
+\item $h$ is called \callout{total} if it is complete and contains every transaction $T \in \mathcal{T}$.
+\end{itemize}
+\end{definition}
+
+To fully model any behavior of a transactional concurrent program we are obliged to formally describe the database section. This notion will be depicted as the concept of \textit{model}:
+
+%Those notions are generic enough to only describe a possible set of instructions that a parallel program may execute along with the $\wr$ relations that exist between them.
+
+\begin{comment}
+\begin{definition}
+An axiomatic \callout{model} $\mathcal{M}$ over histories is a collection of rules that enforce a \callout{consistency criterion} over them. The histories that satisfy those criteria are called \callout{consistent} while the rest are simply denoted inconsistent. 
+\end{definition}
+\end{comment}
+
+\begin{definition}
+An axiomatic \callout{model} $\mathcal{M}$ over histories is a collection of rules that enforce a \callout{consistency criterion} over them. The histories that satisfy those criteria are called \callout{$\mathcal{M}$-consistent} while the rest are simply denoted $\mathcal{M}$-inconsistent. If there is no ambiguity on the model, we will simply denote them consistent or inconsistent.%
+
+\end{definition}
+
+\begin{figure}[H]
+	\resizebox{\textwidth}{!}{
+		\footnotesize
+		\begin{tabular}{|c|c|c|}
+			\hline &  & \\
+			\begin{subfigure}[t]{.31\textwidth}
+				\centering
+				\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=1cm,
+					semithick, transform shape]
+					\node[transaction state, text=black] at (0,0)       	(t_1)           {$t_1$};
+					\node[transaction state, text=black, label={above:\textcolor{black}{$\writeVar{ }{x}$}}] at (-0.5,1.5) (t_2) {$t_2$};
+					\node[transaction state, text=black] at (2,0)       (o_1)           {$\alpha$};
+					\node[transaction state] at (1.5,1.5) (o_2) {$\beta$};
+					\path (t_1) edge[color=wrColor] node {$\wro_x$} (o_1);
+					% \path (t_2) edge[blue] node {$\CO$} (t_1);
+					\path (t_2) edge[color=wrColor] node {$\wro$} (o_2);
+					\path (o_2) edge[color=poColor] node {$\po$} (o_1);
+					\path (t_2) edge[left,double,color=coColor] node {$\co$} (t_1);
+				\end{tikzpicture}
+				\parbox{\textwidth}{
+					$\forall x,\ \forall t_1, t_2,\ \forall \alpha.\ t_1\neq t_2\ \land$
+					
+					\hspace{4mm}$\tup{t_1,\alpha}\in \wro_x \land \writeVar{t_2}{x}\ \land$ 
+					
+					\hspace{9mm}$\tup{t_2,\alpha}\in\wro\circ\po$
+					
+					\hspace{14mm}$\implies \tup{t_2,t_1}\in\co$
+				}
+				%\end{align*}
+				
+				\caption{$\mathsf{Read\ Committed}$}
+				\label{lock_rc_def}
+			\end{subfigure}
+			
+			&     
+			
+			
+			\begin{subfigure}[t]{.35\textwidth}
+				\centering
+				\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=1cm,
+					semithick, transform shape]
+					\node[transaction state, text=black] at (0,0)       (t_1)           {$t_1$};
+					\node[transaction state] at (2,0)       (t_3)           {$t_3$};
+					\node[transaction state, text=black,label={above:\textcolor{black}{$\writeVar{ }{\xvar}$}}] at (-.5,1.5) (t_2) {$t_2$};
+					\path (t_1) edge[wrColor] node {$\wro_x$} (t_3);
+					% \path (t_2) edge[blue] node {$\CO$} (t_1);
+					\path (t_2) edge[bend left] node {$\so \cup \wro$} (t_3);
+					\path (t_2) edge[left, double ,coColor] node {$\co$} (t_1);
+				\end{tikzpicture}
+				\parbox{\textwidth}{
+					$\forall x,\ \forall t_1, t_2,\ \forall t_3.\ t_1\neq t_2\ \land$
+					
+					\hspace{4mm}$\tup{t_1,t_3}\in \wro_x \land \writeVar{t_2}{x}\ \land$ 
+					
+					\hspace{9mm}$\tup{t_2,t_3}\in\so \cup \wro$
+					
+					\hspace{14mm}$\implies \tup{t_2,t_1}\in\co$
+				}
+				
+				\caption{$\mathsf{Read\ Atomic}$}
+				\label{ra_def}
+			\end{subfigure}
+			
+			&
+			
+			\begin{subfigure}[t]{.31\textwidth}
+				\centering
+				\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=4cm,
+					semithick, transform shape]
+					\node[transaction state, text=black] at (0,0)       (t_1)           {$t_1$};
+					\node[transaction state] at (2,0)       (t_3)           {$t_3$};
+					\node[transaction state, text=black,label={above:\textcolor{black}{$\writeVar{ }{\key}$}}] at (-.5,1.5) (t_2) {$t_2$};
+					\path (t_1) edge[wrColor] node {$\wro_x$} (t_3);
+					% \path (t_2) edge[blue] node {$\CO$} (t_1);
+					\path (t_2) edge[dashed, bend left] node {$(\so \cup \wro)^+$} (t_3);
+					%   \path [->, decoration={snake}] (t_2) edge[decorate] node[auto] {F} (t_3);
+					\path (t_2) edge[left,double equal sign distance,coColor] node {$\co$} (t_1);
+				\end{tikzpicture}
+				\parbox{\textwidth}{
+					$\forall x,\ \forall t_1, t_2,\ \forall t_3.\ t_1\neq t_2\ \land$
+					
+					\hspace{4mm}$\tup{t_1,t_3}\in \wro_x \land \writeVar{t_2}{x}\ \land$ 
+					
+					\hspace{9mm}$\tup{t_2,t_3}\in(\so \cup \wro)^+$
+					
+					\hspace{14mm}$\implies \tup{t_2,t_1}\in\co$
+				}
+				
+				\caption{$\mathsf{Causal\ Consistency}$}
+				\label{cc_def}
+			\end{subfigure}
+			
+			\\ \hline			  
+			
+			
+			\begin{subfigure}[b]{.31\textwidth}
+			\centering
+			\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=4cm,
+			 semithick, transform shape]
+			\node[transaction state, text=black] at (0,0)       (t_1)           {$t_1$};
+			\node[transaction state] at (2,0)       (t_3)           {$t_3$};
+			\node[transaction state, text=black,label={above:\textcolor{black}{$\writeVar{ }{x}$}}] at (-0.5,1.5) (t_2) {$t_2$};
+			\node[transaction state] at (1.5,1.5) (t_4) {$t_4$};
+			\path (t_1) edge[wrColor] node {$\wro_x$} (t_3);
+			% \path (t_2) edge[blue] node {$\CO$} (t_1);
+			\path (t_2) edge[coColor, double] node {$\co^*$} (t_4);
+			\path (t_4) edge[left] node {$(\so \cup \wro)$} (t_3);
+			\path (t_2) edge[left,double, coColor] node {$\co$} (t_1);
+			\end{tikzpicture}
+			\parbox{\textwidth}{
+			$\forall \xvar,\ \forall t_1, t_2,\ \forall t_3.\ t_1\neq t_2\ \land$
+			
+			\hspace{4mm}$\tup{t_1,t_3}\in \wro[\xvar] \land \writeVar{t_2}{\xvar}\ \land$ 
+			
+			\hspace{9mm}$\tup{t_2,t_3}\in\co^*\circ\,(\wro\cup\so)$
+			
+			\hspace{14mm}$\implies \tup{t_2,t_1}\in\co$
+			}
+			
+			\caption{$\mathsf{Prefix}$}
+			\label{pre_def}
+			\end{subfigure}
+			     
+			
+			&
+			\begin{subfigure}[b]{.35\textwidth}
+			    \centering
+			    \begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=4cm,
+			      semithick, transform shape]
+			     \node[transaction state, text=black] at (0,0)       (t_1)           {$t_1$};
+			     \node[transaction state, label={right:$\writeVar{ }{\yvar}$}] at (2,0)       (t_3)           {$t_3$};
+			     \node[transaction state, text=black,label={above:\textcolor{black}{$\writeVar{ }{\xvar}$}}] at (-.5,1.5) (t_2) {$t_2$};
+			     \node[transaction state, label={right:{$\writeVar{}{\yvar}$}}] at (1.5,1.5) (t_4) {$t_4$};
+			     \path (t_1) edge[wrColor] node {$\wro_x$} (t_3);
+			     % \path (t_2) edge[blue] node {$\CO$} (t_1);
+			     \path (t_2) edge [coColor, double] node {$\co^*$} (t_4);
+			     \path (t_4) edge [coColor, double] node {$\co$} (t_3);
+			     \path (t_2) edge[left,double, coColor] node {$\co$} (t_1);
+			    \end{tikzpicture}
+			    \parbox{\textwidth}{
+			     $\forall \xvar,\ \forall t_1, t_2,\ \forall t_3, t_4,\ \forall \yvar.\ t_1\neq t_2\ \land$
+			     
+			     \hspace{4mm}$\tup{t_1,t_3}\in \wro_x \land \writeVar{t_2}{\xvar}\ \land$ 
+			     
+			     \hspace{9mm}$\writeVar{t_3}{\yvar}\ \land \writeVar{t_4}{\yvar}\ \land$ 
+			     
+			     \hspace{12mm}$\tup{t_2,t_4}\in\co^*\ \land \tup{t_4,t_3}\in\co$
+			     
+			     \hspace{16mm}$\implies \tup{t_2,t_1}\in\co$
+			    }
+			    
+			    \caption{$\mathsf{Conflict}$}
+			    \label{confl_def}
+			   \end{subfigure}
+			&     
+			\begin{subfigure}[b]{.31\textwidth}
+				\centering
+				\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=4cm,
+					semithick, transform shape]
+					\node[transaction state, text=black] at (0,0)       (t_1)           {$t_1$};
+					\node[transaction state] at (2,0)       (t_3)           {$t_3$};
+					\node[transaction state, text=black, label={above:\textcolor{black}{$\writeVar{ }{x}$}}] at (-.5,1.5) (t_2) {$t_2$};
+					\path (t_1) edge[wrColor] node {$\wro_x$} (t_3);
+					% \path (t_2) edge[blue] node {$\CO$} (t_1);
+					\path (t_2) edge[bend left, double, coColor] node {$\co$} (t_3);
+					\path (t_2) edge[left,double, coColor] node {$\co$} (t_1);
+				\end{tikzpicture}
+				\parbox{\textwidth}{
+					$\forall x,\ \forall t_1, t_2,\ \forall t_3.\ t_1\neq t_2\ \land$
+					
+					\hspace{4mm}$\tup{t_1,t_3}\in \wro_x \land \writeVar{t_2}{x}\ \land$ 
+					
+					\hspace{9mm}$\tup{t_2,t_3}\in\co$
+					
+					\hspace{14mm}$\implies \tup{t_2,t_1}\in\co$
+				}
+				
+				\caption{$\mathsf{Serializability}$}
+				\label{ser_def}
+			\end{subfigure}
+		
+		\\\hline
+		\end{tabular}
+	}
+	%  \vspace{-3mm}
+	\caption{Axioms defining isolations levels. The reflexive and transitive, resp., transitive, closure of a relation $rel$ is denoted by $rel^*$, resp., $rel^+$. Also, $\circ$ denotes the composition of two relations, i.e., $rel_1 \circ rel_2 = \{\tup{a, b} | \exists c. \tup{a, c} \in rel_1 \land \tup{c, b} \in rel_2\}$.}
+	\label{fig:consistency_defs}
+	%  \vspace{-2mm}
+\end{figure}
+
+In figure \ref{fig:consistency_defs} it is depicted five axioms which correspond to their homonymous isolation levels: \textit{Read Committed} (RC), \textit{Read Atomic} (RA), \textit{Causal Consistency} (CC)  \textit{Prefix Consistency} (PRE) and \textit{Serializability} (SER); along with the conflict axiom. Conflict and Prefix allow us to define \textit{Snapshot Isolation} (SI) as the model where prefix and conflict axioms both hold. We say a history $h$ satisfies an isolation level $I$ if there is a total order called \callout{commit order} $\co$ that extend $\so \cup \wro$ and satisfies its axioms. However, by the definition of RC, RA and CC, it is clear that for every history $h$ s.t. the relation $\co$ deduced from $\so \cup \wro$ is acyclic exists a commit order for those isolation levels.
+
+%Because this is equivalent to state $\so \cup \wro \cup \co$ is an acylic relationm
+
+%, they enforce some relation between transactions, represented as $\co$-edges. Under this three models we say a history is consistent if exists a total order called \callout{commit order}, $\co$, that extend $\so \cup \wro$ and satisfies the axioms. 

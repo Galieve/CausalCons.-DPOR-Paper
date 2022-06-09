@@ -1,0 +1,125 @@
+\section{Weak DPOR algorithms for Snapshot Isolation and Serializability}
+
+As show in section \textcolor{red}{PROOFS SECTION}, algorithm \textcolor{red}{CITE CC'S ALGORITHM}'s completeness proof is model-depending. Immediately, the question of its extensibility to other isolation levels arise. For understanding the difference between the formers and SI or SER, let's analyze how algorithm \textcolor{red}{CITE CC'S ALGORITHM}, denoted $A$ thereinafter \textcolor{red}{I don't like calling $A$ here, but i dont know what to do...}, behaves for the program depicted in figure \ref{fig:ser-non-optimal:a} under them. We study this example as it has exactly two consistent executions but a dead-lock one under SI and SER.
+
+\begin{figure}[H]
+	
+	\centering
+	\begin{subfigure}[b]{.3\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-1.5, -0.25) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]130:$T_1$}] (t2) at (-3, -2) {\begin{tabular}{l} 
+						$\wrt{z}{1}$ \\ $a \gets \rd{x}$ \\ $\wrt{y}{1}$ \\ \ldots
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0,  label={[font=\small]50:$T_2$}] (t2) at (0, -2) {\begin{tabular}{l} 
+						$\wrt{z}{2}$ \\ $b \gets \rd{y}$ \\ $\wrt{x}{2}$ \\ \ldots
+				\end{tabular}};		
+				
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1x);
+				\path (t2.north west) -- (t2.north) coordinate[pos=0.67] (t2x);
+				\path (t3.north west) -- (t3.west) coordinate[pos=0.67] (t3x);
+				
+				%\path (t3x) edge [above] node[yshift=8,xshift=0] {$\wro_x$} (t2.north east);
+				%\path (t1x) edge [right] node {$\wro_y$} (t2x);
+			\end{tikzpicture}  
+		}
+		\caption{Original program.}
+		\label{fig:ser-non-optimal:a}
+	\end{subfigure}
+	\hspace{.5cm}
+	\centering
+	\begin{subfigure}[b]{.3\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-1.5, -0.25) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -2) {\begin{tabular}{l} 
+						$\wrt{z}{1}$ \\ $a \gets \rd{x}$ \\ \pgfsetfillopacity{0.3}$\wrt{y}{1}$ \\ \ldots
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, -2) {\begin{tabular}{l} 
+						$\wrt{z}{2}$ \\ $b \gets \rd{y}$ \\ \pgfsetfillopacity{0.3}$\wrt{x}{2}$ \\ \ldots
+				\end{tabular}};		
+				
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1sw);
+				\path (t1.south east) -- (t1.south) coordinate[pos=0.67] (t1se);
+				\path (t2.north east) -- (t2.north) coordinate[pos=0.67] (t2x);
+				\path (t3.north west) -- (t3.north) coordinate[pos=0.67] (t3x);
+				
+				%\path (t3x) edge [above] node[yshift=8,xshift=0] {$\wro_x$} (t2.north east);
+				\path (t1sw) edge [left] node {$\wro_x$} (t2x);
+				\path (t1se) edge [right] node {$\wro_y$} (t3x);
+			\end{tikzpicture}  
+			
+		}
+		\caption{Consistent partial history.}
+		\label{fig:ser-non-optimal:b}
+	\end{subfigure}
+	\hspace{.5cm}
+	\centering
+	\begin{subfigure}[b]{.3\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-1.5, -0.25) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -2) {\begin{tabular}{l} 
+						$\wrt{z}{1}$ \\ $a \gets \rd{x}$ \\ $\wrt{y}{1}$ \\ \pgfsetfillopacity{0.3}\ldots
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, -2) {\begin{tabular}{l} 
+						$\wrt{z}{2}$ \\ $b \gets \rd{y}$ \\ $\wrt{x}{2}$ \\ \pgfsetfillopacity{0.3}\ldots
+				\end{tabular}};		
+				
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1sw);
+				\path (t1.south east) -- (t1.south) coordinate[pos=0.67] (t1se);
+				\path (t2.north east) -- (t2.north) coordinate[pos=0.67] (t2x);
+				\path (t3.north west) -- (t3.north) coordinate[pos=0.67] (t3x);
+				
+				%\path (t3x) edge [above] node[yshift=8,xshift=0] {$\wro_x$} (t2.north east);
+				\path (t1sw) edge [left] node {$\wro_x$} (t2x);
+				\path (t1se) edge [right] node {$\wro_y$} (t3x);
+			\end{tikzpicture}  
+			
+		}
+		\caption{Dead-lock history.}
+		\label{fig:ser-non-optimal:c}
+	\end{subfigure}
+	\caption{A program and some partial histories. In gray, instructions not yet executed.}
+	\label{fig:ser-non-optimal}
+	%\vspace{-3mm}
+\end{figure}
+
+As $\mathcal{P}$ is symmetric and every partial execution computed by $A$ have at most one pending transaction, we can assume, without loss of generality, the oracle order where $T_1$ precedes $T_2$. In this setting, when $A$ execute the read event $r_1 \coloneqq a \gets \rd{x}$, it will only be able to read from $\init$. After completing $T_1$, it executes the read-event $r_2 \coloneqq b \gets \rd{x}$ from $T_2$. One one hand, if $r_2$ reads from $T_1$, then we obtain a consistent history that can be extended to a total consistent one, $h$. However, from $h$ we cannot swap any two transactions as $T_2$ depends on $T_1$, which also depends on $\init$. On the other hand, if $r_2$ reads from $\init$ we will obtain a history $h'$ that leads to a deadlock (figure \ref{fig:ser-non-optimal:c}) and cannot be swapped before $T_2$'s completion; otherwise $A$ would have two pending transaction. To sum up, algorithm \textcolor{red}{CITE CC'S ALGORITHM} is incomplete for SI and SER.
+
+This show that our proposal is not flexible enough to satisfy the constraints that new models may require. Therefore, we want to analyze what constraints shall we remove in it to remain $\mathcal{M}$-sound, complete and optimal while employing polynomial memory; for SI and SER models. Let's suppose then that there exists such an algorithm $A$ and see how it behaves under the same program $\mathcal{P}$. As $A$ is complete, whenever a $\iread$ event $r$ reading from some $\iwrite$ $w$ does not lead to an inconsistency, it will explore that possible history (the algorithm cannot deduce in advance if a dead-lock/inconsistency will appear later on). In particular, a consistent extension of the history shown in \ref{fig:ser-non-optimal:b} will be computed with either $\wrt{y}{1}$ or $\wrt{x}{2}$ in it. Without loss of generality, let's assume $w_2 \coloneqq \wrt{x}{2} \not \in h$. \textcolor{red}{Shall I develop this a bit more? how?}. As $A$ is in $\mathcal{S}_{\mathcal{M}}$, for every $a = \texttt{N}(h)$, $a \not\in h $; and as stated in lines \ref{algorithm:algo-class:exploreRead}, \ref{algorithm:algo-class:exploreStd}, the history $h \bullet a$ will always be explored. Therefore, as $A$ 
+
+Moreover, as $A$ is $\mathcal{M}$-sound, $\texttt{N}(h')$ cannot return $w_2$ as $\lnot \ \textsc{IsConsistent}_{\mathcal{M}}(h' \bullet w_2)$, for any history $h'$ extending $h$. Therefore, there is an extension $h'$ of $h$ where all events but those in $T_2$ $\po$ after $w_x$ will be executed. In conclusion, $\texttt{N}(h') = \bot$ but $h'$ is not total, so it must be a blocking execution. That contradicts $A$ is an optimal algorithm.
+
+
+%Let's suppose on the contrary that such algorithm $A$ exists. As $A$ is complete, whenever a $\iread$ event $r$ reading from some $\iwrite$ $w$ does not lead to an inconsistency, it will explore that possible history. In particular, a consistent extension of the history shown in \ref{fig:ser-non-optimal:b} will be computed  with either $\wrt{y}{1}$ or $\wrt{x}{2}$ in it. Without loss of generality, let's assume $w_x \coloneqq \wrt{x}{2} \not \in h$. \textcolor{red}{Shall I develop this a bit more? how?}. As $A$ is weakly optimal, for every $a = \texttt{N}(h)$, $a \not\in h $ (otherwise $A$ will compute $h$ and $h \bullet a = h$); and as stated in lines \ref{algorithm:algo-class:exploreRead}, \ref{algorithm:algo-class:exploreStd}, the history $h \bullet a$ will always be explored. Moreover, as $A$ is $\mathcal{M}$-sound, $\texttt{N}(h')$ cannot return $w_x$ as $\lnot \ \textsc{IsConsistent}_{\mathcal{M}}(h' \bullet w_x)$, for any history $h'$ extending $h$. Therefore, there is an extension $h'$ of $h$ where all events but those in $T_2$ $\po$ after $w_x$ will be executed. In conclusion, $\texttt{N}(h') = \bot$ but $h'$ is not total, so it must be a blocking execution. That contradicts $A$ is an optimal algorithm.
+
+\begin{theorem}
+There is no algorithm in $\mathcal{S}_{\mathcal{M}} \cap \mathcal{O}^n_{\mathcal{M}}$, $n$ in $\mathbb{N}$, for neither SI nor SER.
+\label{theorem:si-ser-bad-models}
+\begin{proof}
+	
+\textcolor{red}{
+During this proof let's call $\mathcal{P}$ to the program depicted in \ref{fig:ser-non-optimal:a}. Let's suppose on the contrary that such algorithm $A$ exists. As $A$ is complete, whenever a $\iread$ event $r$ reading from some $\iwrite$ $w$ does not lead to an inconsistency, it will explore that possible history. In particular, a consistent extension of the history shown in \ref{fig:ser-non-optimal:b} will be computed  with either $\wrt{y}{1}$ or $\wrt{x}{2}$ in it. Without loss of generality, let's assume $w_x \coloneqq \wrt{x}{2} \not \in h$. \textcolor{red}{Shall I develop this a bit more? how?}. As $A$ is weakly optimal, for every $a = \texttt{N}(h)$, $a \not\in h $ (otherwise $A$ will compute $h$ and $h \bullet a = h$); and as stated in lines \ref{algorithm:algo-class:exploreRead}, \ref{algorithm:algo-class:exploreStd}, the history $h \bullet a$ will always be explored. Moreover, as $A$ is $\mathcal{M}$-sound, $\texttt{N}(h')$ cannot return $w_x$ as $\lnot \ \textsc{IsConsistent}_{\mathcal{M}}(h' \bullet w_x)$, for any history $h'$ extending $h$. Therefore, there is an extension $h'$ of $h$ where all events but those in $T_2$ $\po$ after $w_x$ will be executed. In conclusion, $\texttt{N}(h') = \bot$ but $h'$ is not total, so it must be a blocking execution. That contradicts $A$ is an optimal algorithm.
+}
+
+%\underline{$S_{\mathcal{M}} \cap \mathcal{L}^1_{\mathcal{M}} = \emptyset$}. 
+
+%Let's suppose on the contrary that such algorithm $A$ exists. As $A$ is in $\mathcal{L}^1_{\mathcal{M}}$ and $\mathcal{P}$ is symmetric, with out loss of generality we can assume $A$ execute first $T_1$ and then $T_2$. Then, it will execute the read event $r_1 \coloneqq a \gets \rd{x}$, which can only read from $\init$. After $T_1$, it executes the first event of $T_2$: $r_2 \coloneqq b \gets \rd{x}$. If $r_2$ reads from $T_1$, then we obtain a consistent history that can be extended to a total consistent one, $h$. However, from $h$ we cannot swap any two transactions as $T_2$ depends on $T_1$, which also depends on $\init$. On the other hand, if $r_2$ reads from $\init$, we will obtain a history $h'$ that leads to a deadlock and cannot be swapped before $T_2$'s completion; otherwise $A$ would have two pending transaction. Therefore, $A$ would only explore exactly one execution, so it is incomplete. This contradicts $A$ is in $\mathcal{L}^1_{\mathcal{M}}$.
+
+	%from this history, there %only has two transactions, $A$ can either execute the first or the second transaction at a time. As $A$ is complete and the history depicted in \ref{fig:ser-non-optimal:b} is consistent, there is an execution $h$ extending that history
+	%As after executing any event, $A$ has no information on the future events' availability, it will explore any possible consistent history. 
+	
+	\textcolor{red}{The first case is due to the non-$\wro \cup \so$-maximality of SI, SER (second example we discussed). The second one is the example when there is only one branch computed (first example we discussed).}
+\end{proof}
+\end{theorem}
+
+The reason why theorem \ref{theorem:si-ser-bad-models} holds for SI and SER but not for the rest of isolation levels described in \ref{fig:consistency_defs} is due to the maximal-extensibility of the rest of the models. Under any of them the event $\wrt{x}{2}$ would always be eligible to be added, and therefore any final dead-lock would be reached.
+
+\begin{theorem}
+There exists an algorithm in $\mathcal{S}_{\mathcal{M}} \cap \mathcal{W}_{\mathcal{M}}$ for $\mathcal{M} \in \{SI, SER\}$.
+\end{theorem}

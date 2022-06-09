@@ -1,0 +1,272 @@
+\section{Proof of the algorithms}
+
+\textcolor{red}{Introduction}
+
+%As we are going to prove the completeness of algorithm \ref{algorithm:stmc}, the first property we want to prove is its equivalence with its recursive counterpart, \ref{algorithm:stmc2}. Here, line \ref{algorithm:stmc:inner_loop} refers to 
+\subsection{Soundness}
+
+\begin{lemma}
+\label{lemma:recursiveIterativeSame}
+Let $h$ a consistent incomplete history and $s$ a state of the program such that $h$ appears at line \ref{algorithm:stmc:outer_loop}. Let $h'$ the next history computed by the algorithm from $s$. Then $\prev(h') = h$.
+\end{lemma}
+
+\subsection{Completeness}
+
+\textcolor{red}{Problem of this proofs: I assume optimality before proving it! \sout{ I don't know what wording we shall apply} (I tried to modify it, let's see if it is noticeable).}
+
+\begin{algorithm}[H]
+\caption{\textsc{Canonical order}}
+\begin{algorithmic}[1]
+	
+	\Statex
+	\Procedure{\textsc{canonicalOrder}}{$h, T, T'$}
+	\State \Return $T \ [\so \cup \wro]^* \ T' \lor$
+	\State \qquad $(\lnot(\tr(T') \ [\so \cup \wro]^* \ T) \land \minimalDependency(h, T, T', \bot)$
+	\EndProcedure
+	
+	\Statex
+	\Procedure{\minimalDependency}{$h, T, T', e$}
+	\Let $a = \min_{<_{\ora}} \dep(h, T, e)$; $a' = \min_{<_{\ora}} \dep(h, T', e)$
+	\If{$a \neq a'$}
+		\State \Return $a <_{\ora} a'$
+	\Else
+		\State \Return $\minimalDependency(h, T, T', a)$
+	\EndIf
+	\EndProcedure
+	
+	\Statex
+	\Procedure{\dep}{$h, T, e$}
+	\State \Return $\{r \ | \exists w \text{ s.t. } T \ [\so \cup \wro]^* \ \tr(w) \land \ w \ [\wro] \ r \land \tr(r) \ [\so \cup \wro]^+ \tr(e) \} \cup T$ 
+	\EndProcedure	
+\end{algorithmic}
+\label{algorithm:canonical-order}
+%\caption{Generic method for exploring every possible history $h$ of a program $\mathcal{P}$ running under a database with $\mathcal{M}$ as isolation level.}
+\end{algorithm}
+
+The function $\textsc{canonicalOrder}$ produces a relation between transactions in a history, denoted $\leq^h$. In algorithm \ref{algorithm:canonical-order}'s description, we denote $\bot$ as the end of the program, which always exists, and that is $\so$-related with every single transaction.
+
+\begin{lemma}
+\label{lemma:dep_shrinks}
+For every history $h$, event $e$ and transaction $T$, $\dep(h, T, \min_{<_{\ora}} \dep(h, T, e)) \subseteq \dep(h, T, e)$. Moreover, if $\dep(h, T, e) \neq T$, the inclusion is strict.
+\begin{proof}
+Let $r' = \min_{<_{\ora}} \dep(h, T, e)$ and $r \in \dep(h, T,r')$. Then, $\exists w \text{ s.t. } T \ [\so \cup \wro]^* \ \tr(w) \land \ w \ [\wro] \ r \land \tr(r) \ [\so \cup \wro]^+ \tr(r')$ and $\exists w' \text{ s.t. } T \ [\so \cup \wro]^* \ \tr(w') \land \ w' \ [\wro] \ r' \land \tr(r') \ [\so \cup \wro]^+ \tr(e)$; so $\tr(r) \ [\so \cup \wro]^+ \tr(r') \ [\so \cup \wro]^+ \tr(e)$. In other words, $r \in \dep(h, T, e)$. The moreover comes trivially as $r' \not\in \dep(h, T, r')$.
+\end{proof}
+\end{lemma}
+
+\begin{lemma}
+\label{lemma:minimalDependency-halts}
+For every distinct $T, T'$, $\minimalDependency(h,T,T',e)$ always halts.
+\begin{proof}
+As $h$ is a finite history, every transaction $T$ belongs to $\dep(h, T,e)$, regardless of the event $e$ and via lemma \ref{lemma:dep_shrinks} the set $\dep$ shrinks in each recursive call; we conclude that if $T \neq T'$, there would be a call of $\minimalDependency$ and an event $e$ associated with it s.t. $\min_{<_{\ora}}  \dep(h, T, e) \neq \min_{<_{\ora}}  \dep(h, T', e)$.
+\end{proof}
+\end{lemma}
+
+\begin{lemma}
+\label{lemma:canonincal-total-order}
+The relation $\leq^h$ is a total order.
+\begin{proof}
+$ $\\
+\begin{itemize}
+\item \underline{Reflexivity:} By definition, for every $T$, $T \leq^h T$.
+\item \underline{Transitivity:} Let's suppose $a \leq^h b $ and $b \leq^h c$. First, take into account that if $c \neq a$, $\lnot(c \ [\so \cup \wro]^* \ a)$ Here we distinguish four cases:
+\begin{itemize}
+	\item If $a \ [\so \cup \wro]^* \ b$ and $b \ [\so \cup \wro]^* \ c$, then $a \ [\so \cup \wro]^* \ c$, so $a \leq^h c$.
+	\item If $a \ [\so \cup \wro]^* \ b$ but $\lnot(b \ [\so \cup \wro]^* \ c)$, then for every $e\in h$, $\min_{<_{\ora}} \dep(a, e) \leq_{\ora} \min_{<_{\ora}} \dep(b, e)$, so $a <^h c$.
+	\item If $\lnot(a \ [\so \cup \wro]^* \ b)$ but $b \ [\so \cup \wro]^* \ c$, then for every $e\in h$, $\min_{<_{\ora}} \dep(b, e) \leq_{\ora} \min_{<_{\ora}} \dep(c, e)$, so $a <^h c$.
+	\item If $\lnot(a \ [\so \cup \wro]^* \ b)$ and $\lnot(b \ [\so \cup \wro]^* \ c)$, then it can be proven by induction that $a <^h c$. \textcolor{red}{It has to be proven iterating on the call function mininalDependency, a bit boring}
+	%there exists and $e\in h$ s.t. $\min_{<_{\ora}} \dep(a, e) <_{\ora} \min_{<_{\ora}} \dep(b, e)$ or $\min_{<_{\ora}} \dep(b, e) <_{\ora} \min_{<_{\ora}} \dep(c, e)$, 
+\end{itemize}
+\item \underline{Antisymmetric} For every $a, b$ s.t. $a \leq^h b$ and $b \leq^h a$. If $a \ [\so \cup \wro]^* b$, then $a = b$. If not, then $\minimalDependency(h,a,b,\bot)$ and $\minimalDependency(h,b,a,\bot)$ cannot be satisfied at the same time. \textcolor{red}{Again an induction on $\minimalDependency$ along with the history's finiteness.}
+\item \underline{Strongly connection} Let $a, b$ s.t. $a \not \leq_{\ora} b$. If $b \ [\so \cup \wro]^* a$, then $b \leq_{\ora} a$. Otherwise, as $\lnot(a \ [\so \cup \wro]^* \ b)$ and $\minimalDependency$ halts (lemma \ref{lemma:minimalDependency-halts}) and $\lnot \minimalDependency(h, a, b, e)$, then $\minimalDependency(h,b, a, e)$; so $b <^h a$.
+\end{itemize}
+\end{proof}
+\end{lemma}
+
+\begin{definition}
+\label{def:oracle-respectful}
+A reachable history $h$ is \callout{$\ora$-respectful} if it has at most one pending transaction and for every pair of events $e \in \mathcal{P}, e' \in h$ s.t. $e \leq_{\ora} e'$, either $e \leq_h e'$ or $\exists e'' \in h, \tr(e'') \leq_{\ora} \tr(e)$ s.t. $\tr(e') \ [\so \cup \wro]^* \ \tr(e'')$, $e'' \leq_h e$ and $\swapped{h}{e''}$; where if $e \not\in h$ we state $e' \leq_h e$ always hold but $e \leq_h e'$ never does. We will denote it by $R^{\ora}(h)$. %\textcolor{olive}{REVISAR EL CAMBIO DEL $e'' < e$ -> $T'' < T$.}
+\end{definition}
+
+\begin{lemma}
+\label{lemma:reachable-or-respectful}
+Every reachable history is $\ora$-respectful.
+\begin{proof}
+We will prove it by induction on the number of \textcolor{red}{cite algorithm}'s stack calls a computable path that leads to a history $h$ needs, $n$. The base case, $n = 0$, is for the trivial history $h = \emptyset$ where it trivially holds; so let us prove the inductive case; being $e \gets \nextEvent(h)$. On one hand, $e$ is not a $\iread$ nor a $\ibegin$ event and $h' = h \bullet e$, as $\lnot \swapped{h}{e}$ and $h'$ is edge-wise identical to $h$, $R^{\ora}(h')$ holds. 
+
+If $e$ is a $\ibegin$ event, $h' = h \bullet e$. Let $a \in \mathcal{P}, b \in h'$ s.t. $a \leq_{\ora} b$. If $a \in h$ or $b \neq e$, as $\leq_{h'}$ is an extension of $\leq_h$ and $R^{\ora}(h)$, the property holds. Moreover, as $e = \min_{\ora} \mathcal{P} \setminus h$, there is no event $a \in \mathcal{P} \setminus h$ s.t. $a \leq_{\ora} e$; so the property holds.
+
+
+On the other hand, if $e$ is a $\iread$ event and $w$ is a $\iwrite$ one, let us prove that $h' = h \bullet_w e$. Let $a \in \mathcal{P}, b \in h'$ s.t. $a \leq_{\ora} b$. Once again, if $a \in h$ or $b \neq e$ the property holds; so let's suppose $a \in \mathcal{P} \setminus h$ and $b = e$. Let $d = \ibegin(\tr(e))$, $d \in h$. As $R^{\ora}(h)$ and $a \not\in h$, $a \leq_{\ora} d$; so there exists $c \in h$, $\tr(c) \leq_{\ora} \tr(a)$ s.t. $\tr(d) \ [\so \cup \wro]^* \ \tr(c)$, $c \leq_h d$ and $\swapped{h}{c}$. As $\tr(r) = \tr(d)$, we conclude $R^{\ora}(h)$.
+
+%We find two situations: either $\tr(r)$ has no swapped events or it has them. If no, as $h_b = h \setminus \tr(r)$ has no pending transactions and $\nextEvent(h_b) = \ibegin(\tr(r))$, $h_b$ is in the reachable path to $h$ and $e = \min_{\ora}  \mathcal{P} \setminus h$. That implies there is not such pair $a, b$, so $R^{\ora}(h')$ holds. Otherwise, let $c \in \tr(r)$ a swapped element. 
+
+Finally, let $h' = \swap(h, r, w)$ for some $r, w \in h$ s.t. $\protocol(h, r, w)$ holds. Let $a, b$ two event s.t. $a \leq_{\ora} b $. If $a \leq_{h'} b$ or, as $R^{\ora}(h)$ and $\protocol(h, r, w)$ holds, $a \not\leq_h b$, then the property is satisfied; so let's suppose $b <_{h'} a$ and $a \leq_h b$. In this situation, $a$ has to be a deleted event, so $a \in \mathcal{P} \setminus h' \cup \{r\}$. As $r \leq_h a$, if $a \leq_{\ora} r$, there would exist a $c \in h $, $\tr(c) \leq_{\ora} \tr(a) \leq_{\ora} \tr(r)$ s.t. $\tr(r) \ [\so \cup \wro]^* \ \tr(c)$ and $\swapped{h}{c}$. However, this contradicts $\protocol(h, r, w)$; so $r \leq_{\ora} a$. Taking $e'' = r$ the property is witnessed. 
+%The only transaction in the history whose relative order has changed is $\tr(r)$, so $b \in \tr(r)$. In that setting, we can take $r$ as a
+\end{proof}
+\end{lemma}
+
+\begin{lemma}
+For any reachable history $h$, $\leq^h \equiv \leq_h$.
+\begin{proof}
+We will prove this lemma by induction on the number of steps a computable path leading to $h$ are required by algorithm \textcolor{red}{cite algorithm}. The base case, $n = 0$, implies $h = \emptyset$, so both relations hold. Let's suppose that for every history $h'$ that requires at most $n$ steps, $\leq^{h'} \equiv \leq_{h'}$; and let's analyze $\leq^h$ for a history computed with $n+1$. In particular, there exists a history $h_p$ in that path which is an immediate predecessor of $h$. We will distinguish cases depending on how from $h_p$ we reach $h$; calling $e = \nextEvent(h)$
+\begin{itemize}
+	\item \underline{Adding a $ \iend, \iwrite$:} As $h_p$ and $h$ are edge-wise identical, $\leq^h \equiv \leq_h$.
+	
+	\item \underline{Adding a $\ibegin$:} As $\dep(h_p, T, \bot) = \dep(h, T, \bot)$ for every transaction in $h_p$, if $T \leq^{h_p} T'$, then $T \leq^h T'$. Moreover, $\dep(h, \tr(e), \bot) = \{e\}= \min_{\ora} \mathcal{P} \setminus h_p$. By \ref{lemma:reachable-or-respectful} $h$ is $\ora$-respectful, so for every $T$, $\min_{\ora} \dep(h, T, \bot) <_{\ora} e$; which implies $T <^h \tr(e)$. By lemma \ref{lemma:canonincal-total-order}, $\leq^h$ is a total order, so it coincides with $\leq^h$.
+	
+	\item \underline{Adding a $\iread$:} As no transaction depends on $\tr(e)$ and $\tr(e) = \last{h_p}$, if we prove that for every pair of transactions $\minimalDependency(h_p, T, T', \bot) = \minimalDependency(h, T, T', \bot)$, the lemma would hold. On one hand, $\dep(h, \tr(e), \bot) = \dep(h_p, \tr(e), \bot) = \tr(e)$ and in the other hand, by lemma \ref{lemma:reachable-or-respectful}, $\min_{\ora} \dep(h_p, T, \bot) <_{\ora} \tr(e)$. Finally, as $e \not\in \dep(h, T, e')$, for every $T \neq \tr(e), e' \neq \bot$, for every pair of transactions $T, T'$, $\minimalDependency(h_p, T, T' \bot) = \minimalDependency(h, T, T' \bot)$. 
+	
+	\item \underline{Swapping $r \in h$ and $w \in \tr(e)$:} As $\protocol(h, r, w)$ is satisfied and $h$ is $\ora$-respectful, for every event $e'$ and transaction $T$, $\min_{\ora} \dep(h_p, T, e') = \min_{\ora} \dep(h, T, e')$, so for every pair of transactions $\minimalDependency(h_p, T, T', \bot) = \minimalDependency(h, T, T', \bot)$. In particular, this implies $T \leq^{h_p} T'$ if and only if $T \leq^h T'$ for every  pair $T, T'$ and $T \leq^h \tr(r)$; so $\leq^h \equiv \leq_h$. 
+\end{itemize}
+\end{proof}
+\end{lemma}
+
+As $\leq^h \equiv \leq_h$ for any reachable history, we will extend $R^{\ora}(h)$ to any history changing $\leq_h$ to $\leq^h$ in \ref{def:oracle-respectful} whenever it is needed. This property is not something reachable histories satisfy but also, as next lemma shows, total histories with $\leq^h$ order do; which justify it as an useful tool for proving completeness.
+\begin{lemma}
+\label{lemma:total-respectful}
+Any total history is $\ora$-respectful.
+\begin{proof}
+Let $h$ be a total history and $T, T'$ a pair of transactions s.t. $T \leq_{\ora} T'$. If $T \leq^h T'$, then the statement is satisfied; so let's assume the contrary: $T' \leq^h T$. If $T' \ [\so \cup \wro]^* \ T$, then for every $e \in T, e' \in T'$ $\exists c \in h$ s.t. $\tr(c) \leq_{\ora} \tr(e)$, $\tr(e') \ [\so \cup \wro]^* \tr(c)$, $\swapped{h}{c}$ and $c \leq^h e$; so the property is satisfied. Otherwise, by definition of $\minimalDependency$, there exists $r' \in h$ s.t. $T' \ [\so \cup \wro]^* \ \tr(r')$ and $\tr(r') \leq_{\ora} T$. Moreover, by \textsc{canonicalOrder}'s definition, $\tr(r) \leq^h T$. Finally $\swapped{h}{r'}$ holds as it is the minimum element according $\ora$. To sum up, $R^{\ora}(h)$ holds.
+\end{proof}
+\end{lemma}
+
+\begin{algorithm}[H]
+\caption{\textsc{prev}}
+\begin{algorithmic}[1]
+	
+	\Statex
+	\Procedure{\textsc{prev}}{$h$}
+	\If{$h = \emptyset$}
+	\State \Return $\emptyset$
+	\EndIf
+	\State $a \gets \last{h}$
+	\If{$\lnot \swapped{h}{a}$}
+		\State \Return $h \setminus a$
+	\Else
+		\State \Return $\maxCompletion(h\setminus a, \{e \ | \ e \not\in (h \setminus a) \land e <_{\ora} h.\wro(a) \})$
+	\EndIf
+	\EndProcedure
+
+	\Statex
+	\Procedure{\maxCompletion}{$h, D$}
+	\If{$D \neq \emptyset$}
+		\State $e \gets \min_{<_{\ora}} D$
+		\If{$e.type() \neq \iread$}
+			\State \Return $\maxCompletion(h \bullet e, D \setminus \{e\})$
+		\Else
+			\Let $w$ s.t. $\isMaximallyAdded{h \bullet_w e, e}$
+			\State \Return $\maxCompletion(h \bullet_w e, D \setminus \{e\})$
+		\EndIf
+	
+	\Else
+		\State \Return $h$
+	\EndIf
+	\EndProcedure
+	
+	
+\end{algorithmic}
+\label{algorithm:prev}
+%\caption{Generic method for exploring every possible history $h$ of a program $\mathcal{P}$ running under a database with $\mathcal{M}$ as isolation level.}
+\end{algorithm}
+
+%code for splitting algorithmic environment
+\begin{comment}
+\algstore{myalg}
+\end{algorithmic}
+\end{algorithm}
+
+%gap maybe needed to split algorithms in two parts. 
+
+\begin{algorithm}[H]                   
+\begin{algorithmic} [1]                   % enter the algorithmic environment
+\algrestore{myalg}	
+\end{comment}	
+
+
+\begin{lemma}
+\label{lemma:prev-respectful}
+For every $\ora$-respectful history $h$, $\prev(h)$ is also $\ora$-respectful.
+\begin{proof}
+Let suppose $h \neq \emptyset$, $h_p = \prev(h)$, $a = \last{h}$, $e \in \mathcal{P}$ and $ e' \in h_p$ s.t. $e \leq_{\ora} e'$. As $R^{\ora}(h)$ is satisfied, either $e \leq^h e'$ or $\exists e'' \in h, \tr(e'') \leq_{\ora} \tr(e)$, $e'' \leq^h e$, $\tr(e') \ [\so \cup \wro]^* \tr(e'')$ and $\swapped{h}{e''}$. If $\lnot \swapped{h}{a}$, $h_p = h \bullet a$; so if $e \leq^h e'$, $e \leq^{h_p} e'$ and if not, $e'' \in h_p$, so $R^{\ora}(h_p)$ holds. 
+
+Otherwise, $\swapped{h}{a}$ and we distinguish between the sets $e$ and $e'$ belong to. Firstly, for every pair of events $\hat{e} \in h_p \setminus h$, $\hat{e}' \in \dep(h, \tr(\hat{e}, \bot))$, we know that $\tr(\hat{e}) \leq_{\ora} \tr(\hat{e}')$. Therefore, $\min_{<_{\ora}} \dep(h, \tr(\hat{e}, \bot)) = \ibegin(\tr(\hat{e}))$. In addition, by construction of $\prev(h)$ and $\ora$-respectfulness of h, for every $\hat{e} \in h, e'' \in h$, $\min_{<_{\ora}} \dep(h_p, \tr(\hat{e}), e'') = \min_{<_{\ora}} \dep(h, \tr(\hat{e}), e'')$. Combining both results, if $e'$ belong to $h$, either $e \leq^{h_p} e'$ or exists a $e'' \in h$ s.t. $e'' \leq^{h_p} e$ and witness $R^{\ora}(h)$ for $e,e'$ (regardless of $e$'s belonging to $h$, $e'' \leq^{h_p} e$). On the contrary, as $h_p$ has no pending transactions, if $e' \not\in h$, $\lnot (\tr(e') \ [\so \cup \wro]^* \ \tr(e))$, so regardless if $\tr(e) \ [\so \cup \wro]^* \tr(e')$, $e \leq^{h_p} e'$. To sum up, $R^{\ora}(h_p)$ holds.
+\end{proof}
+\end{lemma}
+
+\begin{lemma}
+\label{lemma:soundness-prev}
+For every consistent history $\ora$-respectful $h$, if $\prev(h)$ is reachable, then $h$ is also reachable.
+\begin{proof}
+Let suppose $h \neq \emptyset$, $h_p = \prev(h)$ and $a = \last{h}$. If $\lnot \swapped{h}{a}$, let $h_n = h_p \bullet a$ if $a$ is not a read, $h_n = h_p \bullet_{h.\wro(a)} a$ in the other case. Either way, $h_n$ is always reachable and it coincides with $h$. Otherwise, $a$ is a $\iread$ event and it swapped; so let us call $w = h.\wro(a)$. Firstly, as $\swapped{h}{a}$, $a <_{\ora} w$, and by lemma \ref{lemma:reachable-or-respectful}, $R^{\ora}(h_p)$ holds, so $a <_{h_p} w$ does; which let us conclude $\compute(h_p)$ will always return $(a, w)$ as a possible swap pair. In addition, all transactions in $h_p$ are non-pending, so in particular $\last{h_p}$ is an $\iend$ event. If we call $h_s = \swap(h_p, a, w)$, and $h_p \setminus h = h_p \setminus h_s$ would hold, as $h \subseteq h_p, h_s \subseteq h_p$, then $h = h_s$; which would allow us to conclude $h$ is reachable from $h_p$.
+
+On one hand, if $e \in h_p \setminus h$, $e \not\in h$ and $e <_{\ora} w$. In particular, $\lnot (\tr(e) \ [\so \cup \wro]^* \ \tr(w))$. Moreover, if $ e \leq_{\ora} a$, by $R^{\ora}(h)$, either $e \leq^h a$ or $\exists e''\in h, e'' \leq_{\ora} e$ s.t. $\tr(a) \ [\so \cup \wro]^* \tr(e'')$, $e'' \leq^h e$ and $\swapped{h}{e''}$; both impossible situations as $e \not\in h$ and $a = \last{h}$; so $a \leq_{\ora} e$. In other words, $e \in h_p \setminus h_s$.
+
+On the other hand, $e \in h_p \setminus h_s$ if and only if $\lnot (\tr(e) \ [\so \cup \wro]^* \ \tr(w))$ and $a <_{\ora} e <_{\ora} w$. If $e \in h$ then $e \leq^{h} a$, and as $h$ is $\ora$-respectful and $a \leq_{\ora} e$, we deduce there exists a $e'' \in h$ s.t. $\tr(e'') \leq_{\ora} \tr(a)$, $\tr(e) \ [\so \cup \wro]^* \tr(e'')$ and $\swapped{h}{e''}$. Moreover, as $c \in h$, $c \in h_p$; but as $\swapped{h_p}{c}$ and $\protocol(h, a, w)$ hold, $c \in h_s$ and so $e$ does. This result leads to a contradiction, so $e \not\in h$; i..e $e \in h_p \setminus h$.
+\end{proof}
+\end{lemma}
+
+\begin{comment}
+
+\begin{lemma}
+Let $h$ a history computed by the algorithm \ref{algorithm:stmc}. If $h$ appears at line \ref{algorithm:stmc:outer_loop} when the state is $s$, both $h$ and $s$ will reappear paired at line \ref{algorithm:stmc:inner_loop}.
+\end{lemma}
+
+%This number will be called $\Delta(h,s)$.
+%, when $\Delta(s,h) = 0$,
+\begin{proof}
+This proof is made by induction on the number of pairs $(h_i, s_i)$ the algorithm computes starting with $(h,s)$ at line \ref{algorithm:stmc:outer_loop} until reaching some history inconsistent or complete. Let's call $\Delta(h, s)$ to this number. First of all, let's notice that $\Delta(h,s) < \omega$ as the number of events is finite. %and for every type of $a$ distinct of $\bot$, the number of 
+
+\underline{Base case: $\Delta(h,s) = 0$} This case is trivial by the algorithm's definition.
+
+\underline{Inductive case: for every $h,s$ such that $\Delta(h,s) \leq n$ the lemma holds.} Let $h,s$ such that $\Delta(h,s) = n+1$, $a = \next(h,s)$ and $h' = h \bullet a$. Here we have to distinguish between the type of $a$:
+\begin{itemize}
+\item \underline{$\ibegin$, $\iwrite$}: 
+\end{itemize}
+
+
+%Therefore, the base case follows trivially but the inductive case depends on the type of $a = \textsc{next}(h)$ and the soundness of $\prev$. For the cases $\iread$ and $\iend$ a second induction has to be done for distinguishing all different histories that can be generated when changing one $\wro$-edge or when swapping two events.
+\end{proof}
+
+\begin{corollary}
+Every $\iread$ that is not swapped can read from any previous $\iwrite$.
+\end{corollary}
+
+\begin{corollary}
+Let $h$ a history and $w \in \tr(\last{h})$ a $\iwrite$ event that writes $x \in \mathcal{V}$. For every $r$ event such that $\canSwap(w,r,h)$, the history $h'$ obtained by swapping $r$ and $w$ will be computed.
+\end{corollary}
+
+\end{comment}
+
+\begin{lemma}
+\label{lemma:prev-reduces-one}
+For every non-empty consistent $\ora$-respectful history $h$, $h_p = \prev(h)$ and $a = \last{h}$, if $\swapped{h}{a}$ then $\{e \in h_p \ | \ \swapped{h_p}{e}\} = \{e \in h \ | \ \swapped{h}{e}\} \setminus \{a\}$, otherwise $h_p = h \setminus a$.
+%Let $h$ a history, $h' = \prev(h)$ and at some state $s$, $h'$ appear at line \ref{algorithm:stmc:outer_loop}, from $s$ the algorithm will compute some state $s'$ such that $h$ will also appear at line \ref{algorithm:stmc:outer_loop}.`
+\begin{proof}
+Let $a = \last{h}$ and $h' = h \setminus a$. If $a$ is not swapped, then $h_p = h'$, so the lemma holds immediately. Otherwise, as $h_p =  \maxCompletion(h')$, we will show that every event not belonging to $h_p \setminus h'$ is not swapped by induction on every recursive call to $\maxCompletion$. Let us call $D = \{e \ | \ e \not\in h' \land e <_{\ora} \}$. This set, intuitively, contain all the events that would have been deleted from a reachable history $h$ to produce $h_p$. In this setting, let us call $h_{|D|} = h'$, $D_{|D|} = D$ and $D_k = D_{k+1} \setminus \{\min_{<_{\ora}} D_{k+1}\}, \; e_k = \min_{<_{\ora}}D_k$ for every $k, 0 \leq k < |D|$ (i.e. $D_k = D_{k+1} \setminus \{ e_{k+1}\}$). We will prove the lemma by induction on $n = |D| - k$, constructing a collection of histories $h_k$, $0 \leq k < |D|$, such that each one is an extension of its predecessor with a non-swapped event.
+
+The base case, $h_{|D|}$ is trivial as by its definition it corresponds with $h'$. Let's prove the inductive case: $\{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$. If $e_{k+1}$ is not a $\iread$ event, $h_k = h_{k+1} \bullet e_{k+1}$ and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$; as only $\iread$ events can be swapped. Otherwise, by the model's \textcolor{orange}{past-extensibility} there exists a $\iwrite$ event $f_{k+1}$ s.t. writes the same variable and $\isConsistent{h_{k+1} \bullet_{f_{k+1}} e_{k+1}} \land \{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h_{k+1} \bullet_{f_{k+1}} e_{k+1}}{e}\}$ holds. Let $w_{k+1} = \max_{\leq^{h_{k+1}}} \{w \ | \ \isConsistent{h_{k+1} \bullet_{w} e_{k+1}} \land \{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h_{k+1} \bullet_{w} e_{k+1}}{e}\}\}$. Therefore, $h_k = h_{k+1} \bullet_{w_{k+1}} e_{k´+1}$ is consistent and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$. Moreover, let's remark that as $w_{k+1}$ is the maximum write event according to $\leq_{h_{k+1}}$ s.t. $\isConsistent{h_k}$ and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$ and $R^{\ora}(h)$, it also satisfies $\isMaximallyAdded{h_{k}}{ e_{k+1}, w_{k+1}}$. Altogether, we obtain $h_p = h_0$; which let us conclude $\{e \in h_p \ | \ \swapped{h_p}{e}\} = \{e \in h' \ | \ \swapped{h'}{e}\} = \{e \in h \ | \ \swapped{h}{e}\}\setminus \{a\}$. \textcolor{orange}{In orange where I use the new constraint.}
+\end{proof}
+\end{lemma}
+
+\begin{lemma}
+\label{lemma:prev-leads-empty}
+For every history $h$ there exists some $k_h \in \mathbb{N}$ such that $\prev^{k_h}(h) = \emptyset$.
+\begin{proof}
+This lemma is immediate consequence of lemma \ref{lemma:prev-reduces-one}. Let us call $\xi(h) = |\{e \in h \ | \ \swapped{h}{e}\}$, the number of swapped events in $h$, and let us prove the lemma by induction on $(\xi(h), |h|)$. The base case, $\xi(h) = |h| = 0$ is trivial as $h$ would be $\emptyset$; so let's assume that for every history $h$ such that $\xi(h) < n$ or $\xi(h) =h \land |h| < m$ there exists such $k_h$. Let $h$ then a history s.t. $\xi(h) = n$ and $|h| = m$. $h_p = \prev(h)$. On one hand, if $h_p = h \setminus a$ then $\xi(x_p) = \xi(h)$ and $|h_p| = |h|-1$. On the other hand, if $h_p \neq h \setminus a$, $\xi(h_p) = \xi(h) - 1$. In any case, by induction hypothesis on $h_p$, there exists an integer $k_{h_p}$ such that $\prev^{k_{h_p}}(h_p) = \emptyset$. Therefore, $k_h = k_{h_p}+ 1$ satisfies $\prev^{k_h}(h) = \emptyset$.
+\end{proof}
+\end{lemma}
+
+\begin{proposition}
+\label{proposition:chain-histories-proof}
+For every consistent $\ora$-respectful history $h$ exists $k \in \mathbb{N}$ and some sequence of $\ora$-respectful histories $\{h_n\}_{n = 0}^k$, $h_0 = \emptyset$ and $h_k = h$ such that the algorithm will compute.
+\begin{proof}
+Let $h$ a history, $k$ the minimum integer such that $\prev^k(h) = \emptyset$, which exists thanks to lemma \ref{lemma:prev-leads-empty} and $C = \{\prev^{k-n}(h)\}_{n = 0}^k$ a set of indexed histories. By the collection's definition and lemma \ref{lemma:prev-respectful}, $h_0 = \prev^k(h) = \emptyset$, $h_k = \prev^0(h) = h$ and $R^{\ora}(h_n)$ for every $n \in \mathbb{N}$; so let us prove by induction on $n$ that every history in $C$ is reachable. The base case, $h_0$, is trivially achieved; as it is always reachable. In addition, by lemma \ref{lemma:soundness-prev}, we know that if $h_n$ is reachable, $h_{n+1}$ is it too; which proves the inductive step. %Moreover, so we will focus on the inductive case, assuming $h_n$ is reachable and deducing $h_{n+1}$ is it too. 
+\end{proof}
+\end{proposition}
+
+\begin{theorem}
+Algorithm \textcolor{red}{cite algorithm} is complete.
+\begin{proof}
+By lemma \ref{lemma:total-respectful}, any consistent total history is $\ora$-respectful. As a consequence of proposition \ref{proposition:chain-histories-proof}, there exist a sequence of reachable histories which $h$ belongs to; so in particular, $h$ is reachable.
+\end{proof}
+\end{theorem}

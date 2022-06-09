@@ -1,0 +1,391 @@
+\documentclass[acmsmall,screen]{acmart}
+\usepackage{parskip}
+\usepackage{caption, subcaption}
+\usepackage{algorithm, algpseudocode}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata,positioning,backgrounds,calc,patterns}
+\usetikzlibrary{arrows.meta}
+\usepackage{mathpartir}
+\usepackage{framed}
+\usepackage{ulem}
+
+
+\tikzset{transaction state/.style={draw=black!0}}
+\tikzset{
+	arrow/.pic={\path[tips,every arrow/.try,->,>=#1] (0,0) -- +(.1pt,0);},
+	pics/arrow/.default={triangle 90},
+	lab dis/.store in=\LabDis,
+	lab dis=0.3,
+	->-/.style args={at #1 with label #2}{decoration={
+			markings,
+			mark=at position #1 with {\arrow{>}; \node at (0,\LabDis) {#2};}},postaction={decorate}},
+	-<-/.style args={at #1 with label #2}{decoration={
+			markings,
+			mark=at position #1 with {\arrow{<}; \node at (0,\LabDis)
+				{#2};}},postaction={decorate}},
+	-*-/.style={decoration={
+			markings,
+			mark=at position #1 with {\fill (0,0) circle (1.5pt);}},postaction={decorate}}
+}
+
+%\settopmatter{printfolios=true}
+%%
+%%% These commands are for a JOURNAL article.
+%\acmJournal{PACMPL}
+%\acmVolume{1}
+%\acmNumber{OOPSLA}
+%\acmArticle{1}
+%\acmYear{2021}
+%\acmMonth{8}
+%\acmDOI{} % \acmDOI{10.1145/nnnnnnn.nnnnnnn}
+%\startPage{1}
+
+
+
+%\setcopyright{rightsretained} 
+%\acmJournal{PACMPL}
+%\acmYear{2021} \acmVolume{5} \acmNumber{OOPSLA} \acmArticle{132} \acmMonth{10} \acmPrice{}\acmDOI{10.1145/3485546}
+
+%%% The following is specific to OOPSLA '21 and the paper
+%%% 'MonkeyDB: Effectively Testing Correctness under Weak Isolation Levels'
+%%% by Ranadeep Biswas, Diptanshu Kakwani, Jyothi Vedurada, Constantin Enea, and Akash Lal.
+%%%
+
+
+
+\acmJournal{PACMPL}
+
+
+\begin{comment}
+\setcopyright{rightsretained}
+\acmPrice{}
+\acmDOI{10.1145/3485546}
+\acmYear{2021}
+\copyrightyear{2021}
+\acmSubmissionID{oopsla21main-p150-p}
+\acmVolume{5}
+\acmNumber{OOPSLA}
+\acmArticle{132}
+\acmMonth{10}
+\end{comment}
+
+%% Bibliography style
+\citestyle{acmauthoryear}
+\bibliographystyle{ACM-Reference-Format}
+
+
+
+\definecolor{pinegreen}{rgb}{0.0, 0.47, 0.44}
+\newcommand{\callout}[2][pinegreen]{\normalem{\emph{\textcolor{#1}{#2}}}\ULforem
+}
+
+\newenvironment{cframed}[1][black] {\def\FrameCommand{\fboxsep=\FrameSep\fcolorbox{#1}{white}}%
+	\MakeFramed {\advance\hsize-\width \FrameRestore}}
+{\endMakeFramed}
+
+\newcommand{\rchange}[1]{#1}
+
+\newcommand{\dipnote}[1]{{\color{red}{#1}}}
+\newcommand{\constantin}[1]{{\color{red}{Constantin: #1}}}
+\newcommand{\akash}[1]{{\color{red}{#1}}}
+
+\newcommand{\figref}[1]{Figure~\ref{fig:#1}}
+\newcommand{\sectref}[1]{\S\ref{sec:#1}}
+
+\newcommand{\eg}{e.g., }
+\newcommand{\ie}{i.e., }
+
+\newcommand{\key}{k}
+\newcommand{\Keys}{\mathsf{Keys}}
+
+\definecolor{coColor}{HTML}{b37200}
+\definecolor{soColor}{HTML}{800080}
+\definecolor{poColor}{HTML}{C41E3A}
+\definecolor{wrColor}{HTML}{008000}
+\definecolor{orColor}{HTML}{0026ff}
+
+\newcommand{\PO}{\textcolor{poColor}{\textsf{po}}}
+\newcommand{\SO}{\textcolor{soColor}{\textsf{so}}}
+\newcommand{\WR}{\textcolor{wrColor}{\textsf{WR}}}
+\newcommand{\WW}{\textcolor{red}{\textsf{WW}}}
+\newcommand{\RW}{\textcolor{red}{\textsf{RW}}}
+\newcommand{\VIS}{\textcolor{red}{\textsf{vis}}}
+\newcommand{\CO}{\textcolor{coColor}{\textsf{co} }}
+
+\newcommand{\axpre}{\mathsf{Prefix}}
+\newcommand{\axconf}{\mathsf{Conflict}}
+\newcommand{\axsi}{\textsc{Si}}
+\newcommand{\axser}{\mathsf{Serializability}}
+
+\newcommand{\ext}{\textsc{Ext}}
+\newcommand{\session}{\textsc{Session}}
+\newcommand{\transvis}{\textsc{TransVis}}
+\newcommand{\prefix}{\textsc{Prefix}}
+\newcommand{\noconflict}{\textsc{NoConflict}}
+\newcommand{\totalvis}{\textsc{TotalVis}}
+
+\newcommand{\set}[1]{{\{{#1}\}}}
+\newcommand{\mset}[1]{{\{\!\{ #1 \}\!\}}}
+\newcommand{\tup}[1]{{\left\langle{#1}\right\rangle}}
+\renewcommand{\implies}{\Rightarrow}
+\newcommand{\pto}{\rightharpoonup}
+\newcommand{\To}{\Rightarrow}
+\newcommand{\Path}[3]{{#1}\xrightarrow{#2}{#3}}
+
+
+\newcommand{\Obj}{\mathsf{Obj}}
+\newcommand{\Var}{\mathsf{Vars}}
+\newcommand{\Vars}{\mathsf{Vars}}
+\newcommand{\Val}{\mathsf{Vals}}
+\newcommand{\Vals}{\mathsf{Vals}}
+\newcommand{\Columns}{\mathbb{C}}
+\newcommand{\Rows}{\mathbb{R}}
+\newcommand{\Tables}{\mathbb{T}}
+\newcommand{\OId}{\mathsf{OpId}}
+\newcommand{\Op}{\mathsf{Op}}
+\newcommand{\xvar}{{x}}
+\newcommand{\prog}{{\mathsf{P}}}
+\newcommand{\histOf}[2][]{{\mathsf{hist}_{#1}({#2})}}
+
+
+\newcommand{\yvar}{{y}}
+\newcommand{\val}{{v}}
+\newcommand{\id}{{i}}
+\newcommand{\rd}[2][]{\textsf{read}_{#1}({#2})}
+%\newcommand{\rd}[3][]{\textsf{read}_{#1}({#2},{#3})}
+\newcommand{\rdo}{\textsf{read}}
+\newcommand{\wrt}[3][]{\textsf{write}_{#1}({#2},{#3})}
+\newcommand{\op}{{o}}
+\newcommand{\Tr}{{\mathcal{T}}}
+\newcommand{\tr}{\textup{\textsf{tr}}}
+\newcommand{\Hist}{{\mathcal{H}}}
+\newcommand{\hist}{{h}}
+\newcommand{\po}{\textcolor{poColor}{\mathsf{po}}}
+\newcommand{\so}{\textcolor{soColor}{\mathsf{so}}}
+\newcommand{\co}{\textcolor{coColor}{\mathsf{co}}}
+\newcommand{\ora}{\textcolor{orColor}{\mathsf{or}}}
+\newcommand{\wro}{\textcolor{wrColor}{\mathsf{wr}}}
+\newcommand{\rwo}{\mathsf{RW}}
+\newcommand{\wrosi}{\mathsf{WR}}
+\newcommand{\readOp}[1]{\mathsf{reads}({#1})}
+\newcommand{\tlogs}[1]{\mathsf{TLogs}({#1})}
+\newcommand{\transC}[1]{\mathsf{compTrans}({#1})}
+\newcommand{\vars}[1]{\mathsf{vars}({#1})}
+\newcommand{\writeOp}[1]{\mathsf{writes}({#1})}
+\newcommand{\writeVar}[2]{{#1}\ \mathsf{writes}\ {#2}}
+\newcommand{\readVar}[2]{{#1}\ \mathsf{reads}\ {#2}}
+\renewcommand{\hist}{{h}}
+\newcommand{\lin}{\textcolor{red}{\mathsf{lin}}}
+\newcommand{\vis}{\textcolor{red}{\mathsf{vis}}}
+\newcommand{\aread}{\mathsf{r}}
+\newcommand{\none}{\mathsf{None}}
+\newcommand{\btrue}{\mathsf{true}}
+\newcommand{\bfalse}{\mathsf{false}}
+\newcommand{\init}{\textup{\textbf{\texttt{init}}}}
+
+
+%---- Algorithm
+
+\newcommand{\genericNext}{\textup{\texttt{N}}}
+\newcommand{\genericEvaluate}{\textup{\texttt{E}}}
+\newcommand{\genericCompute}{\textup{\texttt{C}}}
+\newcommand{\genericProtocol}{\textup{\texttt{P}}}
+\newcommand{\genericSwap}{\textup{\texttt{S}}}
+\newcommand{\nextEvent}{\textup{\textsc{next}}}
+\newcommand{\protocol}{\textup{\textsc{isSwappable}}}
+\newcommand{\swap}{\textup{\textsc{swap}}}
+\newcommand{\compute}{\textup{\textsc{compute}}}
+
+\newcommand{\last}[1]{\textup{\texttt{last}}(#1)}
+\newcommand{\swapped}[2]{\textup{\textsc{swapped}}(#1, #2)}
+\newcommand{\maxCompletion}{\textup{\textsc{maxCompletion}}}
+
+\newcommand{\prev}{\textup{\textsc{prev}}}
+\newcommand{\canSwap}{\textup{\textsc{canSwap}}}
+\newcommand{\isConsistent}[2][\mathcal{M}]{\textup{\textsc{isConsistent}}_{#1}(#2)}
+\newcommand{\isMaximallyAdded}[2]{\textup{\textsc{isMaximallyAdded}}(#1, #2)}
+\newcommand{\dep}{\textup{\textsc{dep}}}
+\newcommand{\minimalDependency}{\textup{\textsc{minimalDependency}}}
+
+
+
+\newcommand{\events}[1]{\mathtt{events}({#1})}
+\newcommand{\thread}[1]{\mathtt{th}({#1})}
+\newcommand{\variable}[1]{\mathtt{var}({#1})}
+\newcommand{\valEvent}[1]{\mathtt{val}({#1})}
+\newcommand{\eqdef}{::=}
+\newcommand{\tab}{\mathit{tab}}
+\newcommand{\pkey}{\mathit{pkey}}
+\newcommand{\pkeyVal}{\mathit{pkeyVal}}
+\newcommand{\ibegin}{\mathtt{begin}}
+\newcommand{\iadd}{\mathtt{add}}
+\newcommand{\iremove}{\mathtt{remove}}
+\newcommand{\ielements}{\mathtt{elements}}
+\newcommand{\icontains}{\mathtt{has}}
+\newcommand{\iend}{\mathtt{end}}
+\newcommand{\iif}[2]{\mathtt{if}({#1}) \{ {#2} \}}
+\newcommand{\iread}{\mathtt{read}}
+\newcommand{\iwrite}{\mathtt{write}}
+\newcommand{\iselect}[4]{\mathtt{SELECT}\ {#1}\ \mathtt{AS}\ {#2}\ \mathtt{FROM}\ {#3}\ \mathtt{WHERE}\ {#4}}
+\newcommand{\iinsert}[2]{\mathtt{INSERT\ INTO}\ {#1}\ \mathtt{VALUES}\ {#2}}
+\newcommand{\idelete}[2]{\mathtt{DELETE\ FROM}\ {#1}\ \mathtt{WHERE}\ {#2}}
+\newcommand{\iupdate}[3]{\mathtt{UPDATE}\ {#1}\ \mathtt{SET}\ {#2}\ \mathtt{WHERE}\ {#3}}
+\newcommand{\KVProgs}{\mathcal{P}_{KV}}
+\newcommand{\SQLProgs}{\mathcal{P}_{SQL}}
+\newcommand{\DBschema}{\mathcal{S}}
+\newcommand{\DBinst}{\mathcal{D}}
+
+
+\algnewcommand\algorithmicswitch{\textbf{switch}}
+\algnewcommand\algorithmiccase{\textbf{case}}
+\algnewcommand\algorithmicassert{\texttt{assert}}
+\algnewcommand\Assert[1]{\State \algorithmicassert(#1)}%
+% New "environments"
+\algdef{SE}[SWITCH]{Switch}{EndSwitch}[1]{\algorithmicswitch\ #1\ \algorithmicdo}{\algorithmicend\ \algorithmicswitch}%
+\algdef{SE}[CASE]{Case}{EndCase}[1]{\algorithmiccase\ #1\ :}{\algorithmicend\ \algorithmiccase}%
+\algtext*{EndSwitch}%
+\algtext*{EndCase}%
+\algtext*{EndFor}%
+\algnewcommand\Let{\State\textbf{let} }
+\algnewcommand\Break{\State\textbf{break} }
+\algnewcommand\InputAlgorithmic{\Statex\textbf{Input: }} 
+\algnewcommand\OutputAlgorithmic{\Statex\textbf{Output: }}
+\algblockdefx[BlockName]{ForTo1}{EndForTo1}%
+[3][i]{\textbf{for} #1 $\gets$ #2 \textbf{to} #3 \textbf{do}}%
+
+
+
+\usepackage{listings}
+\lstset{columns=fullflexible,keepspaces=true,basicstyle=\ttfamily\footnotesize}
+\lstset{commentstyle=\color{gray}}
+
+\lstdefinelanguage{MyLang}{%
+	keywords = { delete, do, each, else, export, finally, for, foreach, function,
+		if, in, let, of, return, void, while, with, yield, elements, read, write,
+		insert, remove, add, AddItem, DeleteItem, Push, Pop, Enroll, Tweet, Timeline,
+		NewsFeed, begin, end, break, throw},
+	morecomment = [l]{//},
+	morecomment = [s]{/*}{*/},
+	morestring  = [b]',
+	morestring  = [b]",
+	sensitive   = true,
+}
+
+\lstdefinelanguage{Java10}{
+	language      = Java,
+	morekeywords  ={ var },
+}
+
+
+%\input{header}
+\begin{document}
+	
+	%% Title information
+	\title[The title]{Dynamic Partial Order Reduction for Checking Correctness Against Weak Isolation Levels}       %% [Short Title] is optional;
+	%% when present, will be used in
+	%% header instead of Full Title.
+	%\titlenote{with title note}             %% \titlenote is optional;
+	%% can be repeated if necessary;
+	%% contents suppressed with 'anonymous'
+	%\subtitle{Subtitle}                     %% \subtitle is optional
+	%\subtitlenote{with subtitle note}       %% \subtitlenote is optional;
+	%% can be repeated if necessary;
+	
+	\author{Enrique Román-Calvo}
+	\affiliation{
+		\institution{IRIF, University of Paris \& CNRS} 
+		\country{France}                    %% \country is recommended
+	}
+	\email{calvo@irif.fr}          %% \email is recommended
+	
+	
+	\author{Ahmed Bouajjani}
+	\affiliation{
+		\institution{IRIF, University of Paris \& CNRS}
+		\country{France}                  %% \country is recommended
+	}
+	\email{abou@irif.fr}          %% \email is recommended
+	
+	\author{Constantin Enea}
+	\affiliation{
+		\institution{LIX, École Polytechinque \& CNRS}
+		\country{France}                    %% \country is recommended
+	}
+	\email{cenea@irif.fr}          %% 
+	
+	
+	%% Abstract
+	\begin{abstract}
+		\input{abstract}
+	\end{abstract}
+	
+\begin{comment}
+
+	
+	\begin{CCSXML}
+		<ccs2012>
+		<concept>
+		<concept_id>10011007.10011074.10011099.10011102.10011103</concept_id>
+		<concept_desc>Software and its engineering~Software testing and debugging</concept_desc>
+		<concept_significance>500</concept_significance>
+		</concept>
+		<concept>
+		<concept_id>10003752.10003753.10003761.10003762</concept_id>
+		<concept_desc>Theory of computation~Parallel computing models</concept_desc>
+		<concept_significance>300</concept_significance>
+		</concept>
+		</ccs2012>
+	\end{CCSXML}
+	
+	\ccsdesc[500]{Software and its engineering~Software testing and debugging}
+	\ccsdesc[300]{Theory of computation~Parallel computing models}
+	
+\end{comment}
+	%% Keywords
+	%\keywords{Applications of Storage Systems, Transactional Databases, Weak Isolation Levels, Testing}  %% \keywords are mandatory in final camera-ready submission
+	\maketitle
+	
+	\sloppy
+	\input{intro}
+	%\input{trvsmt}
+	%\input{algorithm}
+	\input{definitions}
+	\input{model}
+	\input{algo-class}
+	\input{sound-complete}
+	\input{optimal}
+	\input{si-ser}
+	%\input{iterative}
+	\input{proofs}
+	
+	%\newpage
+	%\input{intro-ranadeep}
+
+	%\input{prog_lang}
+	%\input{ax-kv}
+	%\input{op-kv}
+	%\input{formal}
+	%\input{impl}
+	%\input{microbenchmark}
+	%\input{oltp}
+	%\input{jepsen}
+	%\input{related}
+	%\input{concl}
+	
+	
+	%% Acknowledgments
+	\begin{acks}                            %% acks environment is optional
+		%\input{acknowledgment}
+	\end{acks}
+	
+	%\newpage
+	
+	%% Bibliography
+	\bibliography{main,dblp}
+	
+	%\newpage
+	%% Appendix
+	%\appendix
+	%\input{appendix}
+	
+\end{document}

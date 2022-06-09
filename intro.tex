@@ -1,0 +1,118 @@
+%!TEX root = main.tex
+\section{Introduction}
+\label{sec:intro}
+
+Programming paradigm is in constant evolution, sequential programs tend to easily become obsolete because of its slow performance and even concurrent programs can also be inefficient when the memory requirements increase. The current state-of-the-art tries to overcome those problems by developing parallel programs along with distributed storage systems. However, not every type of application has the same data reliability requirements and therefore developers may want to relax the \textit{isolation level}, i.e. the restrictions imposed to the information stored for guaranteeing consistency, from the database in order to increase performance.
+
+Allowing multiple behaviors in these contexts hinder the already difficult task of verifying concurrent programs. Studying every alternative is something unrealistic, as the number of possible scenarios grows exponentially with the length of the programs. In general, formal methods such as \textcolor{red}{cite examples} are a reasonable approach as they provide certificate of correctness and explainability of the bugs otherwise. Among them, \textit{stateless model checking} (SMC) and \textit{dynamic partial order reduction} (DPOR) \textcolor{red}{cite papers} stand out as the most promising techniques for verifying current programs during the recent years \textcolor{red}{cite papers}.
+
+On one hand, for a given length-bounded program, SMC explores systematically every possible execution without storing at any point the set of already visited ones. On the other hand, DPOR resumes every possible behavior in a more succinct way, reducing the number of executions that have to be explored for covering those behaviors. Henceforth, combining both techniques to obtaining sound, complete and efficient algorithms has been one of the aimed goals in this field and it has been successfully done for concurrent programs with shared memory \textcolor{red}{cite papers}.
+
+Despite their popularity, there is no application of such techniques in parallel programming with distributed memory's literature so far, hence the relevance of filling this gap. Nevertheless, part of the path this paper wants to create is already explored, as shared memory models are not that unrelated with distributed database's. For example, we can mention the relation between \textit{sequential consistency} and \textit{serializability} or \textit{strong release-acquire} and \textit{causal consistency}; where both database isolation level cases are nothing but a generalization of their shared memory counterparts \textcolor{red}{cite papers}.
+
+In this paper, we present STMC, a \textit{sound}, \textit{complete}, \textit{optimal} DPOR algorithm with \textit{linear memory requirements} that employs SMC techniques for verifying some isolation levels. We describe the models that can guarantee those properties, show that \textit{causal consistency} (CC), \textit{read atomic} (RA) and \textit{read committed} (RC) satisfy them and present an example of why more complex models such as \textit{serializability} (SER) cannot be verified with our algorithm. We also present a formal semantics for STMC and exhibit how it evolves from the base algorithm to its current state; requiring executing transactions in isolation and swapping complete blocks of transactions. In addition, we provide some proofs to help the reader having a better understanding of STMC.
+
+On top of this theoretical development, we also furnish this work with an implementation using Java and several benchmarks that study its re. In a nutshell, our software is an extension of JPF \textcolor{red}{cite tool}, a Java-built software analysis framework for Java (parallel) programs. It provides control to DFS traversal of executions, which along its modularity, makes it an ideal tool for developing and extending a database concurrent programs' verifier. In particular, we highlight the easiness for splitting the program memory and database's management and providing an API for writing the programs to analyze. 
+%Our work doesn't finish with the theoretical aspects, as we also furnish this paper with an implementation in Java. In a nutshell, it is an extension of JPF \textcolor{red}{cite tool}, a Java 
+
+%we start from the base algorithm presented in \textcolor{red}{cite Viktor's algorithm} and adapt it to some concrete isolation levels while maintaining its properties  In particular, we describe the properties any model has to ensure for 
+
+%Data storage is no longer about writing data to a single disk with a single point of access. Modern applications require not just data reliability, but also high-throughput concurrent accesses. Applications concerning supply chains, banking, etc. use traditional relational databases for storing and processing data, whereas applications such as social networking software and e-commerce platforms use cloud-based storage systems (such as Azure Cosmos DB \cite{cosmosdb}, Amazon DynamoDB \cite{decandia2007dynamo}, Facebook TAO \cite{facebook-tao}, etc.). We use the term \textit{storage system} in this paper to refer to any such database system or service.
+
+%Providing high-throughput processing, unfortunately, comes at an unavoidable cost of weakening the guarantees offered to users. Concurrently-connected clients may end up observing different views of the same data. These ``anomalies'' can be prevented by using a strong \textit{isolation level} such as \textit{serializability} \cite{DBLP:journals/jacm/Papadimitriou79b}, which essentially offers a single view of the data. However, serializability requires expensive synchronization and incurs a high performance cost. As a consequence, most storage systems use weaker isolation levels, such as {\it Causal Consistency}~\cite{DBLP:journals/cacm/Lamport78,DBLP:conf/sosp/LloydFKA11,antidote}, {\it Snapshot Isolation}~\cite{DBLP:conf/sigmod/BerensonBGMOO95}, {\it Read Committed}~\cite{DBLP:conf/sigmod/BerensonBGMOO95}, etc. for better performance. In a recent survey of database administrators \cite{survey}, 86\% of the participants responded that most or all of the transactions in their databases execute at Read Committed isolation level.
+
+
+\begin{comment}
+
+
+\begin{figure}
+	\begin{minipage}{4.2cm}
+		\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,escapeinside={(*}{*)},language=MyLang]
+			// Append item to cart
+			AddItem(item i, userId) {
+				begin()
+				key = "cart:" + userId
+				cart = read(key)
+				cart.append(i)
+				write(key, cart)
+				commit()
+			}
+		\end{lstlisting}
+	\end{minipage}
+	\hspace{-5mm}
+	\begin{minipage}{4.2cm}
+		\begin{lstlisting}[xleftmargin=4mm,basicstyle=\ttfamily\footnotesize,escapeinside={(*}{*)},language=MyLang]
+			// Fetch cart and delete item
+			DeleteItem(item i, userId) {
+				begin()
+				key = "cart:" + userId
+				cart = read(key)
+				cart.remove(i)
+				write(key, cart)
+				commit()
+			}
+		\end{lstlisting}
+	\end{minipage}
+	
+	\vspace{-6mm}	
+	\resizebox{8.5cm}{!}{
+		\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=4cm,
+			semithick, transform shape]
+			\node (s11l) at (1.15, 2.1) {\textbf{Initial state}};
+			\node[draw, rounded corners=2mm] (t0) at (2.05, 1.5) {\begin{tabular}{l} $\wrt{\texttt{cart:}u}{\{..\, I\, ..\}}$ \end{tabular}};
+			\node[draw, rounded corners=2mm, minimum width=3.6cm, minimum height=1.3cm] (s1) at (0, -0.1) {};
+			\node[style={inner sep=0,outer sep=0}] (s11) at (0, 0.3) {\begin{tabular}{l} $\rd{\texttt{cart:}u}{\{..\, I\, ..\}}$\end{tabular}};
+			\node[style={inner sep=0,outer sep=0}] (s12) at (0, -0.5) {\begin{tabular}{l} $\wrt{\texttt{cart:}u}{\{..\, I,I\, ..\}}$ \end{tabular}};
+			\node (s11l) at (-1, 0.8) {\textbf{AddItem}};
+			\node[draw, rounded corners=2mm, minimum width=3.6cm, minimum height=1.3cm] (s2) at (4.1, -0.1) {};
+			\node[style={inner sep=0,outer sep=0}] (s21) at (4.1, 0.3) {\begin{tabular}{l} $\rd{\texttt{cart:}u}{\{..\, I\, ..\}}$ \end{tabular}};
+			\node[style={inner sep=0,outer sep=0}] (s22) at (4.1, -0.5) {\begin{tabular}{l} $\wrt{\texttt{cart:}u}{\{..\, ..\}}$ \end{tabular}};
+			\node (s11l) at (4.9, 0.8) {\textbf{DeleteItem}};
+			\node[draw, rounded corners=2mm] (r1) at (8.3, 0) {\begin{tabular}{l} $\rd{\texttt{cart:}u}{\{..\, ..\}}$ \end{tabular}};
+			\node[draw, rounded corners=2mm] (r2) at (8.3, -1.3) {\begin{tabular}{l} $\rd{\texttt{cart:}u}{\{..\, I, I\, .\}}$ \end{tabular}};
+			\path (s11) edge[left] node {$\po$} (s12);
+			\path (s21) edge[left] node {$\po$} (s22);
+			\path (t0) edge[left] node {$\wro$} (s1);
+			\path (t0) edge[right] node {$\wro$} (s2);
+			\path (r1) edge[left] node {$\so$} (r2);
+			\path (s2) edge[above] node {$\wro$} (r1);
+			\path (s1) edge[below,bend right=11] node {$\wro$} (r2);
+			%    \path (t0) edge[red, right, bend left=20] node[pos=0.4,xshift=-1] {$\wro$} (s11);
+			%    \path (t0) edge[red, left, bend right=20] node[pos=0.9,xshift=-1] {$\wro$} (s12);
+		\end{tikzpicture}  
+	}
+	
+	%  \begin{lstlisting}[xleftmargin=4mm,basicstyle=\ttfamily\footnotesize,escapeinside={(*}{*)},language=MyLang,morekeywords={Test,GetCart}]
+	%Test: 
+	%{ AddItem(I, u); GetCart(u); GetCart(u) } || DeleteItem(I, u)
+	%		\end{lstlisting}
+	\vspace{-2mm}
+	\caption{A simple shopping cart service.}
+	\label{fig:motiv}
+	\vspace{-3mm}
+\end{figure}
+
+\textcolor{orange}{
+%A weaker isolation level allows for more possible behaviors than stronger isolation levels. It is up to the developers then to ensure that their application can tolerate this larger set of behaviors. Unfortunately, weak isolation levels are hard to understand or reason about \cite{DBLP:conf/popl/BrutschyD0V17,adya-thesis} and resulting application bugs can cause loss of business \cite{acidrain}. Consider a simple shopping cart application, inspired from \citet{sivaramakrishnan2015declarative5}, that stores a per-client shopping cart in a key-value store (\textit{key} is the client ID and \textit{value} is a multi-set of items). \figref{motiv} shows procedures for adding an item to the cart (\texttt{AddItem}) and deleting \textit{all} instances of an item from the cart (\texttt{DeleteItem}). Each procedure executes in a transaction, represented by the calls to \texttt{begin} and \texttt{commit}. Suppose that initially, a user $u$ has a single instance of item $I$ in their cart. Then the user connects to the application via two different sessions (for instance, via two browser windows), adds $I$ in one session (\texttt{AddItem($I$, $u$)}) and deletes $I$ in the other session (\texttt{DeleteItem($I$, $u$)}). With serializability, the cart can either be left in the state $\{ I \}$ (delete happened first, followed by the add) or $\emptyset$ (delete happened second). However, with Causal Consistency (or Read Committed), it is possible that with two sequential reads of the shopping cart, the cart is empty in the first read (signaling that the delete has succeeded), but there are \textit{two} instances of $I$  in the second read! Such anomalies, of deleted items reappearing, have been noted in previous work \cite{decandia2007dynamo}. 
+}
+
+\paragraph{Testing storage-backed concurrent applications} Even in a serializable context, where the behaviors are limited, verifying a concurrent application is not a trivial task. Since decades researchers have been developed techniques for addressing this problem being the combined application of \textit{Stateless Model Checking} (SMC) and \textit{Dynamic Partial Order Reduction} (DPOR) algorithms the most promising approach. The former is a verification technique that explore all possible executions of a concurrent program without storing the set of states already visited, which avoids excessive memory consumption and improves the scalability factor of its implementations. The latter, on the other hand, refers to the establishment of some equivalence relation between different traces the program may execute. Thanks to these relations we can reduce the set of possible states and, therefore, notably decrease the time consumed.
+
+In this paper we present STMC (Stateless Transactional Model-Checker), a DPOR algorithm for SMC storage-backed concurrent applications, where the multiple threads are only able to communicate between each other via the storage system and there is no transaction that is enable/disabled by any other. This algorithm is inspired in \textcolor{red}{cite Viktor's algorithm} and therefore our result is a \textit{sound}, \textit{complete} and \textit{optimal} algorithm which has a polynomial bound of memory on the program's size. Moreover, our approach is parametric on the storage model, supporting SER, CC and TRIVIAL models, and takes advantage on the write-read equivalence relation's flexibility to reduce the number of executed traces to those whose \textit{history} are different. \textcolor{blue}{Moreover, we present an alternative version of it focused on pure testing where some executions are discarded in order to, on average, detect earlier when some code is erroneous.}
+
+To achieve this, we build upon prior work \---- most notably, \textcolor{red}{JPF} \---- and represent program executions as \textit{histories}. In summary, we make the following contributions:
+\begin{itemize}
+	\item We describe through a series of examples the huge difference between the multi-thread (MT) environment and the transactional one.
+	\item We describe formally the working context and the notions that appears on it.
+	\item We provide a series of algorithms which allow us to understand the resulting products.
+	\item We formally prove that STMC is sound, complete and optimal.
+	\item We implement a version of STMC, the unique tool at the moment of writing able to solve the problem addressed.
+\end{itemize}
+
+%SMC may allow a program to be verified employing polynomial memory and DPOR techniques may reduce exponentially the number of executing traces, but the task of obtaining an algorithm that explore all possible traces according to some semantics (\textit{completeness}) and nothing else (\textit{soundness}) without exploring redundant elements (\textit{optimality}) and using only a polynomial nu
+
+%Thanks to the work of \textcolor{red}{cite things} complete, optimal algorithms that run in polynomial time 
+
+%This paper addresses the problem of \textit{testing} code for correctness against weak behaviors: a developer should be able to write a test that runs their application and then asserts for correct behavior. The main difficulty with testing today is getting coverage of weak behaviors. Running against an actual production storage system is very likely to only result in serializable behaviors because of their optimized implementation. For instance, only 0.0004\% of all reads performed on Facebook's TAO storage system were not serializable \cite{facebook-consistency}. Emulators, offered by cloud providers for local development, on the other hand, do not support weaker isolation levels at all \cite{cosmosdb-local}. Another option, possible when the storage system is available open-source, is to set it up with a tool like Jepsen~\cite{jepsen} to inject noise (bring down replicas or delay packets on the network). This approach is unable to provide good coverage at the level of client operations \cite{clotho} (more details in \sectref{oltp}). Another line of work has focussed on finding anomalies by identifying non-serializable behavior (\sectref{related}). Anomalies, however, do not always correspond to bugs \cite{DBLP:conf/pldi/BrutschyD0V18,isodiff}; they may either not be important (e.g., gathering statistics in a non-serializable fashion may not impact application correctness) or may already be handled by the application (e.g., checking and deleting duplicate items).
+
+\end{comment}

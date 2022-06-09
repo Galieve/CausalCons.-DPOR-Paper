@@ -1,0 +1,136 @@
+\section{Transactional environment}
+
+\textcolor{red}{TODO: Add definitions of transactions and events}.
+
+Why the transactional case is not trivially comparable to the multi-thread one? To answer this question let us dive in the previous literature. Strictly, an \textit{execution} is a total order between the instructions of a program given by the processor. However, this rigid definition does not take into account that some instructions can be reordered without affecting the program's semantics. The notion of \textit{history}, a graph whose vertices are instructions and whose edges are its relations, allow to express these similarities between executions. As those graphs are, essentially, due to the order between instructions in each thread joint with the write-read dependencies, one reasonable approach is translating the notion of history to the transactional case, where the only difference would be the vertices' type: instead of instructions now each vertex would be a whole transaction. This decision is reasonable as a MT history can be seen as a transactional history. The reverse, on the other hand, is not always true, and it is what enriches the environment: if in the MT context the vertices only could be a write node or a read node (depending on which instruction they were executing), in the transactional case each vertex can be a read-only, write-only or everything in between; as we can see in Figure~\ref{rc_example:1}.
+
+\begin{figure}[H]
+	
+ \resizebox{.4\textwidth}{!}{
+	\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+		semithick, transform shape]
+		\node[draw, rounded corners=2mm] (t1) at (0, 0) {\begin{tabular}{l} $\wrt{\key_1}{1}$ \end{tabular}};
+		\node[draw, rounded corners=2mm,outer sep=0] (t2) at (0, -1.5) {\begin{tabular}{l} $\wrt{\key_1}{2}$ \\ $\wrt{\key_2}{2}$\end{tabular}};
+		\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (3.5, -0.75) {};
+		\node[style={inner sep=0,outer sep=0}] (t3_1) at (3.5, 0) {\begin{tabular}{l} $\rd{\key_2}{2}$ \end{tabular}};
+		\node[style={inner sep=0,outer sep=0}] (t3_2) at (3.5, -1.5) {\begin{tabular}{l} $\rd{\key_1}{1}$ \end{tabular}};
+		\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=1.25cm] (t4) at (-3.5, -0.25) {};
+		\node[style={inner sep=0,outer sep=0}] (t4_1) at (-3.5, 0) {\begin{tabular}{l} $\wrt{\key_2}{3}$ \end{tabular}};
+		\node[style={inner sep=0,outer sep=0}] (t4_2) at (-3.5, -0.5) {\begin{tabular}{l} $\rd{\key_1}{2}$ \end{tabular}};
+		%\node[draw, rounded corners=2mm,outer sep=0] (t4) at (-3, 0) {\begin{tabular}{l} $\wrt{\key_1}{2}$ \\ $\rd{\key_2}{2}$\end{tabular}};
+		% \path (t1) edge node {} (t3_2);
+		% \path (t2) edge node {} (t3_1);
+		\path (t1) edge node {$\so$} (t2);
+		\path (t3_1) edge node {$\po$} (t3_2);
+		\path (t1) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t3_2);
+		\path (t2) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t4_2);
+		\path (t2) edge node[yshift=-2,xshift=7] {$\wro$} (t3_1);
+	\end{tikzpicture}  
+}
+
+%\caption{$\mathsf{Read\ Committed}$ violation.}
+%\label{rc_example:1}
+\caption{A possible history that holds $\mathsf{Read\ Committed}$ axioms.}
+\label{rc_example:1}
+%\vspace{-3mm}
+\end{figure}
+
+Any deterministic algorithm that has as goal finding every possible history a MT-program may have (according to some memory model) has to execute step by step the ordered set of instructions, deciding for each one if there is any new non-explored history to take into account. When adding one new vertex and some edges to the graph, this new graph may be inconsistent according to the semantics of the model but may be mandatory to be explored to eventually produce all possible histories. \textcolor{red}{Example of this}. But it is clear that any non-naive algorithm whose aim is to be sound (i.e. not exploring histories that are not consistent) and complete (i.e. exploring every consistent history) will have to apply some strategy. Commonly, those are based on distinguish read and write vertices and applying one or another policy depending on the case.
+
+It is clear that the immediate solution of adapting the same policies to transactions cannot be adapted. The second idea one could have thought about is applying those policies not to the transactions themselves but to the small instructions they execute. This idea, even if it is not perfect, handles part of the errors the most naive version had while assuming another hypothesis: the algorithm has access to every instruction a transaction can execute and can distinguish between them. This assumption is not minor, it heavily constraints the relation between different verifying tools, as the storage system verifier has to satisfy the algorithm information requirements.
+
+\begin{figure}[H]
+	
+	\centering
+	\begin{subfigure}{.29\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-2.5, 0.125) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+				\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+				\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{1}$ \end{tabular}};
+				\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{2}$ \end{tabular}};
+				\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=1.25cm] (t4) at (3, -0) {\begin{tabular}{l} $\wrt{y}{1}$ \\ $\wrt{x}{1}$ \\
+				$\wrt{z}{1}$ \end{tabular}};
+				\node[draw, rounded corners=2mm] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+				\path (t4) edge node {$\so$} (t5);
+				\path (t3_1) edge node {$\po$} (t3_2);
+				%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+				%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+				\path (t4) edge[above] node[yshift=2,xshift=4] {$\wro$} (t3_1);
+				\path (t5) edge[below] node[yshift=-2,xshift=4] {$\wro$} (t3_2);
+			\end{tikzpicture}  
+			
+		}
+		\caption{Objective trace.}
+		\label{objective_trace:1}
+	\end{subfigure}
+	\hspace{.5cm}
+	\centering
+	\begin{subfigure}{.29\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, 0.125) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+				\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+				\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{0}$ \end{tabular}};
+				\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{0}$ \end{tabular}};
+				\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=1.25cm, opacity=0.3] (t4) at (2.5, -0) {
+					\begin{tabular}{l} 
+						$\wrt{y}{1}$ \\
+						$\wrt{x}{1}$ \\
+						$\wrt{z}{1}$
+					 \end{tabular}};
+				\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (2.5, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+				\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
+				\path (t3_1) edge node {$\po$} (t3_2);
+				%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+				%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+				\path (t2) edge[above] node[yshift=2,xshift=-4] {$\wro$} (t3_1);
+				\path (t2) edge[below] node[yshift=0,xshift=-10] {$\wro$} (t3_2);
+			\end{tikzpicture}  
+			
+		}
+		\caption{Current trace.}
+		\label{objective_trace:2}
+	\end{subfigure}
+	\hspace{.5cm}
+	\centering
+	\begin{subfigure}{.29\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, 0.125) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+				\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+				\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{0}$ \end{tabular}};
+				\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{0}$ \end{tabular}};
+				\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=1.25cm] (t4) at (3, -0) {\begin{tabular}{l} 
+						$\wrt{y}{1}$ \\
+						$\wrt{x}{1}$ \\
+						{\pgfsetfillopacity{0.2}$\wrt{z}{1}$}
+				\end{tabular}};
+				\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+				\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
+				\path (t3_1) edge node {$\po$} (t3_2);
+				%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+				%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+				\path (t4) edge[above] node[yshift=2,xshift=4] {$\wro$} (t3_1);
+				\path (t2) edge[below] node[yshift=-2,xshift=-10] {$\wro$} (t3_2);
+			\end{tikzpicture}  
+			
+		}
+		\caption{Incorrect trace.}
+		\label{objective_trace:3}
+	\end{subfigure}
+	%\caption{Histories used to explain the axioms in Figure~\ref{consistency_defs}.}
+	\label{counter_example:1}
+	%\vspace{-3mm}
+\end{figure}
+
+
+Nevertheless, this idea is not enough to solve the problem: let's suppose that we have the situation \textcolor{red}{to be completed...}
+
+
+
+
+%All the strategies have to face with the exponential number of different branches and the possible duplication on their generation

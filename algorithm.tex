@@ -1,0 +1,380 @@
+\section{A Stateless Transactional Model-Checker}
+
+During this section we will present several approach for finding a deterministic transactional model checker and we will show why STMC is the best among them. Every approach would be, in some particular sense, incremental; starting from an empty history and ``upgrading'' it, adding in each step new events or relations. For any fixed program, we will assume that there is a finite number of transactions that no transaction enable/disable any other and that they are totally ordered by some relation $\ora$ called \textit{oracle order}. Therefore, combining $\ora$ and $\po$ we can also say that the oracle order also enforces a total order between the events. 
+
+The naivest version for solving this problem would simply be executing every transaction and, afterwards, computing all possible graphs and discard those that are inconsistent. However, this exponential naive solution is very inefficient as it potentially compute an exponential number of histories that are inconsistent. Therefore, something more subtle has to be defined. The next idea one could think about would be executing the instructions according to $\ora$ step by step and only computing the possible graphs that this new event may produce. This reasonable refinement is based on the intuition that adding vertices/edges consistently to an already consistent history cannot produce an inconsistent result.
+
+\begin{figure}[H]
+	
+	\centering
+	\begin{subfigure}{.29\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-2.5, 0.125) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+				\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+				\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{1}$ \end{tabular}};
+				\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{2}$ \end{tabular}};
+				\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=1.25cm] (t4) at (3, -0) {\begin{tabular}{l} $\wrt{y}{1}$ \\ $\wrt{x}{1}$ \\
+						$\wrt{z}{1}$ \end{tabular}};
+				\node[draw, rounded corners=2mm] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+				\path (t4) edge node {$\so$} (t5);
+				\path (t3_1) edge node {$\po$} (t3_2);
+				%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+				%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+				\path (t4) edge[above] node[yshift=2,xshift=4] {$\wro$} (t3_1);
+				\path (t5) edge[below] node[yshift=-2,xshift=4] {$\wro$} (t3_2);
+			\end{tikzpicture}  
+			
+		}
+		\caption{Target history.}
+		\label{objective_trace:1}
+	\end{subfigure}
+	\hspace{.5cm}
+	\centering
+	\begin{subfigure}{.29\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, 0.125) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+				\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+				\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{0}$ \end{tabular}};
+				\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{0}$ \end{tabular}};
+				\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=1.25cm, opacity=0.3] (t4) at (2.5, -0) {
+					\begin{tabular}{l} 
+						$\wrt{y}{1}$ \\
+						$\wrt{x}{1}$ \\
+						$\wrt{z}{1}$
+				\end{tabular}};
+				\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (2.5, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+				\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
+				\path (t3_1) edge node {$\po$} (t3_2);
+				%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+				%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+				\path (t2) edge[above] node[yshift=2,xshift=-4] {$\wro$} (t3_1);
+				\path (t2) edge[below] node[yshift=0,xshift=-10] {$\wro$} (t3_2);
+			\end{tikzpicture}  
+			
+		}
+		\caption{Current history.}
+		\label{objective_trace:2}
+	\end{subfigure}
+	\hspace{.5cm}
+	\centering
+	\begin{subfigure}{.29\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, 0.125) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+				\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+				\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{0}$ \end{tabular}};
+				\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{0}$ \end{tabular}};
+				\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=1.25cm] (t4) at (3, -0) {\begin{tabular}{l} 
+						$\wrt{y}{1}$ \\
+						$\wrt{x}{1}$ \\
+						{\pgfsetfillopacity{0.2}$\wrt{z}{1}$}
+				\end{tabular}};
+				\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+				\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
+				\path (t3_1) edge node {$\po$} (t3_2);
+				%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+				%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+				\path (t4) edge[above] node[yshift=2,xshift=4] {$\wro$} (t3_1);
+				\path (t2) edge[below] node[yshift=-2,xshift=-10] {$\wro$} (t3_2);
+			\end{tikzpicture}  
+			
+		}
+		\caption{Inconsistent history.}
+		\label{objective_trace:3}
+	\end{subfigure}
+	\caption{The history in \ref{objective_trace:1} cannot be obtained from \ref{objective_trace:2} with a naive approach.}
+	\label{fig:objective_trace_counterexample}
+	%\vspace{-3mm}
+\end{figure}
+
+Is the intuition beneath this approach enough? Let's suppose that a program runs over a serializable (SER) storage system. One of its possible histories can be seen in Figure~\ref{objective_trace:1}, history that we will call target. One possible total order of the transactions in this program could be order them from left to right, top to bottom; let's suppose this order is $\ora$. Following this order, this algorithm would have executed the first two transactions obtaining the history seen in Figure~\ref{objective_trace:2}. The 
+
+%this problem would simply be, each time one event is added to a history, every other possible graph that can be deduce from it changing some $\wr$-edges is computed. This recursive and simple version is clearly complete and sound, but it is clear non-optimal, as adding one event may lead to several graphs already explored in some other branches. For example, the histories $h_1$ and $h_2$ presented in Figure~\ref{fig:naive} would produce each one the four alternative graphs that can arise after introducing the light gray transaction $\wrt{y}{2}$. 
+
+\begin{comment}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{\linewidth}
+\centering
+\begin{minipage}[b]{0.4\textwidth}
+\resizebox{\textwidth}{!}{
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+semithick, transform shape]
+\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{0}$ \end{tabular}};
+\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{0}$ \end{tabular}};
+\node[draw, rounded corners=2mm] (t4) at (2.5, -0) {
+\begin{tabular}{l} 
+$\wrt{x}{1}$
+\end{tabular}};
+\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (2.5, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+%\path[] (t4) edge node[] {$\so$} (t5);
+\path (t3_1) edge node {$\po$} (t3_2);
+%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+\path (t2) edge[above] node[yshift=0,xshift=-4] {$\wro$} (t3_1);
+\path (t2) edge[below] node[yshift=0,xshift=-10] {$\wro$} (t3_2);
+\end{tikzpicture}  
+}
+\caption{History $1$.}
+\end{minipage}
+\hspace{.5cm}
+\begin{minipage}[b]{0.4\textwidth}
+\resizebox{\textwidth}{!}{
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+semithick, transform shape]
+\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{0}$ \end{tabular}};
+\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{0}$ \end{tabular}};
+\node[draw, rounded corners=2mm] (t4) at (3, -0) {
+\begin{tabular}{l} 
+$\wrt{x}{1}$
+\end{tabular}};
+\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+%\path[] (t4) edge node[] {$\so$} (t5);
+\path (t3_1) edge node {$\po$} (t3_2);
+%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+\path (t4) edge[above] node[yshift=0,xshift=2] {$\wro$} (t3_1);
+\path (t2) edge[below] node[yshift=0,xshift=-10] {$\wro$} (t3_2);
+\end{tikzpicture}  
+}
+\caption{History $2$.}
+\end{minipage}
+\end{subfigure}
+\caption{Two histories that naively produce redundancies}
+\label{fig:naive}
+\end{figure}
+
+
+
+
+\begin{figure}[H]
+	    \centering
+	\begin{subfigure}[b]{\linewidth}
+		\centering
+		\begin{minipage}[b]{0.4\textwidth}
+			\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+				\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+				\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{0}$ \end{tabular}};
+				\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{0}$ \end{tabular}};
+				\node[draw, rounded corners=2mm] (t4) at (2.5, -0) {
+					\begin{tabular}{l} 
+						$\wrt{x}{1}$
+				\end{tabular}};
+				\node[draw, rounded corners=2mm] (t5) at (2.5, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+				%\path[] (t4) edge node[] {$\so$} (t5);
+				\path (t3_1) edge node {$\po$} (t3_2);
+				%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+				%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+				\path (t2) edge[above] node[yshift=0,xshift=-4] {$\wro$} (t3_1);
+				\path (t2) edge[below] node[yshift=0,xshift=-10] {$\wro$} (t3_2);
+			\end{tikzpicture}  
+			}
+			\caption{History $1$.}
+		\end{minipage}
+		\hspace{.5cm}
+		\begin{minipage}[b]{0.4\textwidth}
+			\resizebox{\textwidth}{!}{
+				\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+					semithick, transform shape]
+					\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+					\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+					\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{0}$ \end{tabular}};
+					\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{0}$ \end{tabular}};
+					\node[draw, rounded corners=2mm] (t4) at (3, -0) {
+						\begin{tabular}{l} 
+							$\wrt{x}{1}$
+					\end{tabular}};
+					\node[draw, rounded corners=2mm] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+					%\path[] (t4) edge node[] {$\so$} (t5);
+					\path (t3_1) edge node {$\po$} (t3_2);
+					%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+					%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+					\path (t4) edge[above] node[yshift=0,xshift=2] {$\wro$} (t3_1);
+					\path (t2) edge[below] node[yshift=0,xshift=-10] {$\wro$} (t3_2);
+				\end{tikzpicture}  
+			}
+			\caption{History $2$.}
+		\end{minipage}
+	\end{subfigure}
+	\hspace{.5cm}
+	\begin{subfigure}[b]{\linewidth}
+		\centering
+		\begin{minipage}[b]{0.4\textwidth}
+			\resizebox{\textwidth}{!}{
+				\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+					semithick, transform shape]
+					\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+					\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+					\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{0}$ \end{tabular}};
+					\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{0}$ \end{tabular}};
+					\node[draw, rounded corners=2mm] (t4) at (3, -0) {
+						\begin{tabular}{l} 
+							$\wrt{x}{1}$
+					\end{tabular}};
+					\node[draw, rounded corners=2mm] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+					%\path[] (t4) edge node[] {$\so$} (t5);
+					\path (t3_1) edge node {$\po$} (t3_2);
+					%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+					%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+					\path (t2) edge[above] node[yshift=0,xshift=-4] {$\wro$} (t3_1);
+					\path (t5) edge[below] node[yshift=0,xshift=2] {$\wro$} (t3_2);
+				\end{tikzpicture}  
+			}
+			\caption{History $3$.}
+		\end{minipage}
+		\hspace{.5cm}
+		\begin{minipage}[b]{0.4\textwidth}
+			\resizebox{\textwidth}{!}{
+				\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+					semithick, transform shape]
+					\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+					\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+					\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{0}$ \end{tabular}};
+					\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{0}$ \end{tabular}};
+					\node[draw, rounded corners=2mm] (t4) at (3, -0) {
+						\begin{tabular}{l} 
+							$\wrt{x}{1}$
+					\end{tabular}};
+					\node[draw, rounded corners=2mm] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+					%\path[] (t4) edge node[] {$\so$} (t5);
+					\path (t3_1) edge node {$\po$} (t3_2);
+					%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+					%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+					\path (t4) edge[above] node[yshift=0,xshift=2] {$\wro$} (t3_1);
+					\path (t5) edge[below] node[yshift=0,xshift=2] {$\wro$} (t3_2);
+				\end{tikzpicture}  
+			}
+			\caption{History $4$.}
+		\end{minipage}
+	\end{subfigure}
+\caption{All possible complete histories.}
+\label{fig:all_histories}
+\end{figure}
+
+\begin{figure}[H]
+	
+
+
+\centering
+\begin{subfigure}{.35\textwidth}
+	
+	\resizebox{\textwidth}{!}{
+		\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+			semithick, transform shape]
+			\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, 0.125) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+			\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+			\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{0}$ \end{tabular}};
+			\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{0}$ \end{tabular}};
+			\node[draw, rounded corners=2mm, opacity=0.3] (t4) at (2.5, -0) {
+				\begin{tabular}{l} 
+					$\wrt{x}{1}$
+			\end{tabular}};
+			\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (2.5, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+			\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
+			\path (t3_1) edge node {$\po$} (t3_2);
+			%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+			%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+			\path (t2) edge[above] node[yshift=2,xshift=-4] {$\wro$} (t3_1);
+			\path (t2) edge[below] node[yshift=0,xshift=-10] {$\wro$} (t3_2);
+		\end{tikzpicture}  
+	}
+	\caption{Initial history.}
+\end{subfigure}
+\hspace{.5cm}
+\centering
+\begin{subfigure}{.35\textwidth}
+	\resizebox{\textwidth}{!}{
+		\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+			semithick, transform shape]
+			\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, 0.125) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+			\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+			\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{0}$ \end{tabular}};
+			\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{0}$ \end{tabular}};
+			\node[draw, rounded corners=2mm] (t4) at (2.5, -0) {
+				\begin{tabular}{l} 
+					$\wrt{x}{1}$
+			\end{tabular}};
+			\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (2.5, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+			\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
+			\path (t3_1) edge node {$\po$} (t3_2);
+			%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+			%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+			\path (t2) edge[above] node[yshift=2,xshift=-4] {$\wro$} (t3_1);
+			\path (t2) edge[below] node[yshift=0,xshift=-10] {$\wro$} (t3_2);
+		\end{tikzpicture}  
+		
+	}
+	\caption{Incorrect trace.}
+	\label{objective_trace:3}
+\end{subfigure}
+\hspace{.5cm}
+\centering
+\begin{subfigure}{.35\textwidth}
+	\resizebox{\textwidth}{!}{
+		\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+			semithick, transform shape]
+			\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, 0.125) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+			\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+			\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{0}$ \end{tabular}};
+			\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{0}$ \end{tabular}};
+			\node[draw, rounded corners=2mm, opacity=0.3] (t4) at (2.5, -0) {
+				\begin{tabular}{l} 
+					$\wrt{x}{1}$
+			\end{tabular}};
+			\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (2.5, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+			\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
+			\path (t3_1) edge node {$\po$} (t3_2);
+			%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+			%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+			\path (t2) edge[above] node[yshift=2,xshift=-4] {$\wro$} (t3_1);
+			\path (t2) edge[below] node[yshift=0,xshift=-10] {$\wro$} (t3_2);
+		\end{tikzpicture}  
+	}
+	\caption{Initial history.}
+\end{subfigure}
+\hspace{.5cm}
+\centering
+\begin{subfigure}{.35\textwidth}
+	\resizebox{\textwidth}{!}{
+		\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+			semithick, transform shape]
+			\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, 0.125) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
+			\node[draw, rounded corners=2mm, minimum width=2.2cm, minimum height=2.5cm] (t3) at (0, -0.875) {};
+			\node[style={inner sep=0,outer sep=0}] (t3_1) at (0, 0) {\begin{tabular}{l} $\rd{x}{0}$ \end{tabular}};
+			\node[style={inner sep=0,outer sep=0}] (t3_2) at (0, -1.75) {\begin{tabular}{l} $\rd{y}{0}$ \end{tabular}};
+			\node[draw, rounded corners=2mm] (t4) at (2.5, -0) {
+				\begin{tabular}{l} 
+					$\wrt{x}{1}$
+			\end{tabular}};
+			\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (2.5, -1.75) {\begin{tabular}{l} $\wrt{y}{2}$ \end{tabular}};
+			\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
+			\path (t3_1) edge node {$\po$} (t3_2);
+			%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+			%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+			\path (t2) edge[above] node[yshift=2,xshift=-4] {$\wro$} (t3_1);
+			\path (t2) edge[below] node[yshift=0,xshift=-10] {$\wro$} (t3_2);
+		\end{tikzpicture}  
+		
+	}
+	\caption{Incorrect trace.}
+	\label{objective_trace:3}
+\end{subfigure}
+	%\caption{Histories used to explain the axioms in Figure~\ref{consistency_defs}.}
+	\label{counter_example:1}
+	%\vspace{-3mm}
+\end{figure}
+
+\end{comment}
