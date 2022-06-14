@@ -57,6 +57,8 @@ Let $h$ be a history:
 \end{itemize}
 \end{definition}
 
+\textcolor{red}{EXTENSIONS AND $\bullet$ OPERATOR NOT (yet) DEFINED IN THIS SECTION!!!!!!!}
+
 To fully model any behavior of a transactional concurrent program we are obliged to formally describe the database section. This notion will be depicted as the concept of \textit{model}:
 
 %Those notions are generic enough to only describe a possible set of instructions that a parallel program may execute along with the $\wr$ relations that exist between them.
@@ -262,7 +264,7 @@ An axiomatic \callout{model} $\mathcal{M}$ over histories is a collection of rul
 	%  \vspace{-2mm}
 \end{figure}
 
-In figure \ref{fig:consistency_defs} it is depicted five axioms which correspond to their homonymous isolation levels: \textit{Read Committed} (RC), \textit{Read Atomic} (RA), \textit{Causal Consistency} (CC)  \textit{Prefix Consistency} (PRE) and \textit{Serializability} (SER); along with the conflict axiom. Conflict and Prefix allow us to define \textit{Snapshot Isolation} (SI) as the model where prefix and conflict axioms both hold. We say a history $h$ satisfies an isolation level $I$ if there is a total order called \callout{commit order} $\co$ that extend $\so \cup \wro$ and satisfies its axioms. However, by the definition of RC, RA and CC, it is clear that for every history $h$ s.t. the relation $\co$ deduced from $\so \cup \wro$ is acyclic exists a commit order for those isolation levels.
+In figure \ref{fig:consistency_defs} it is depicted five axioms which correspond to their homonymous isolation levels: \textit{Read Committed} ($\RC$), \textit{Read Atomic} ($\RA$), \textit{Causal Consistency} ($\CC$)  \textit{Prefix Consistency} ($\PRE$) and \textit{Serializability} ($\SER$); along with the conflict axiom. Conflict and Prefix allow us to define \textit{Snapshot Isolation} ($\SI$) as the model where prefix and conflict axioms both hold. We say a history $h$ satisfies an isolation level $I$ if there is a total order called \callout{commit order} $\co$ that extend $\so \cup \wro$ and satisfies its axioms. However, by the definition of $\RC, \RA$ and $\CC$, it is clear that for every history $h$ s.t. the relation $\co$ deduced from $\so \cup \wro$ is acyclic exists a commit order for those isolation levels.
 
 %Because this is equivalent to state $\so \cup \wro \cup \co$ is an acylic relationm
 

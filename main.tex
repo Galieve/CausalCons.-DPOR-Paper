@@ -181,20 +181,30 @@
 \newcommand{\none}{\mathsf{None}}
 \newcommand{\btrue}{\mathsf{true}}
 \newcommand{\bfalse}{\mathsf{false}}
+
+%---- Models
+\newcommand{\CC}{\textup{\textbf{\texttt{CC}}}}
+\newcommand{\SER}{\textup{\textbf{\texttt{SER}}}}
+\newcommand{\PRE}{\textup{\textbf{\texttt{PRE}}}}
+\newcommand{\SI}{\textup{\textbf{\texttt{SI}}}}
+\newcommand{\RA}{\textup{\textbf{\texttt{RA}}}}
+\newcommand{\RC}{\textup{\textbf{\texttt{RC}}}}
+
 \newcommand{\init}{\textup{\textbf{\texttt{init}}}}
 
-
-%---- Algorithm
+%---- Theoretical algorithm
 
 \newcommand{\genericNext}{\textup{\texttt{N}}}
 \newcommand{\genericEvaluate}{\textup{\texttt{E}}}
 \newcommand{\genericCompute}{\textup{\texttt{C}}}
 \newcommand{\genericProtocol}{\textup{\texttt{P}}}
 \newcommand{\genericSwap}{\textup{\texttt{S}}}
+\newcommand{\genericValidWrites}{\textup{\texttt{V}}}
 \newcommand{\nextEvent}{\textup{\textsc{next}}}
 \newcommand{\protocol}{\textup{\textsc{isSwappable}}}
 \newcommand{\swap}{\textup{\textsc{swap}}}
 \newcommand{\compute}{\textup{\textsc{compute}}}
+\newcommand{\validWrites}{\textup{\texttt{valid}}}
 
 \newcommand{\last}[1]{\textup{\texttt{last}}(#1)}
 \newcommand{\swapped}[2]{\textup{\textsc{swapped}}(#1, #2)}
@@ -234,6 +244,9 @@
 \newcommand{\SQLProgs}{\mathcal{P}_{SQL}}
 \newcommand{\DBschema}{\mathcal{S}}
 \newcommand{\DBinst}{\mathcal{D}}
+
+
+%---- Pseudocode
 
 
 \algnewcommand\algorithmicswitch{\textbf{switch}}
@@ -356,7 +369,7 @@
 	\input{optimal}
 	\input{si-ser}
 	%\input{iterative}
-	\input{proofs}
+	\input{proofs:sound-complete-optimal}
 	
 	%\newpage
 	%\input{intro-ranadeep}

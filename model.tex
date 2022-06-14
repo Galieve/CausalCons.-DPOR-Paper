@@ -1,6 +1,4 @@
-\section{Maximal closed models}
-
-\textcolor{red}{EXTENSIONS AND $\bullet$ OPERATOR NOT DEFINED IN THIS SECTION!!!!!!!}
+\section{Causally closed models}
 
 Besides models presented in figure \ref{fig:consistency_defs}, others isolation levels exists in literature and real life applications \textcolor{red}{cite Constantin's papers + Twitter, shoppingcart...}. However, our algorithm can not be analyzed under an arbitrary model. We characterize in this section the ones that can be employed by our algorithm.
 %not all of them can verified with the algorithm
@@ -70,47 +68,17 @@ Besides models presented in figure \ref{fig:consistency_defs}, others isolation 
 Let's analyze the histories $h_1$ and $h_2$ described in figure \ref{fig:maxclosed:a} and \ref{fig:maxclosed:b} respectively under RA; isolation level under which both are consistent. $h_1$ can be extended adding the event $r_1 = b \gets \rd{y}$ and the $\wro$-edge $w_1 \ [\wro] \ r_1$, where $w_1 = \wrt{x}{0}$. However, this is not the case of $h_2$: the only event that could be added in it is $w_2 = \wrt{y}{2}$. If $w_2$ would be added in $h_2$, any relation extending $\so \cup \wro$ and satisfying RA would be cyclic, so it wouldn't be a commit order. The essential difference between these two histories is the following: in $h_1$, $\tr(r)$ is $\so \cup \wro$-maximal while in $h_2$ $\tr(w)$ is not. As real database executions forbid transactions reading from non-committed ones, it is reasonable to allow those transactions $\so \cup \wro$-maximal to be executed completed without hindering the previous committed transactions. 
 
 \begin{definition}
-A model $\mathcal{M}$ is called \callout{maximal closed} if for every program $\mathcal{P}$ the following conditions are satisfied:
+A model $\mathcal{M}$ is called \callout{causally closed} if for every program $\mathcal{P}$ the following conditions are satisfied:
 \begin{itemize}
 	%\item \textbf{Well-formedness:} Consistency criteria for a history $h$ only depend on the edges of $h$ and if $h$ is consistent then $[\so \cup \wro]^+$ is also acyclic.
 	
 	\item \textbf{Prefix-closedness:} Every $\so \cup \wro$-prefix-closed sub-history of a consistent history is also consistent.
-	\item \textbf{Maximal-extensibility:} Every non-total consistent history $h$ can be consistently extended by executing an event from a $\so \cup \wro$-maximal pending transaction $T$ in $h$.
-	\textcolor{orange}{\item \textbf{Past-readability:} For every history $h$ and every $\so \cup \wro$-maximal $\iread$ event $r$ there exists a $\iwrite$ event $w$ s.t. $h \bullet_w r$ is consistent and $r$ is not-swapped} \textcolor{red}{\textbf{NEW CONSTRAINT ADDED!!} \textbf{\underline{Swapped} not defined until a bit later!!} It is added as a constraint because it is stronger than maximal extensibility and only added in some small part of the proof (prev's correctness lemma). Nevertheless, it is an strengthening of maximal-extensibility; maybe it has to be adapted. } 
-	
-
-	  %Every non-total consistent history $h$ executed in isolation there is a complete consistent history $h'$ such that $h$ is a strict $\so \cup \wro$-prefix-closed sub-history of $h'$. In particular, adding a $\ibegin, \iwrite$ or $\iend$ to a history does not change its evaluation.
+	\item \textbf{Causal-extensibility:} Every non-total consistent history $h$ can be consistently extended by executing an event from a $\so \cup \wro$-maximal pending transaction $T$ in $h$. Moreover, if that event $r$ is a $\iread$, it can always read from a $\iwrite$ event $w$ s.t. in $h$ $\tr(w) \ [\so \cup \wro]^* \ \tr(r)$.
 \end{itemize}
 \end{definition}
 %For be denominated as \callout{STMC-model}, $\mathcal{M}$ has to satisfies the following three axioms for every program $\mathcal{P}$:
 
-Comparing to the model requirements described in \textcolor{red}{cite viktor's algorithm}, it is maximal-extensibility property the most weakened one. However, this weak formulation still forbids some axiomatic models such as Serializability \textcolor{red}{cite constantin's paper (SER)} to not be a maximal closed model \textcolor{red}{Appendix cite}.
+Comparing to the model requirements described in \textcolor{red}{cite viktor's algorithm}, it is causal-extensibility property, a slightly stricter version of \textcolor{red}{Viktor}'s maximal-extensibility, the biggest difference. However, this weak formulation still forbids some axiomatic models such as Serializability \textcolor{red}{cite constantin's paper (SER)} \textcolor{red}{Appendix cite}.
 %Indeed, some isolation levels cannot guarantee that reading from the last added $\iwrite$ event will maintain its consistency status.
 
-\begin{theorem}
-\label{theorem:maximalClosedModels}
-Causal Consistency (CC), Read Atomic (RA) and Read Committed (RC) are maximal closed models.
-\begin{proof}
-$ $	
-	
-\underline{Prefix-closedness:} Let $h$ be a consistent history. As any $\so \cup \wro$-prefix-closed sub-history $h'$ of $h$ is a sub-graph of it, and there is a commit order $\co$ for $h$, it suffices to restrict $\co$ to $h'$ for obtaining a commit order for it. %Let's prove those three models are maximal-extensible. 
-
-\underline{Maximal-extensibility:} Let $h$ a non-total consistent history with a $\so \cup \wr$-maximal pending transaction $T$. Let $e = \min_{\po_T} \{e' \in T \setminus h\}$. We proceed analyzing case by case depending on $e$'s type:
-	\begin{itemize}
-		\item \underline{$\ibegin$ case.} This case is impossible as $T$ was a pending transaction in $h$.
-		\item \underline{$\iend$ case.} As $h \bullet e$ is a complete history with the same set of relations, it is consistent.
-		%\item \underline{Inductive case: if $n \leq k$, the theorem is satisfied.} Let's suppose that $n= k+1$. By definition of transactions $e$ is either a $\iread$ or a $\iwrite$ event.
-		\item \underline{$\iwrite$ case.} Let $h' = h \bullet e$. In this history there is no $\iread$ event $r$ such that $e \ [\wro] \ r$, as all those edges are already fixed in $h$. Moreover, as $T$ is $\so \cup \wro$-maximal, there is no transaction $T'$ such that $T \ [\so \cup \wro] \ T'$; and therefore, it can never take the role of $t_1$ nor $t_2$ in the axioms. To sum up, $h'$ correspond to the same graph as $h$; so it is consistent.%Applying induction hypothesis to $h'$, we obtain that there is a consistent complete history $h''$ that extends $h'$. As $h'$ is an extension of $h$, $h$ satisfies the theorem with $h''$ as witness.
-		\item \underline{$\iread$ case.} In this case, we have to prove that there exists a $\iwrite$ event $w$ such that $h'_w = h \bullet_w e$ is consistent. In particular, if $ x = \variable{e}$, we will show it by induction on the number of cycles imposed by history $h'_{w}$ to any total order that satisfies the axioms; for every $\iwrite$ event $w$ with same variable such that $\forall y \in \mathcal{V}, T' \in h$ s.t. $T' \ [\wro_y] \ \tr(w)$ either $\lnot(T' \ [\wro \cup \so \cup \co]^* \ \tr(w))$ or $\lnot(\writeVar{\tr(w)}{y})$. Let's remark that as the initial $\iwrite$ of variable $x$ satisfies this property, we know this set is nonempty and to prove the theorem it suffices to prove the commit relation deduced from $\so \cup \wro_w$, $\co_w$, is acyclic. % on the number of cycles $h'_{w} = h \bullet_{w} e$ has 
-		%If so, as $h'_w$ is executed in isolation and is an extension of $h$, we can apply the induction hypothesis to conclude our result.  We will show by induction that there is an event $w'$ such that $h'_{w'}$ is consistent (i.e. $h'_{w'} = h \bullet w$ is acyclic). 
-		\begin{itemize}
-			\item \underline{Base case: There is no cycles in $h_w$.} As $\co_w$ is acyclic, $h_w$ is consistent under CC, RA and RC.
-			\item \underline{Inductive case: The theorem is true if $h_w$ has at most $n$ $\so \cup \wro_w \cup \co_w$ cycles.} Let's suppose that the history $h_w$ has $n+1$ cycles of this kind and let's see how to obtain a history $h_{w'}$ with one less cycle.	As for every variable $y$ and every transaction $T'$ s.t. $T' \ [\wro_y] \ T$ either $\lnot(T' \ [\wro \cup \so \cup \co]^* \ \tr(w))$ or $\lnot(\writeVar{\tr(w)}{y})$, if there is a cycle in $h_w$ is because there is a transaction $T''$ such that $\writeVar{T''}{x}$, $\tr(w) \ [\wro \cup \so \cup \co]^* \ T''$ and $T'' \ [\wro \cup \so]^+ \ \tr(e)$ (CC), $T'' \ [\wro \cup \so] \  \tr(e)$ (RA) or $T'' \ [\wro] \ \tr(e)$ (RC) (figure \ref{fig:consistency_defs}).
-			
-			 Let $w'$ a $\iwrite$ event in $T''$ s.t. $\variable{w'} = x$ and $h'_{w'} = h \bullet_w e$. First, as $h$ is consistent and $\tr(e)$ depends on $T''$, it is clear that the cycle between $\tr(w)$ and $T''$ has disappeared. Adding that $T$ is $\so \cup \wro$-maximal, we deduce that any cycle in $h_w$ is due to the $\co_w$-edges forced by adding $\tr(w) \ [\wro] \ \tr(e)$ in $h$. Therefore, it can be checked case by case that for any cycle in $h_{w'}$ there is a cycle in $h_w$ (starting from a graph with a cycle between $T'$, $\tr(w)$ and $T$ plus a cycle  between $T''$, $\tr(w)$ and $T$ in $h_w$ we can deduce there is a cycle between $T''$, $T'$ and $T$ in $h_{w'}$). \textcolor{red}{there is no space no time to draw all four graphs, and do the reasoning (which is quite simple and in all cases is the same).} Moreover, as $h$ is consistent, there cannot be any $\co$-edge created with $T'$ as $t_2$ and $T$ as $t_3$ that was not already in $h$, so the event $w'$ holds that for every variable $y$ and every transaction $T'$ s.t. $T' \ [\wro_y] \ T$ either $\lnot(T' \ [\wro \cup \so \cup \co]^* \ \tr(w'))$ or $\lnot(\writeVar{\tr(w')}{y})$; i.e. $w'$ satisfies the induction hypothesis. To sum up, $h_{w'}$ has $n$ cycles, so by induction hypothesis there is an acyclic history $h_{w''}$; i.e. $h$ can be maximally extended.  %Moreover, as $h$ is consistent, it can be checked that every other cycle in $h_w$ is due to the $w \ [\wro] \ e$ edge. Finally
-		\end{itemize}
-	\end{itemize}
-\end{proof}
-\end{theorem}
-
-%Well-formedness express that consistency criterion only have to depend on the dependencies of a history and not in other factors such as the type of events or the variables they read. Prefix-closedness describe the relations. Intuitively maximal-extensibility express that adding a 
+\input{proofs:causal-extensibility}
