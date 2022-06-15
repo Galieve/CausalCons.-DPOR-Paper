@@ -19,8 +19,6 @@ We prove this theorem by induction on the number of steps a reachable history ne
 
 \textcolor{red}{I have this new proof shorter than the initial idea but I do not know if it doesn't have typos. TODO: reread it!}
 
-\textcolor{red}{TODO: proof isSwappable soundness}
-
 \begin{comment}
 \begin{lemma}
 \label{lemma:swapped-elements-remain-1step}
@@ -49,9 +47,17 @@ Let's suppose such a pair of histories exist a
 
 \end{comment}
 
+\begin{lemma}
+\label{lemma:soundness-isswappable}
+For every two histories $h_1, h_2$ with the same set of events and $\iread$ event $r$, if $\protocol(h_i, r, w)$ holds for $i \in \{1,2\}$ and $\leq_{h_1} \equiv \leq_{h_2}$, for every $\iread$ event $r'$ s.t. $r \leq_{h_i} r'$ and $ \lnot(\tr(r') \ [\so \cup \wro]^+ \tr(w))$ we have $h_1.\wro(r') = h_2.\wro(r')$.
+\begin{proof}
+As for every $i \in \{1,2\}$ $\protocol(h_1, r, w)$ holds, so does it $\isMaximallyAdded{h_i}{r'}$. Therefore, as $\leq_{h_1} \equiv \leq_{h_2}$, $h_1.\wro(r') = h_2.\wro(r')$.
+\end{proof}
+\end{lemma}
+
 \begin{theorem}
 Algorithm \ref{algorithm:optimal-instantiated} is optimal.
 \begin{proof}
-As the model is causal-extensible, any algorithm weakly optimal is also optimal. Let us prove that for every reachable history there is only a computable path that leads to it from $\emptyset$. By lemma \ref{proposition:orders-coincide}, we know that for every reachable history $h$, $\leq_h \equiv \leq^h$. However, $\leq^h$ is an order that does not depend on the computable path that leads to $h$; so neither does $\leq_h$. Let's suppose that there exist two reachable histories $h_1, h_2$ s.t. $h_1 = \prev(h)$ and that in one step of computation produce a common history $h$. If we prove they are identical, the algorithm would be optimal. Firstly, if $\last{h}$ is not a swapped $\iread$ event, by the definition of $\nextEvent$ function $h_2 = h \setminus \last{h} = h_1$. Therefore, let us call $r = \last{h}$ and $w = h.\wro(r)$. Because $\swapped{h}{r}$ holds, from $h_2$ to $h$ it has to have happened a swap between $r$ and $w$. But by corollary \ref{corollary:prev-swap-identity}, $h = \swap(h_1, r, w)$, so $h_1 \restriction_{h \setminus r} = h_2 \restriction_{h \setminus r}$. As $\protocol(h_i, r, w)$ holds and $h_i$ is $\ora$-respectful (for $i \in \{1,2\}$), $h_1 \setminus h = h_2 \setminus h$, and for every $\iread$ event $e$, $h_1.\wro(e) = h_2.\wro(e)$. Therefore, $h_1 = h_2$.
+As the model is causal-extensible, any algorithm weakly optimal is also optimal. Let us prove that for every reachable history there is only a computable path that leads to it from $\emptyset$. By lemma \ref{proposition:orders-coincide}, we know that for every reachable history $h$, $\leq_h \equiv \leq^h$. However, $\leq^h$ is an order that does not depend on the computable path that leads to $h$; so neither does $\leq_h$. Let's suppose that there exist two reachable histories $h_1, h_2$ s.t. $h_1 = \prev(h)$ and that in one step of computation produce a common history $h$. If we prove they are identical, the algorithm would be optimal. Firstly, if $\last{h}$ is not a swapped $\iread$ event, by the definition of $\nextEvent$ function $h_2 = h \setminus \last{h} = h_1$. On the contrary, let's suppose $r = \last{h}$ is a swapped event that reads from a $\iwrite$ event $w$. Because $\swapped{h}{r}$ holds, from $h_2$ to $h$ it has to have happened a swap between $r$ and $w$. But by corollary \ref{corollary:prev-swap-identity}, $h = \swap(h_1, r, w)$, so $h_1 \restriction_{h \setminus r} = h_2 \restriction_{h \setminus r}$. As $h_1, h_2$ are both $\ora$-respectful, $e \in h_1 \setminus h \iff e \in h_2 \setminus h$. Finally, as $\protocol(h_i, r, w)$ holds for $i \in \{1,2\}$, by lemma \ref{lemma:soundness-isswappable}, if $e \in h_1 \setminus h$, $h_1.\wro(e) = h_2.\wro(e)$. Therefore, $h_1 = h_2$.
 \end{proof}
 \end{theorem}
