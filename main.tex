@@ -183,14 +183,17 @@
 \newcommand{\bfalse}{\mathsf{false}}
 
 %---- Models
-\newcommand{\CC}{\textup{\textbf{\texttt{CC}}}}
-\newcommand{\SER}{\textup{\textbf{\texttt{SER}}}}
-\newcommand{\PRE}{\textup{\textbf{\texttt{PRE}}}}
-\newcommand{\SI}{\textup{\textbf{\texttt{SI}}}}
-\newcommand{\RA}{\textup{\textbf{\texttt{RA}}}}
-\newcommand{\RC}{\textup{\textbf{\texttt{RC}}}}
+\newcommand{\CC}{\textup{\texttt{CC}}}
+\newcommand{\SER}{\textup{\texttt{SER}}}
+\newcommand{\PRE}{\textup{\texttt{PRE}}}
+\newcommand{\SI}{\textup{\texttt{SI}}}
+\newcommand{\RA}{\textup{\texttt{RA}}}
+\newcommand{\RC}{\textup{\texttt{RC}}}
+
+%---- Basic definitions
 
 \newcommand{\init}{\textup{\textbf{\texttt{init}}}}
+\newcommand{\type}[1]{\textup{\texttt{type}}(#1)}
 
 %---- Theoretical algorithm
 
@@ -201,10 +204,11 @@
 \newcommand{\genericSwap}{\textup{\texttt{S}}}
 \newcommand{\genericValidWrites}{\textup{\texttt{V}}}
 \newcommand{\nextEvent}{\textup{\textsc{next}}}
-\newcommand{\protocol}{\textup{\textsc{isSwappable}}}
+\newcommand{\evaluate}{\textup{\textsc{evaluate}}}
+\newcommand{\protocol}[1][\mathcal{M}]{\textup{\textsc{isSwappable}}_{#1}}
 \newcommand{\swap}{\textup{\textsc{swap}}}
 \newcommand{\compute}{\textup{\textsc{compute}}}
-\newcommand{\validWrites}{\textup{\texttt{valid}}}
+\newcommand{\validWrites}[1][\mathcal{M}]{\textup{\textsc{valid}}_{#1}}
 
 \newcommand{\last}[1]{\textup{\texttt{last}}(#1)}
 \newcommand{\swapped}[2]{\textup{\textsc{swapped}}(#1, #2)}
@@ -213,7 +217,7 @@
 \newcommand{\prev}{\textup{\textsc{prev}}}
 \newcommand{\canSwap}{\textup{\textsc{canSwap}}}
 \newcommand{\isConsistent}[2][\mathcal{M}]{\textup{\textsc{isConsistent}}_{#1}(#2)}
-\newcommand{\isMaximallyAdded}[2]{\textup{\textsc{isMaximallyAdded}}(#1, #2)}
+\newcommand{\isMaximallyAdded}[3][\mathcal{M}]{\textup{\textsc{isMaximallyAdded}}_{#1}(#2, #3)}
 \newcommand{\dep}{\textup{\textsc{dep}}}
 \newcommand{\minimalDependency}{\textup{\textsc{minimalDependency}}}
 
@@ -288,7 +292,6 @@
 	language      = Java,
 	morekeywords  ={ var },
 }
-
 
 %\input{header}
 \begin{document}
@@ -365,8 +368,7 @@
 	\input{definitions}
 	\input{model}
 	\input{algo-class}
-	\input{sound-complete}
-	\input{optimal}
+	\input{algorithm-main}
 	\input{si-ser}
 	%\input{iterative}
 	\input{proofs:sound-complete-optimal}

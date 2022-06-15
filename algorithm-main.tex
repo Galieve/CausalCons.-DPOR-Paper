@@ -1,0 +1,52 @@
+\section{A stateless DPOR algorithm for causally-closed models}
+\label{sec:CC-algorithm}
+
+The main goal in this section is describing a deterministic algorithm for transactional model-checking under a causally-closed model $\mathcal{M}$ that obtains all possible behaviors a program may have. We present during this section a swapping-based sound, complete and optimal algorithm employing polynomial memory. In particular, we will show that our algorithm has at most one pending transaction and why this is key to guarantee the rest of the properties. For the legibility of this document, we will postpone their proofs to section \ref{sec:proofs-algorithm}.
+
+\input{orders}
+
+\input{extending-histories}
+
+\input{blocking-branches}
+
+\input{maximally-added}
+
+Altogether, our swapping-based algorithm can simply being defined as an instance of \ref{algorithm:algo-class}: $\textsc{explore}_{\mathcal{M}}(\nextEvent,\evaluate , \validWrites, \compute, \protocol, \swap)$. A full detailed pseudocode of this procedure can be seen as algorithm \ref{algorithm:optimal-instantiated}; with initial call $h = \emptyset$.
+
+\begin{algorithm}[H]
+	\caption{Optimal recursive \textsc{STMC}}
+	\begin{algorithmic}[1]
+		\InputAlgorithmic $h$: history
+		
+		\Statex
+		
+		\State $e \gets  \next(h)$
+		
+		
+		\If{$e = \bot$}
+		\If{$\evaluate(h)$}
+		\State \textbf{output} $h$
+		\EndIf
+		%\State $\textbf{\genericEvaluate}(h)$
+		\State \Return
+		\ElsIf{$\textsc{type}(e) = \iread$}
+		
+		\ForAll{$w \in \validWrites(h,e)$} %\writeVar{w}{x}
+		
+		\State $\textsc{explore}_{\mathcal{M}}(h \bullet_w e)$
+		\EndFor
+		\Else
+		\State $\textsc{explore}_{\mathcal{M}}(h \bullet e)$
+		\EndIf
+		
+		\Statex
+		
+		\ForAll{$(\alpha, \beta) \in \compute(h)$}
+		\If{$\protocol(h \bullet e, \alpha, \beta)$}
+		\State $\textsc{explore}_{\mathcal{M}}(\swap(h \bullet e, \alpha, \beta))$	
+		
+		\EndIf
+		\EndFor
+	\end{algorithmic}
+	\label{algorithm:optimal-instantiated}
+\end{algorithm}

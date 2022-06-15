@@ -1,4 +1,5 @@
 \section{Proof of the algorithms}
+\label{sec:proofs-algorithm}
 
 \textcolor{red}{Introduction}
 
@@ -6,7 +7,7 @@
 \subsection{Soundness}
 
 \begin{theorem}
-Algorithm \textcolor{red}{cite algorithm} is sound.
+Algorithm \ref{algorithm:optimal-instantiated} is sound.
 \begin{proof}
 We prove this theorem by induction on the number of steps a reachable history needs in a computable path to be reached. If this number is zero, the history is $\emptyset$, which is consistent; so let us prove the inductive step, assuming that in any computable path of length at most $n$ every history is consistent. Let $h$ computed in a $n+1$ path, and let $h_p$ the immediate predecessor of $h$, which is consistent, and $a = \nextEvent(h_p)$. If $a$ is not a $\iread$ event and $h = h_p \bullet a$, by $\nextEvent$'s definition along with the model's causal-extensibility, $a$ is a $\so \cup \wro$-maximal event so $h$ is consistent. Otherwise, if $a$ is a $\iread$ event and $h = h_p \bullet_w a$ for some $\iwrite$ event $w$, by $\validWrites$'s definition we know that $h$ is consistent. Finally, if $h = \swap(h_p, r, w)$ for some events $r, w$, as $\protocol(h_p, r, w)$ is satisfied, $h$ is consistent.
 \end{proof}
@@ -47,7 +48,7 @@ Let's suppose such a pair of histories exist a
 \end{comment}
 
 \begin{theorem}
-Algorithm \textcolor{red}{cite algorithm} is optimal.
+Algorithm \ref{algorithm:optimal-instantiated} is optimal.
 \begin{proof}
 As the model is causal-extensible, any algorithm weakly optimal is also optimal. Let us prove that for every reachable history there is only a computable path that leads to it from $\emptyset$. By lemma \ref{proposition:orders-coincide}, we know that for every reachable history $h$, $\leq_h \equiv \leq^h$. However, $\leq^h$ is an order that does not depend on the computable path that leads to $h$; so neither does $\leq_h$. Let's suppose that there exist two reachable histories $h_1, h_2$ s.t. $h_1 = \prev(h)$ and that in one step of computation produce a common history $h$. If we prove they are identical, the algorithm would be optimal. Firstly, if $\last{h}$ is not a swapped $\iread$ event, by the definition of $\nextEvent$ function $h_2 = h \setminus \last{h} = h_1$. Therefore, let us call $r = \last{h}$ and $w = h.\wro(r)$. Because $\swapped{h}{r}$ holds, from $h_2$ to $h$ it has to have happened a swap between $r$ and $w$. But by corollary \ref{corollary:prev-swap-identity}, $h = \swap(h_1, r, w)$, so $h_1 \restriction_{h \setminus r} = h_2 \restriction_{h \setminus r}$. As $\protocol(h_i, r, w)$ holds and $h_i$ is $\ora$-respectful (for $i \in \{1,2\}$), $h_1 \setminus h = h_2 \setminus h$, and for every $\iread$ event $e$, $h_1.\wro(e) = h_2.\wro(e)$. Therefore, $h_1 = h_2$.
 \end{proof}

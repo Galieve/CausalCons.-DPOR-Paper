@@ -57,7 +57,9 @@ Let $h$ be a history:
 \end{itemize}
 \end{definition}
 
-\textcolor{red}{EXTENSIONS AND $\bullet$ OPERATOR NOT (yet) DEFINED IN THIS SECTION!!!!!!!}
+\textcolor{red}{\sout{If the event $e =\nextEvent(h)$ is $\ibegin, \iwrite$ or $\iend$, we will denote by $h \bullet e$ the history $h' = \langle E', \so', \wro\rangle$ where $E' = \events{h} \cup \{e\}$ and $\so' = \so \cup \{\langle e', e \rangle \ | \ e' \in h \land \thread{e} = \thread{e'}\}$. On the other hand, if $e$ is a $\iread$ event, we will define the history $h_w' = h \bullet_w e$ for some $\iwrite$ event $w \in h$ as $\langle E', \so', \wro \cup \{\langle w, r \rangle\} \rangle$; where $E'$ and $\so'$ defined as before.}: Not well defined, just cut-pasted from below}. 
+
+\textcolor{red}{EXTENSIONS, $\mathcal{H}^<$ AND $\bullet$ OPERATOR NOT (yet) DEFINED IN THIS SECTION!!!!!!!}
 
 To fully model any behavior of a transactional concurrent program we are obliged to formally describe the database section. This notion will be depicted as the concept of \textit{model}:
 

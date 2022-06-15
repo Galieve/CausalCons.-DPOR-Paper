@@ -23,9 +23,11 @@ The algorithm's class $\mathcal{O}^n_{\mathcal{M}}$ is defined as the minimal co
 The algorithm's class $\mathcal{W}^n_{\mathcal{M}}$ is defined as the minimal collection containing all algorithms $\mathcal{M}$-sound, complete and weakly optimal that employ polynomial memory and allows at most $n$ pending transactions. 
 \end{definition}
 
+\textcolor{red}{TODO: change this to not be a class...}
+
 %\textcolor{red}{We need the three classes for the following: RA/RC/CC/PRE algorithms belong to $O^1$, our PRE+SER/PRE+SI version is $W^1$, for SER we cannot obtaining it in $O^n$ for any $n$ nor in $L^1$ and in RA/RC/CC/PRE $O^1 = L^1$. Moreover, if we allow the subindex there, we can talk about future work allowing multiple pending transactions (it may be reasonable to prove that there is an algorithm for SER in $L^n$) and indicate Viktor's algorithm is not in $L^n$ for any $n$ as it employs exp memory. If we don't want to be that expressive, we can only talk about weakly optimal and then proof that under RA/RC/CC/PRE with our algorithms there is no blocking branches as an extra feature thanks to the models; but I thought it may be clearer to distribute it in this way.}
 
-The above-mentioned classes are, notwithstanding, quite dense and contain lots of algorithms we are not interested in (as non-DPOR algorithms for example). In particular, our work focuses on the collection of algorithms defined by the schema \ref{algorithm:algo-class} for some functions $\genericNext, \genericEvaluate, \genericCompute, \genericProtocol, \genericSwap$ to be defined. Thanks to this approach we will show the existence of some algorithms and easily prove some of their properties.
+The above-mentioned classes are, notwithstanding, quite dense and contain lots of algorithms we are not interested in (as non-DPOR algorithms for example). In particular, our work focuses on the collection of algorithms defined by the schema \ref{algorithm:algo-class} for some functions $\genericNext, \genericEvaluate, \genericValidWrites, \genericCompute, \genericProtocol, \genericSwap$ to be defined. %Thanks to this approach we will show the existence of some sound and complete algorithms and easily prove some of their properties.
 
 \begin{algorithm}[H]
 	\caption{\textsc{explore} algorithm}
@@ -80,7 +82,7 @@ The \callout{swapping-based algorithm's class} for the memory model $\mathcal{M}
 \begin{itemize}
 	\item $\genericNext: \mathcal{H}_\mathcal{P} \to \mathcal{E}_\mathcal{P}$, where for every $h \in \mathcal{H}_{\mathcal{P}}$, $\genericNext(h) \not\in h$ and for every event $e$ s.t. $e \ [\so] \ \genericNext(h)$, $e \in h$, %\textcolor{red}{redundant with weakly optimal; it may be helpful to the reader}
 	\item $\genericEvaluate: \mathcal{H}_\mathcal{P} \to \{0, 1\}$, %which determines if an execution is total or not,
-	\item $\genericValidWrites: \mathcal{H}_\mathcal{P} \times \mathcal{E}_\mathcal{P} \to \mathcal{E}_\mathcal{P}^*$, where for every $e' \in \genericValidWrites(h, e)$, $e' \in h$ and $h \bullet_{e'} e$ is consistent, %\textcolor{red}{this is for determine when computing a total inconsistent history shall be taken into account}
+	\item $\genericValidWrites: \mathcal{H}_\mathcal{P} \times \mathcal{E}_\mathcal{P} \to \mathcal{P}(\mathcal{E}_\mathcal{P})$, %\textcolor{red}{this is for determine when computing a total inconsistent history shall be taken into account}
 	\item $\genericCompute: \mathcal{H}^<_\mathcal{P} \to \mathcal{E}_\mathcal{P}^* \times \mathcal{E}_\mathcal{P}^*$, where for every history $h$, $\genericCompute(h) = (\alpha, \beta)$, $\alpha \cap \beta = \emptyset$ and for every $(e, e') \in \alpha \times \beta$, $e <_h e'$.
 	\item $\genericProtocol: \mathcal{H}^<_\mathcal{P} \times \mathcal{E}_\mathcal{P}^* \times \mathcal{E}_\mathcal{P}^* \to \{0,1\}$, %\textcolor{red}{shall we impose the protocol to only be true in only one history for each class? not needed though...}
 	\item $\genericSwap: \mathcal{H}^<_\mathcal{P} \times \mathcal{E}_\mathcal{P}^* \times \mathcal{E}_\mathcal{P}^* \to \mathcal{H}^<_\mathcal{P}$, where for every $h, \alpha, \beta$, we have $\genericSwap(h \bullet e, \alpha, \beta) = h'$, $\alpha, \beta \in h'$, for every $(e, e') \in \alpha \times \beta \implies e >_{h'} e'$ and there exists some $(e, e') \in (\alpha, \beta)$ s.t. $\tr(e') \ [\wro] \ \tr(e)$.

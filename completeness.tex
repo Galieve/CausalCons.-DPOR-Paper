@@ -81,7 +81,7 @@ The function $\textsc{canonicalOrder}$ produces a relation between transactions 
 	\label{lemma:reachable-or-respectful}
 	Every reachable history is $\ora$-respectful.
 	\begin{proof}
-		We will prove it by induction on the number of \textcolor{red}{cite algorithm}'s stack calls a computable path that leads to a history $h$ needs, $n$. The base case, $n = 0$, is for the trivial history $h = \emptyset$ where it trivially holds; so let us prove the inductive case; being $e \gets \nextEvent(h)$. On one hand, $e$ is not a $\iread$ nor a $\ibegin$ event and $h' = h \bullet e$, as $\lnot \swapped{h}{e}$ and $h'$ is edge-wise identical to $h$, $R^{\ora}(h')$ holds. 
+		We will prove it by induction on the number of \ref{algorithm:optimal-instantiated}'s stack calls a computable path that leads to a history $h$ needs, $n$. The base case, $n = 0$, is for the trivial history $h = \emptyset$ where it trivially holds; so let us prove the inductive case; being $e \gets \nextEvent(h)$. On one hand, $e$ is not a $\iread$ nor a $\ibegin$ event and $h' = h \bullet e$, as $\lnot \swapped{h}{e}$ and $h'$ is edge-wise identical to $h$, $R^{\ora}(h')$ holds. 
 		
 		If $e$ is a $\ibegin$ event, $h' = h \bullet e$. Let $a \in \mathcal{P}, b \in h'$ s.t. $a \leq_{\ora} b$. If $a \in h$ or $b \neq e$, as $\leq_{h'}$ is an extension of $\leq_h$ and $R^{\ora}(h)$, the property holds. Moreover, as $e = \min_{\ora} \mathcal{P} \setminus h$, there is no event $a \in \mathcal{P} \setminus h$ s.t. $a \leq_{\ora} e$; so the property holds.
 		
@@ -99,7 +99,7 @@ The function $\textsc{canonicalOrder}$ produces a relation between transactions 
 \label{proposition:orders-coincide}
 For any reachable history $h$, $\leq^h \equiv \leq_h$.
 \begin{proof}
-	We will prove this lemma by induction on the number of steps a computable path leading to $h$ are required by algorithm \textcolor{red}{cite algorithm}. The base case, $n = 0$, implies $h = \emptyset$, so both relations hold. Let's suppose that for every history $h'$ that requires at most $n$ steps, $\leq^{h'} \equiv \leq_{h'}$; and let's analyze $\leq^h$ for a history computed with $n+1$. In particular, there exists a history $h_p$ in that path which is an immediate predecessor of $h$. We will distinguish cases depending on how from $h_p$ we reach $h$; calling $e = \nextEvent(h)$
+	We will prove this lemma by induction on the number of steps a computable path leading to $h$ are required by algorithm \ref{algorithm:optimal-instantiated}. The base case, $n = 0$, implies $h = \emptyset$, so both relations hold. Let's suppose that for every history $h'$ that requires at most $n$ steps, $\leq^{h'} \equiv \leq_{h'}$; and let's analyze $\leq^h$ for a history computed with $n+1$. In particular, there exists a history $h_p$ in that path which is an immediate predecessor of $h$. We will distinguish cases depending on how from $h_p$ we reach $h$; calling $e = \nextEvent(h)$
 	\begin{itemize}
 		\item \underline{Adding a $ \iend, \iwrite$:} As $h_p$ and $h$ are edge-wise identical, $\leq^h \equiv \leq_h$.
 		
@@ -165,7 +165,7 @@ Proposition \ref{proposition:orders-coincide} is a very interesting result as it
 Function \ref{algorithm:prev} produce a history that are meant to be the previous step of a reachable history. Thanks to this definition, we will show that every total history has a computable path based on applying $\prev^{-1}$ function iteratively until the objective history is reached.
 
 
-\textcolor{red}{TODO (before): if $h \to \swap(h \bullet e, r, w)$ ``in one step'', actually from $h$ we go to $h \bullet e$ and from it to the swapped. }
+\textcolor{red}{TODO (somewhere before): if $h \to \swap(h \bullet e, r, w)$ ``in one step'', actually from $h$ we go to $h \bullet e$ and from it to the swapped. }
 
 %code for splitting algorithmic environment
 %\algstore{myalg}
@@ -238,7 +238,8 @@ For every non-empty consistent $\ora$-respectful history $h$, $h_p = \prev(h)$ a
 \end{proposition}
 
 \begin{theorem}
-	Algorithm \textcolor{red}{cite algorithm} is complete.
+\label{theorem:completeness}
+	Algorithm \ref{algorithm:optimal-instantiated} is complete.
 	\begin{proof}
 		By lemma \ref{lemma:total-respectful}, any consistent total history is $\ora$-respectful. As a consequence of proposition \ref{proposition:chain-histories-proof}, there exist a sequence of reachable histories which $h$ belongs to; so in particular, $h$ is reachable.
 	\end{proof}
