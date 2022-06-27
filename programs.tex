@@ -1,0 +1,188 @@
+%!TEX root = main.tex
+\section{Transactional Programs}
+
+\newcommand{\icommit}{\mathtt{commit}}
+
+\subsection{Program Syntax}
+
+\begin{figure}
+\small
+\begin{align*}
+\key\in \Vars\quad \xvar\in\LVars
+\end{align*}
+\begin{minipage}[t]{.4\textwidth}
+\begin{align*}
+\mathsf{Prog} &  \eqdef  \mathsf{Sess} \ \mid\  \mathsf{Sess}\,||\,\mathsf{Prog} \\
+\mathsf{Sess} & \eqdef  \mathsf{Trans} \ \mid\  \mathsf{Trans}; \mathsf{Sess} \\
+\mathsf{Trans} & \eqdef  \ibegin; \mathsf{Body}; \icommit 
+\end{align*}
+\end{minipage}
+\begin{minipage}[t]{.4\textwidth}
+\begin{align*}
+\mathsf{Body} & \eqdef  \mathsf{Instr} \ \mid\  \mathsf{Instr}; \mathsf{Body} \\
+\mathsf{Instr} & \eqdef  \mathsf{InstrDB} \ \mid\  a := e \mid\ \iif{\phi(\vec{a})}{\mathsf{Instr}} \\
+\mathsf{InstrDB} & \eqdef \xvar := \iread(\key)  \ \mid\  \iwrite(\key,\xvar) \\
+%\mathsf{Local} & \eqdef  x := e
+\end{align*}
+\end{minipage}
+%\vspace{-6mm}
+\caption{Program syntax. The set of global variables is denoted by $\Vars$ while $\LVars$ denotes the set of local variables.
+We use $\phi$ to denote Boolean expressions, and $e$ to denote expressions over local variables interpreted as values. We use $\vec{\cdot}$ to denote vectors of elements.}
+\label{fig:syntax}
+%\vspace{-4mm}
+\end{figure}
+
+Figure~\ref{fig:syntax} lists the definition of a simple programming language
+that we use to represent applications running on top of a database. A program is a set of \emph{sessions} running in parallel, each
+session being composed of a sequence of \emph{transactions}. Each transaction is
+delimited by $\ibegin$ and $\icommit$ instructions, and its body contains instructions that access the
+database and manipulate a set $\LVars$ of local variables.\footnote{For simplicity, we
+assume that all the transactions in the program commit. Aborted transactions can
+be ignored when reasoning about safety because their effects should be invisible
+to other transactions.} We use symbols 
+$a$, $b$, etc. to denote elements of $\LVars$.
+
+For simplicity, we abstract the database state as a valuation to a set $\Vars$ of \emph{global} variables\footnote{In the context of a relational database, global variables correspond to fields/rows of a table while in the context of a key-value store, they correspond to keys.}. Therefore, the instructions accessing the database correspond to reading the value of a global variable and storing it into a local variable $a$ ($a := \iread(x)$) , writing the value of a local variable $a$ to a global variable $x$ ($\iwrite(x,a)$), or an assignment to a local variable $a$ ($a := e$). The set of values of global or local variables is denoted by $\Vals$. Assignments to local variables use expressions $e$ over local variables, which are interpreted as values and whose syntax is left unspecified. Each of these instructions can be guarded by a Boolean condition $\phi(\vec{a})$ over a set of local variables $\vec{a}$ (their syntax is not important). Our results assume bounded programs, and therefore, we omit other constructs like $\mathtt{while}$ loops.
+%Other constructs like $\mathtt{while}$ loops can be defined in a similar way. 
+%Let $\KVProgs$ denote the set of programs where a transaction body can contain only such instructions.
+
+\subsection{Isolation Level Definition}
+
+We present the axiomatic framework introduced
+by \citet{DBLP:journals/pacmpl/BiswasE19} for defining isolation levels in
+key-value stores.\footnote{Isolation levels are called consistency models by \citet{DBLP:journals/pacmpl/BiswasE19}.}  
+Isolation levels are defined as logical constraints, called \emph{axioms}, over \emph{histories}, which are an abstract representation of the interaction between a program and the database in a concrete execution. 
+% that record the sequence of reads and writes executed in each transaction, the order between transactions in each session, and a write-read relation (also called read-from) that ``justifies'' read values by associating each read to a write that wrote the value returned by the read.
+
+%TODO SOME INTRO EXPLAINING THAT ISOLATION LEVELS ARE DEFINED AS AXIOMS OVER HISTORIES, WHICH REPRESENT THE INTERACTION BETWEEN A PROGRAM AND A STORE. 
+
+\subsubsection{Histories}
+
+Programs interact with a database by issuing transactions formed of $\ibegin$, $\iend$, $\textsf{read}$ and $\textsf{write}$ instructions. The effect of executing one such instruction is represented using an \emph{event} $\langle e, \mathit{type} \rangle$ where $e$ is an \textit{identifier} and $\mathit{type} $ is a \textit{type}. There are four types of events: $\ebegin$, $\eend$, $\erd{x,v}$ for reading value $v$ from global variable $x$, and $\ewrt{x,v}$ for writing value $v$ to global variable $x$. The set of events is denoted by $\Events$.
+For a read or write event $e$, we use $\mathit{var}(e)$ to denote the variable $x$ and $\mathit{val}(e)$ the value $v$.
+
+A \emph{transaction log} $\tup{t,E, \po}$ is an identifier $t$ and a finite set of events $E$ along with a strict total order $\po_t$ on $E$, called \emph{program order}.
+%$T$  is a finite sequence of events ordered by a strict total order $\po_T$ called \emph{program order}. 
+The minimal element of $\po_t$ is a $\ebegin$ event. A transaction log without an $\eend$ event is called \emph{pending} (if the $\eend$ event occurs, then it is maximal in $\po_t$). Otherwise, it is called \emph{complete}.
+
+The program order $\po_t$ represents the order between instructions in the body of a transaction. We assume that each transaction log is well-formed in the sense that if a read of a global variable $x$ is preceded by a write to $x$ in $\po_t$, then it should return the value written by the last write to $x$ before the read (w.r.t. $\po_t$). This property is implicit in the definition of every isolation level that we are aware of. For simplicity, we may use the term \emph{transaction} instead of transaction log. %The  set of all transaction logs is denoted by $\mathsf{Tlogs}$.
+
+%For every transaction $T$, we denote $\po_T$ the total order existing between the events in $T$.
+%During the whole paper we will assume that every pair of transactions are disjoint and that both $\mathcal{E}$ and $\mathcal{T}$ are finite. Therefore, we denote the function $tr: \mathcal{E} \to \mathcal{T}$ that associates every event to the unique transaction it belongs to. %Moreover, we will assume there is a special transaction called \callout{initial} that contains exactly one write event for every possible variable.
+
+The set of $\erd{x,\_}$ events in a transaction log $t$ that are \emph{not} preceded by a write to $x$ in $\po_t$, for some $x$, is denoted by $\readOp{t}$. As mentioned above, the other read events take their values from writes in the same transaction and their behavior is independent of other transactions. Also, the set of $\ewrt{x,\_}$ events in $t$ that are \emph{not} followed by other writes to $x$ in $\po_t$, for some $x$, is denoted by $\writeOp{t}$. If a transaction contains multiple writes to the same key, then only the last one (w.r.t. $\po_t$) can be visible to other transactions (w.r.t. any isolation level that we are aware of). The extension to sets of transaction logs is defined as usual. 
+Also, we say that a transaction log $t$ \emph{writes} $x$, denoted by $\writeVar{t}{x}$, when $\writeOp{t}$ contains some $\ewrt{x,\_}$ event. 
+
+A \emph{history} contains a set of transaction logs (with distinct identifiers)
+ordered by a (partial) \emph{session order} $\so$ that represents the order
+between transactions in the same session.\footnote{In the context of our programming language, $\so$ would be a union of total orders. This constraint is not important for defining isolation levels.} It also includes a
+%ordering constraints imposed by the applications using the database. Most often, $\so$ is a union of sequences, each sequence being called a \emph{session}. 
+\emph{write-read} relation (also called read-from) that ``justifies'' read values by associating each read to a transaction that wrote the value returned by the read.
+
+\begin{definition}
+ A \emph{history} $\tup{T, \so, \wro}$ is a set of transaction logs $T$ along with a strict partial \emph{session order} $\so$, and a 
+\emph{write-read} relation $\wro\subseteq T\times \readOp{T}$ such that
+the inverse of $\wro$ is a total function, if $(t,e)\in \wro$, where $e$ is a $\erd{x,v}$ event, then $\writeOp{t}$ contains some $\ewrt{x,v}$ event, 
+and $\so\cup\wro$ is acyclic.
+\end{definition}
+
+We assume that every history includes a distinguished transaction log writing the initial values of all global variables. This transaction log precedes all the other transaction logs in $\so$. We use $\hist$, $\hist_1$, $\hist_2$, $\ldots$ to range over histories. The set of transaction logs $T$ in a history $\hist=\tup{T, \so, \wro}$ is denoted by $\tlogs{\hist}$.
+
+For a variable $\key$, $\wro[\key]$ denotes the restriction of $\wro$ to reads of $\key$, \ie, $\wro[\key]=\wro\cap (T\times \{ e\ |\ e \mbox{ is a }\erd{\key,\_} \mbox{ event}\})$. Moreover, we extend the relations $\wro$ and $\wro[\key]$ to pairs of transactions by $\tup{t_1,t_2}\in \wro$, resp., $\tup{t_1,t_2}\in \wro[\key]$, iff there exists a $\rd{\key,\_}$ event $e$ in $t_2$ such that $\tup{t_1,e}\in \wro$, resp., $\tup{t_1,e}\in \wro[\key]$. 
+We say that the transaction log $t_1$ is \emph{read} by the transaction log $t_2$ when $\tup{t_1,t_2}\in \wro$. 
+
+\subsubsection{Axiomatic Framework}
+
+\subsection{Program Semantics}
+
+\begin{figure} [t]
+\small
+  \centering
+  \begin{mathpar}
+    \inferrule[spawn*]{\tr \mbox{ fresh}\quad \mathsf{P}(j) = \ibegin; \mathsf{Body}; \icommit; \mathsf{S} \quad \vec{\mathsf{B}}(j) = \epsilon}{
+      \hist,\vec{\gamma},\vec{\mathsf{B}},\mathsf{P}
+      \Rightarrow
+      \hist \oplus_j \tup{\tr,\emptyset,\emptyset},\vec{\gamma}[j\mapsto \emptyset],\vec{\mathsf{B}}[j\mapsto \mathsf{Body}],\mathsf{P}[j\mapsto \mathsf{S}]
+    } 
+
+    \inferrule[if-true*]{\psi(\vec{x})[x\mapsto \vec{\gamma}(j)(x): x\in\vec{x}]\mbox{ true} \\
+    \vec{\mathsf{B}}(j) = \iif{\psi(\vec{x})}{\mathsf{Instr}};\mathsf{B}
+    }{
+      \hist,\vec{\gamma},\vec{\mathsf{B}}, \mathsf{P}
+      \Rightarrow
+      \hist,\vec{\gamma},\vec{\mathsf{B}}[j\mapsto \mathsf{Instr};\mathsf{B}],\mathsf{P}
+    } 
+
+    \inferrule[if-false*]{\psi(\vec{x})[x\mapsto \vec{\gamma}(j)(x): x\in\vec{x}]\mbox{ false} \\
+    \vec{\mathsf{B}}(j) = \iif{\psi(\vec{x})}{\mathsf{Instr}};\mathsf{B}
+    }{
+      \hist,\vec{\gamma},\vec{\mathsf{B}}, \mathsf{P}
+      \Rightarrow
+      \hist,\vec{\gamma},\vec{\mathsf{B}}[j\mapsto \mathsf{B}],\mathsf{P}
+    } 
+
+    \inferrule[write*]{v = \vec{\gamma}(j)(x)\quad \id\mbox{ fresh} \quad 
+    \vec{\mathsf{B}}(j) = \iwrite(\key,\xvar);\mathsf{B}
+    }{
+      \hist,\vec{\gamma},\vec{\mathsf{B}}, \mathsf{P}
+      \Rightarrow
+      \hist \oplus_j \wrt[\id]{\key}{\val},\vec{\gamma},\vec{\mathsf{B}}[j\mapsto \mathsf{B}], \mathsf{P}
+    } 
+
+    \inferrule[read-local*]{
+    \wrt{\key}{\val}\mbox{ is the last write on $\key$ in $\tr$}\\
+    \id\mbox{ fresh } \\
+    \vec{\mathsf{B}}(j) = \xvar := \iread(\key);\mathsf{B}
+    }{
+      \hist,\vec{\gamma},\vec{\mathsf{B}}, \mathsf{P}
+      \Rightarrow
+      \hist \oplus_j \rd[\id]{\key}{\val},\vec{\gamma}[(j,\xvar)\mapsto \val],\vec{\mathsf{B}}[j\mapsto \mathsf{B}],\mathsf{P}
+    } 
+
+    \inferrule[read-extern*]{
+    \vec{\mathsf{B}}(j) = \xvar := \iread(\key);\mathsf{B} \\
+    \hist=(T,\so,\wro) \\
+    \tr \mbox{ is the id of the last transaction log in $\so(j)$} \\
+    \wrt{\key}{\val}\in\writeOp{\tr'}\mbox{ with $\tr'\in \transC{\hist,\vec{\mathsf{B}}}$ and $\tr\neq \tr'$} \\
+    \id\mbox{ fresh }\\
+    \hist' = (\hist \oplus_j \rd[\id]{\key}{\val}) \oplus \wro(\tr',\rd[i]{\key}{\val}) }{
+      \hist,\vec{\gamma},\vec{\mathsf{B}}, \mathsf{P}
+      \Rightarrow
+      \hist',\vec{\gamma}[(j,\xvar)\mapsto \val],\vec{\mathsf{B}}[j\mapsto \mathsf{B}],\mathsf{P}
+    } 
+    
+  \end{mathpar}
+% \vspace{-5mm}
+  \caption{A baseline operational semantics for $\KVProgs$ programs. Above, $\transC{\hist,\vec{\mathsf{B}}}$ denotes the set of transaction logs in $\hist$ that excludes those corresponding to live transactions, i.e., transaction logs $\tr''\in T$ such that $\tr''$ is the last transaction log in some $\so(j')$ and $\vec{B}(j')\neq\epsilon$.}
+  \label{fig:op:sem:baseline}
+\end{figure}
+
+We define the correctness of $\Rightarrow_I$ in relation to a \emph{baseline} semantics where operations from different transactions can interleave arbitrarily, and the values returned by $\rdo$ operations are only constrained to come from committed transactions. 
+%For any isolation level $I$ defined by a set of natural axioms (as explained below), we show that $\histOf[I]{\prog}$ is precisely the set of histories that are produced by the baseline semantics and that satisfy $I$. As opposed to the definition of $\Rightarrow_I$, the conformance of the values returned by $\rdo$ operations to $I$ is checked only at the end of the execution.
+This semantics is represented by a transition relation $\Rightarrow$, which is defined by a set of rules that are analogous to $\Rightarrow_I$. 
+%correspond to starting a new transaction or executing some specific instruction in the body of a transaction (analogous to $\Rightarrow_I$). 
+Since it allows transactions to interleave, a configuration contains a history $\hist$, the sessions/transactions $\mathsf{P}$ that remain to be executed, and:
+\begin{itemize}
+	\item a valuation map $\vec{\gamma}$ that records local variable values in the current transaction of each session ($\vec{\gamma}$ associates identifiers of sessions that have live transactions with valuations of local variables),
+	\item a map $\vec{B}$ that stores the code of each live transaction (associating session identifiers with code).
+\end{itemize}
+Figure~\ref{fig:op:sem:baseline} lists the rules defining $\Rightarrow$. %(the others can be defined in a similar manner). 
+\textsc{spawn*} starts a new transaction in a session $j$ provided that this session has no live transaction ($\vec{\mathsf{B}}(j) = \epsilon$). Compared to \textsc{spawn} in Figure~\ref{fig:op:sem}, this rule allows unfinished transactions in other sessions. \textsc{read-extern*} does not check conformance to $I$, but it allows a read to only return a value written in a completed (committed) transaction. In this work, we consider only isolation levels satisfying this constraint. The rest of the rules are similar to those defining $\Rightarrow_I$.
+Executions, initial and final configurations are defined as in the case of $\Rightarrow_I$. The history of an execution is still defined as the history in the last configuration. Let $\histOf[*]{\prog}$ denote the set of all histories of an execution of $\prog$ w.r.t. $\Rightarrow$ that ends in a final configuration. 
+
+====== From Atomic semantics
+
+Formally, the operational semantics is defined as a transition relation $\Rightarrow_I$ between \emph{configurations}, which are defined as tuples containing the following:
+\begin{itemize}
+	\item history $\hist$ storing the operations executed in the past, 
+	\item identifier $j$ of the current session,
+	\item local variable valuation $\gamma$ for the current transaction, 
+	\item code $\mathsf{B}$ that remains to be executed from the current transaction, and
+	\item sessions/transactions $\mathsf{P}$ that remain to be executed from the original program.
+\end{itemize}
+
+For readability, we define a program as a partial function $\mathsf{P}:\mathsf{SessId}\rightharpoonup \mathsf{Sess}$ that associates session identifiers in $\mathsf{SessId}$ with concrete code as defined in Figure~\ref{fig:syntax} (i.e., sequences of transactions). Similarly, the session order $\so$ in a history is defined as a partial function $\so:\mathsf{SessId}\rightharpoonup \mathsf{Tlogs}^*$ that associates session identifiers with sequences of transaction logs. Two transaction logs are ordered by $\so$ if one occurs before the other in some sequence $\so(j)$ with 
+$j\in \mathsf{SessId}$.
+
+Before presenting the definition of $\Rightarrow_I$, we introduce some notation. Let $\hist$ be a history that contains a representation of $\so$ as above. We use $\hist\oplus_j \tup{\tr,O,\po}$ to denote a history where $\tup{\tr,O,\po}$ is appended to $\so(j)$. 
+Also, for an operation $o$, $\hist\oplus_j o$ is the history obtained from $\hist$ by adding $o$ to the last transaction log in $\so(j)$ and as a last operation in the program order of this log (i.e.,  if $\so(j)=\sigma; \tup{t,O,\po}$, then the session order $\so'$ of $\hist\oplus_j o$ is defined by $\so'(k)=\so(k)$ for all $k\neq j$ and $\so(j) =\sigma; \tup{t,O\cup{o},\po\cup \{(o',o): o'\in O\}}$). Finally, for a history $\hist = \tup{T, \so, \wro}$, $\hist\oplus\wro(\tr,o)$ is the history obtained from $\hist$ by adding $(\tr,o)$ to the write-read relation.

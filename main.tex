@@ -95,8 +95,9 @@
 \newcommand{\eg}{e.g., }
 \newcommand{\ie}{i.e., }
 
-\newcommand{\key}{k}
-\newcommand{\Keys}{\mathsf{Keys}}
+\newcommand{\key}{x}
+\newcommand{\Keys}{\mathsf{Vars}}
+\newcommand{\Events}{\mathcal{E}}
 
 \definecolor{coColor}{HTML}{b37200}
 \definecolor{soColor}{HTML}{800080}
@@ -136,6 +137,7 @@
 \newcommand{\Obj}{\mathsf{Obj}}
 \newcommand{\Var}{\mathsf{Vars}}
 \newcommand{\Vars}{\mathsf{Vars}}
+\newcommand{\LVars}{\mathsf{LVars}}
 \newcommand{\Val}{\mathsf{Vals}}
 \newcommand{\Vals}{\mathsf{Vals}}
 \newcommand{\Columns}{\mathbb{C}}
@@ -143,10 +145,14 @@
 \newcommand{\Tables}{\mathbb{T}}
 \newcommand{\OId}{\mathsf{OpId}}
 \newcommand{\Op}{\mathsf{Op}}
-\newcommand{\xvar}{{x}}
+\newcommand{\xvar}{{a}}
 \newcommand{\prog}{{\mathsf{P}}}
 \newcommand{\histOf}[2][]{{\mathsf{hist}_{#1}({#2})}}
 
+\newcommand{\ebegin}{\mathsf{begin}}
+\newcommand{\eend}{\mathsf{end}}
+\newcommand{\erd}[1]{\mathsf{read}({#1})}
+\newcommand{\ewrt}[1]{\mathsf{write}({#1})}
 
 \newcommand{\yvar}{{y}}
 \newcommand{\val}{{v}}
@@ -365,6 +371,7 @@
 	\input{intro}
 	%\input{trvsmt}
 	%\input{algorithm}
+	\input{programs}
 	\input{definitions}
 	\input{model}
 	\input{algo-class}
