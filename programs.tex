@@ -82,8 +82,11 @@ between transactions in the same session.\footnote{In the context of our program
 \begin{definition}
  A \emph{history} $\tup{T, \so, \wro}$ is a set of transaction logs $T$ along with a strict partial \emph{session order} $\so$, and a 
 \emph{write-read} relation $\wro\subseteq T\times \readOp{T}$ such that
-the inverse of $\wro$ is a total function, if $(t,e)\in \wro$, where $e$ is a $\erd{x,v}$ event, then $\writeOp{t}$ contains some $\ewrt{x,v}$ event, 
-and $\so\cup\wro$ is acyclic.
+\begin{itemize}
+	\item the inverse of $\wro$ is a total function, 
+	\item if $(t,e)\in \wro$, where $e$ is a $\erd{x,v}$ event, then $\writeOp{t}$ contains some $\ewrt{x,v}$ event, and
+	\item $\so\cup\wro$ is acyclic.
+\end{itemize}
 \end{definition}
 
 We assume that every history includes a distinguished transaction log writing the initial values of all global variables. This transaction log precedes all the other transaction logs in $\so$. We use $\hist$, $\hist_1$, $\hist_2$, $\ldots$ to range over histories. The set of transaction logs $T$ in a history $\hist=\tup{T, \so, \wro}$ is denoted by $\tlogs{\hist}$.
@@ -91,7 +94,229 @@ We assume that every history includes a distinguished transaction log writing th
 For a variable $\key$, $\wro[\key]$ denotes the restriction of $\wro$ to reads of $\key$, \ie, $\wro[\key]=\wro\cap (T\times \{ e\ |\ e \mbox{ is a }\erd{\key,\_} \mbox{ event}\})$. Moreover, we extend the relations $\wro$ and $\wro[\key]$ to pairs of transactions by $\tup{t_1,t_2}\in \wro$, resp., $\tup{t_1,t_2}\in \wro[\key]$, iff there exists a $\rd{\key,\_}$ event $e$ in $t_2$ such that $\tup{t_1,e}\in \wro$, resp., $\tup{t_1,e}\in \wro[\key]$. 
 We say that the transaction log $t_1$ is \emph{read} by the transaction log $t_2$ when $\tup{t_1,t_2}\in \wro$. 
 
+\begin{definition}
+Let $h$ be a history:
+\begin{itemize}
+\item $h$ is called \callout{complete} if every transaction is non-pending and \callout{incomplete} otherwise;
+\item $h$ is \callout{executed in isolation} if it contains at most one pending transaction;
+\item $h$ is called \callout{total} if it is complete and contains every transaction $T \in \mathcal{T}$.
+\end{itemize}
+\end{definition}
+
+\textcolor{red}{\sout{If the event $e =\nextEvent(h)$ is $\ibegin, \iwrite$ or $\iend$, we will denote by $h \bullet e$ the history $h' = \langle E', \so', \wro\rangle$ where $E' = \events{h} \cup \{e\}$ and $\so' = \so \cup \{\langle e', e \rangle \ | \ e' \in h \land \thread{e} = \thread{e'}\}$. On the other hand, if $e$ is a $\iread$ event, we will define the history $h_w' = h \bullet_w e$ for some $\iwrite$ event $w \in h$ as $\langle E', \so', \wro \cup \{\langle w, r \rangle\} \rangle$; where $E'$ and $\so'$ defined as before.}: Not well defined, just cut-pasted from below}. 
+
+\textcolor{red}{EXTENSIONS, $\mathcal{H}^<$ AND $\bullet$ OPERATOR NOT (yet) DEFINED IN THIS SECTION!!!!!!!}
+
 \subsubsection{Axiomatic Framework}
+
+To fully model any behavior of a transactional concurrent program we are obliged to formally describe the database section. This notion will be depicted as the concept of \textit{model}:
+
+%Those notions are generic enough to only describe a possible set of instructions that a parallel program may execute along with the $\wr$ relations that exist between them.
+
+\begin{comment}
+\begin{definition}
+An axiomatic \callout{model} $\mathcal{M}$ over histories is a collection of rules that enforce a \callout{consistency criterion} over them. The histories that satisfy those criteria are called \callout{consistent} while the rest are simply denoted inconsistent. 
+\end{definition}
+\end{comment}
+
+\begin{definition}
+An axiomatic \callout{model} $\mathcal{M}$ over histories is a collection of rules that enforce a \callout{consistency criterion} over them. The histories that satisfy those criteria are called \callout{$\mathcal{M}$-consistent} while the rest are simply denoted $\mathcal{M}$-inconsistent. If there is no ambiguity on the model, we will simply denote them consistent or inconsistent.%
+
+\end{definition}
+
+\begin{figure}[H]
+	\resizebox{\textwidth}{!}{
+		\footnotesize
+		\begin{tabular}{|c|c|c|}
+			\hline &  & \\
+			\begin{subfigure}[t]{.31\textwidth}
+				\centering
+				\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=1cm,
+					semithick, transform shape]
+					\node[transaction state, text=black] at (0,0)       	(t_1)           {$t_1$};
+					\node[transaction state, text=black, label={above:\textcolor{black}{$\writeVar{ }{x}$}}] at (-0.5,1.5) (t_2) {$t_2$};
+					\node[transaction state, text=black] at (2,0)       (o_1)           {$\alpha$};
+					\node[transaction state] at (1.5,1.5) (o_2) {$\beta$};
+					\path (t_1) edge[color=wrColor] node {$\wro_x$} (o_1);
+					% \path (t_2) edge[blue] node {$\CO$} (t_1);
+					\path (t_2) edge[color=wrColor] node {$\wro$} (o_2);
+					\path (o_2) edge[color=poColor] node {$\po$} (o_1);
+					\path (t_2) edge[left,double,color=coColor] node {$\co$} (t_1);
+				\end{tikzpicture}
+				\parbox{\textwidth}{
+					$\forall x,\ \forall t_1, t_2,\ \forall \alpha.\ t_1\neq t_2\ \land$
+					
+					\hspace{4mm}$\tup{t_1,\alpha}\in \wro_x \land \writeVar{t_2}{x}\ \land$ 
+					
+					\hspace{9mm}$\tup{t_2,\alpha}\in\wro\circ\po$
+					
+					\hspace{14mm}$\implies \tup{t_2,t_1}\in\co$
+				}
+				%\end{align*}
+				
+				\caption{$\mathsf{Read\ Committed}$}
+				\label{lock_rc_def}
+			\end{subfigure}
+			
+			&     
+			
+			
+			\begin{subfigure}[t]{.35\textwidth}
+				\centering
+				\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=1cm,
+					semithick, transform shape]
+					\node[transaction state, text=black] at (0,0)       (t_1)           {$t_1$};
+					\node[transaction state] at (2,0)       (t_3)           {$t_3$};
+					\node[transaction state, text=black,label={above:\textcolor{black}{$\writeVar{ }{\xvar}$}}] at (-.5,1.5) (t_2) {$t_2$};
+					\path (t_1) edge[wrColor] node {$\wro_x$} (t_3);
+					% \path (t_2) edge[blue] node {$\CO$} (t_1);
+					\path (t_2) edge[bend left] node {$\so \cup \wro$} (t_3);
+					\path (t_2) edge[left, double ,coColor] node {$\co$} (t_1);
+				\end{tikzpicture}
+				\parbox{\textwidth}{
+					$\forall x,\ \forall t_1, t_2,\ \forall t_3.\ t_1\neq t_2\ \land$
+					
+					\hspace{4mm}$\tup{t_1,t_3}\in \wro_x \land \writeVar{t_2}{x}\ \land$ 
+					
+					\hspace{9mm}$\tup{t_2,t_3}\in\so \cup \wro$
+					
+					\hspace{14mm}$\implies \tup{t_2,t_1}\in\co$
+				}
+				
+				\caption{$\mathsf{Read\ Atomic}$}
+				\label{ra_def}
+			\end{subfigure}
+			
+			&
+			
+			\begin{subfigure}[t]{.31\textwidth}
+				\centering
+				\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=4cm,
+					semithick, transform shape]
+					\node[transaction state, text=black] at (0,0)       (t_1)           {$t_1$};
+					\node[transaction state] at (2,0)       (t_3)           {$t_3$};
+					\node[transaction state, text=black,label={above:\textcolor{black}{$\writeVar{ }{\key}$}}] at (-.5,1.5) (t_2) {$t_2$};
+					\path (t_1) edge[wrColor] node {$\wro_x$} (t_3);
+					% \path (t_2) edge[blue] node {$\CO$} (t_1);
+					\path (t_2) edge[dashed, bend left] node {$(\so \cup \wro)^+$} (t_3);
+					%   \path [->, decoration={snake}] (t_2) edge[decorate] node[auto] {F} (t_3);
+					\path (t_2) edge[left,double equal sign distance,coColor] node {$\co$} (t_1);
+				\end{tikzpicture}
+				\parbox{\textwidth}{
+					$\forall x,\ \forall t_1, t_2,\ \forall t_3.\ t_1\neq t_2\ \land$
+					
+					\hspace{4mm}$\tup{t_1,t_3}\in \wro_x \land \writeVar{t_2}{x}\ \land$ 
+					
+					\hspace{9mm}$\tup{t_2,t_3}\in(\so \cup \wro)^+$
+					
+					\hspace{14mm}$\implies \tup{t_2,t_1}\in\co$
+				}
+				
+				\caption{$\mathsf{Causal\ Consistency}$}
+				\label{cc_def}
+			\end{subfigure}
+			
+			\\ \hline			  
+			
+			
+			\begin{subfigure}[b]{.31\textwidth}
+			\centering
+			\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=4cm,
+			 semithick, transform shape]
+			\node[transaction state, text=black] at (0,0)       (t_1)           {$t_1$};
+			\node[transaction state] at (2,0)       (t_3)           {$t_3$};
+			\node[transaction state, text=black,label={above:\textcolor{black}{$\writeVar{ }{x}$}}] at (-0.5,1.5) (t_2) {$t_2$};
+			\node[transaction state] at (1.5,1.5) (t_4) {$t_4$};
+			\path (t_1) edge[wrColor] node {$\wro_x$} (t_3);
+			% \path (t_2) edge[blue] node {$\CO$} (t_1);
+			\path (t_2) edge[coColor, double] node {$\co^*$} (t_4);
+			\path (t_4) edge[left] node {$(\so \cup \wro)$} (t_3);
+			\path (t_2) edge[left,double, coColor] node {$\co$} (t_1);
+			\end{tikzpicture}
+			\parbox{\textwidth}{
+			$\forall \xvar,\ \forall t_1, t_2,\ \forall t_3.\ t_1\neq t_2\ \land$
+			
+			\hspace{4mm}$\tup{t_1,t_3}\in \wro[\xvar] \land \writeVar{t_2}{\xvar}\ \land$ 
+			
+			\hspace{9mm}$\tup{t_2,t_3}\in\co^*\circ\,(\wro\cup\so)$
+			
+			\hspace{14mm}$\implies \tup{t_2,t_1}\in\co$
+			}
+			
+			\caption{$\mathsf{Prefix}$}
+			\label{pre_def}
+			\end{subfigure}
+			     
+			
+			&
+			\begin{subfigure}[b]{.35\textwidth}
+			    \centering
+			    \begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=4cm,
+			      semithick, transform shape]
+			     \node[transaction state, text=black] at (0,0)       (t_1)           {$t_1$};
+			     \node[transaction state, label={right:$\writeVar{ }{\yvar}$}] at (2,0)       (t_3)           {$t_3$};
+			     \node[transaction state, text=black,label={above:\textcolor{black}{$\writeVar{ }{\xvar}$}}] at (-.5,1.5) (t_2) {$t_2$};
+			     \node[transaction state, label={right:{$\writeVar{}{\yvar}$}}] at (1.5,1.5) (t_4) {$t_4$};
+			     \path (t_1) edge[wrColor] node {$\wro_x$} (t_3);
+			     % \path (t_2) edge[blue] node {$\CO$} (t_1);
+			     \path (t_2) edge [coColor, double] node {$\co^*$} (t_4);
+			     \path (t_4) edge [coColor, double] node {$\co$} (t_3);
+			     \path (t_2) edge[left,double, coColor] node {$\co$} (t_1);
+			    \end{tikzpicture}
+			    \parbox{\textwidth}{
+			     $\forall \xvar,\ \forall t_1, t_2,\ \forall t_3, t_4,\ \forall \yvar.\ t_1\neq t_2\ \land$
+			     
+			     \hspace{4mm}$\tup{t_1,t_3}\in \wro_x \land \writeVar{t_2}{\xvar}\ \land$ 
+			     
+			     \hspace{9mm}$\writeVar{t_3}{\yvar}\ \land \writeVar{t_4}{\yvar}\ \land$ 
+			     
+			     \hspace{12mm}$\tup{t_2,t_4}\in\co^*\ \land \tup{t_4,t_3}\in\co$
+			     
+			     \hspace{16mm}$\implies \tup{t_2,t_1}\in\co$
+			    }
+			    
+			    \caption{$\mathsf{Conflict}$}
+			    \label{confl_def}
+			   \end{subfigure}
+			&     
+			\begin{subfigure}[b]{.31\textwidth}
+				\centering
+				\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=4cm,
+					semithick, transform shape]
+					\node[transaction state, text=black] at (0,0)       (t_1)           {$t_1$};
+					\node[transaction state] at (2,0)       (t_3)           {$t_3$};
+					\node[transaction state, text=black, label={above:\textcolor{black}{$\writeVar{ }{x}$}}] at (-.5,1.5) (t_2) {$t_2$};
+					\path (t_1) edge[wrColor] node {$\wro_x$} (t_3);
+					% \path (t_2) edge[blue] node {$\CO$} (t_1);
+					\path (t_2) edge[bend left, double, coColor] node {$\co$} (t_3);
+					\path (t_2) edge[left,double, coColor] node {$\co$} (t_1);
+				\end{tikzpicture}
+				\parbox{\textwidth}{
+					$\forall x,\ \forall t_1, t_2,\ \forall t_3.\ t_1\neq t_2\ \land$
+					
+					\hspace{4mm}$\tup{t_1,t_3}\in \wro_x \land \writeVar{t_2}{x}\ \land$ 
+					
+					\hspace{9mm}$\tup{t_2,t_3}\in\co$
+					
+					\hspace{14mm}$\implies \tup{t_2,t_1}\in\co$
+				}
+				
+				\caption{$\mathsf{Serializability}$}
+				\label{ser_def}
+			\end{subfigure}
+		
+		\\\hline
+		\end{tabular}
+	}
+	%  \vspace{-3mm}
+	\caption{Axioms defining isolations levels. The reflexive and transitive, resp., transitive, closure of a relation $rel$ is denoted by $rel^*$, resp., $rel^+$. Also, $\circ$ denotes the composition of two relations, i.e., $rel_1 \circ rel_2 = \{\tup{a, b} | \exists c. \tup{a, c} \in rel_1 \land \tup{c, b} \in rel_2\}$.}
+	\label{fig:consistency_defs}
+	%  \vspace{-2mm}
+\end{figure}
+
+In figure \ref{fig:consistency_defs} it is depicted five axioms which correspond to their homonymous isolation levels: \textit{Read Committed} ($\RC$), \textit{Read Atomic} ($\RA$), \textit{Causal Consistency} ($\CC$)  \textit{Prefix Consistency} ($\PRE$) and \textit{Serializability} ($\SER$); along with the conflict axiom. Conflict and Prefix allow us to define \textit{Snapshot Isolation} ($\SI$) as the model where prefix and conflict axioms both hold. We say a history $h$ satisfies an isolation level $I$ if there is a total order called \callout{commit order} $\co$ that extend $\so \cup \wro$ and satisfies its axioms. However, by the definition of $\RC, \RA$ and $\CC$, it is clear that for every history $h$ s.t. the relation $\co$ deduced from $\so \cup \wro$ is acyclic exists a commit order for those isolation levels.
+
+TODO DEFINE $I$-consistent histories
 
 \subsection{Program Semantics}
 
@@ -175,7 +400,7 @@ We say that the transaction log $t_1$ is \emph{read} by the transaction log $t_2
 
 We define a small-step operational semantics for transactional programs, which is parametrized by an isolation level $I$. The semantics keeps a history of previously executed database accesses in order to maintain conformance to $I$. 
 
-For readability, we define a program as a partial function $\mathsf{P}:\mathsf{SessId}\rightharpoonup \mathsf{Sess}$ that associates session identifiers in $\mathsf{SessId}$ with concrete code as defined in Figure~\ref{fig:syntax} (i.e., sequences of transactions). Similarly, the session order $\so$ in a history is defined as a partial function $\so:\mathsf{SessId}\rightharpoonup \mathsf{Tlogs}^*$ that associates session identifiers with sequences of transaction logs. Two transaction logs are ordered by $\so$ if one occurs before the other in some sequence $\so(j)$ with 
+For readability, we define a program as a partial function $\prog:\mathsf{SessId}\rightharpoonup \mathsf{Sess}$ that associates session identifiers in $\mathsf{SessId}$ with concrete code as defined in Figure~\ref{fig:syntax} (i.e., sequences of transactions). Similarly, the session order $\so$ in a history is defined as a partial function $\so:\mathsf{SessId}\rightharpoonup \mathsf{Tlogs}^*$ that associates session identifiers with sequences of transaction logs. Two transaction logs are ordered by $\so$ if one occurs before the other in some sequence $\so(j)$ with 
 $j\in \mathsf{SessId}$.
 
 Formally, the operational semantics is defined as a transition relation $\Rightarrow_I$ between \emph{configurations}, which are defined as tuples containing the following:
@@ -183,7 +408,7 @@ Formally, the operational semantics is defined as a transition relation $\Righta
 	\item history $\hist$ storing the events generated by database accesses executed in the past, 
 	\item a valuation map $\vec{\gamma}$ that records local variable values in the current transaction of each session ($\vec{\gamma}$ associates identifiers of sessions that have live transactions with valuations of local variables),
 	\item a map $\vec{B}$ that stores the code of each live transaction (associating session identifiers with code), and
-	\item sessions/transactions $\mathsf{P}$ that remain to be executed from the original program.
+	\item sessions/transactions $\prog$ that remain to be executed from the original program.
 \end{itemize}
 
 

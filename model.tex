@@ -1,4 +1,7 @@
-\section{Causally closed models}
+%!TEX root = main.tex
+\section{Prefix-Closed and Causally-Extensible Isolation Levels}
+
+TODO THE INTUITION BEHIND THIS CONDITION (USE THE TEXT THAT FOLLOWS)
 
 Besides models presented in figure \ref{fig:consistency_defs}, others isolation levels exists in literature and real life applications \textcolor{red}{cite Constantin's papers + Twitter, shoppingcart...}. However, our algorithm can not be analyzed under an arbitrary model. We characterize in this section the ones that can be employed by our algorithm.
 %not all of them can verified with the algorithm
@@ -67,18 +70,66 @@ Besides models presented in figure \ref{fig:consistency_defs}, others isolation 
 
 Let's analyze the histories $h_1$ and $h_2$ described in figure \ref{fig:maxclosed:a} and \ref{fig:maxclosed:b} respectively under RA; isolation level under which both are consistent. $h_1$ can be extended adding the event $r_1 = b \gets \rd{y}$ and the $\wro$-edge $w_1 \ [\wro] \ r_1$, where $w_1 = \wrt{x}{0}$. However, this is not the case of $h_2$: the only event that could be added in it is $w_2 = \wrt{y}{2}$. If $w_2$ would be added in $h_2$, any relation extending $\so \cup \wro$ and satisfying RA would be cyclic, so it wouldn't be a commit order. The essential difference between these two histories is the following: in $h_1$, $\tr(r)$ is $\so \cup \wro$-maximal while in $h_2$ $\tr(w)$ is not. As real database executions forbid transactions reading from non-committed ones, it is reasonable to allow those transactions $\so \cup \wro$-maximal to be executed completed without hindering the previous committed transactions. 
 
+For a relation $R\subseteq A\times A$, the restriction of $R$ to $A'\times A'$, denoted by $R\downarrow A'\times A'$, is defined by $\{(a,b): (a,b)\in R, a,b\in A'\}$. Also, a set $A'$ is called $R$-downward closed when it contains $a\in A$ every time it contains some $b\in A$ with $a\leq b$.
+
+A \emph{prefix} of $\hist=\tup{T, \so, \wro}$ is a history $\hist'=\tup{T',\so\downarrow T'\times T',\wro\downarrow T'\times T'}$ such that $T'$ is $(\so \cup \wro)$-downward closed.  TODO GIVE AN EXAMPLE OF A PREFIX ON THE FIGURE ABOVE.
+
 \begin{definition}
-A model $\mathcal{M}$ is called \callout{causally closed} if for every program $\mathcal{P}$ the following conditions are satisfied:
-\begin{itemize}
-	%\item \textbf{Well-formedness:} Consistency criteria for a history $h$ only depend on the edges of $h$ and if $h$ is consistent then $[\so \cup \wro]^+$ is also acyclic.
-	
-	\item \textbf{Prefix-closedness:} Every $\so \cup \wro$-prefix-closed sub-history of a consistent history is also consistent.
-	\item \textbf{Causal-extensibility:} Every non-total consistent history $h$ can be consistently extended by executing an event from a $\so \cup \wro$-maximal pending transaction $T$ in $h$. Moreover, if that event $r$ is a $\iread$, it can always read from a $\iwrite$ event $w$ s.t. in $h$ $\tr(w) \ [\so \cup \wro]^* \ \tr(r)$.
-\end{itemize}
+An isolation level $I$ is called \emph{prefix-closed} when every prefix of an $I$-consistent history is also $I$-consistent.
 \end{definition}
+
 %For be denominated as \callout{STMC-model}, $\mathcal{M}$ has to satisfies the following three axioms for every program $\mathcal{P}$:
 
-Comparing to the model requirements described in \textcolor{red}{cite viktor's algorithm}, it is causal-extensibility property, a slightly stricter version of \textcolor{red}{Viktor}'s maximal-extensibility, the biggest difference. However, this weak formulation still forbids some axiomatic models such as Serializability \textcolor{red}{cite constantin's paper (SER)} \textcolor{red}{Appendix cite}.
+%Comparing to the model requirements described in \textcolor{red}{cite viktor's algorithm}, it is causal-extensibility property, a slightly stricter version of \textcolor{red}{Viktor}'s maximal-extensibility, the biggest difference. However, this weak formulation still forbids some axiomatic models such as Serializability \textcolor{red}{cite constantin's paper (SER)} \textcolor{red}{Appendix cite}.
 %Indeed, some isolation levels cannot guarantee that reading from the last added $\iwrite$ event will maintain its consistency status.
 
-\input{proofs:causal-extensibility}
+\begin{theorem}
+Every model depicted in figure \ref{fig:consistency_defs} is prefix closed.
+\end{theorem}
+\begin{proof}
+Let $h$ be a consistent history. As any $\so \cup \wro$-prefix-closed sub-history $h'$ of $h$ is a sub-graph of it, and there is a commit order $\co$ for $h$, it suffices to restrict $\co$ to $h'$ for obtaining a commit order for $h'$.
+\end{proof}
+
+Let  $\hist=\tup{T, \so, \wro}$ be a history. A transaction $t$ is called $(\so \cup \wro)$-maximal in $h$ if $h$ does not contain any transaction $t'$ such that $(t,t')\in \so \cup \wro$. We define a \emph{causal extension} of a pending transaction $t$ in $h$ with an event $e$ as follows:
+\begin{itemize}
+\item $e$ is added to $t$ as a maximal element of $\po_t$,
+\item if $e$ is a read event, then $\wro$ is extended with some tuple $(t',e)$ such that $t'\ [\so \cup \wro]^*\ t$
+\item the other elements of $\hist$ remain unchanged.
+\end{itemize}
+
+TODO NOTE THAT A HISTORY MAY HAVE MULTIPLE CAUSAL EXTENSIONS WITH A READ. NOT FOR THE OTHER TYPES OF EVENTS. GIVE EXAMPLES.
+
+
+\begin{definition}
+An isolation level $I$ is called \textbf{causally-extensible} if for every $I$-consistent history $h$, every $(\so \cup \wro)$-maximal pending transaction $t$ in $h$, and every event $e$, there exists a causal extension of $t$ with $e$ that is $I$-consistent.
+%	can be extended with an event from a $\so \cup \wro$-maximal pending transaction $T$ in $h$. Moreover, if that event $r$ is a $\iread$, it can always read from a $\iwrite$ event $w$ s.t. in $h$ $\tr(w) \ [\so \cup \wro]^* \ \tr(r)$.
+\end{definition}
+
+\begin{theorem}
+\label{theorem:causalExtensibleModels-CC-RA-RC}
+Causal Consistency ($\CC$), Read Atomic ($\RA$) and Read Committed ($\RC$) are causally-extensible.
+\end{theorem}
+\begin{proof}
+Let $\mathcal{M}$ a model in $\{\CC, \RA, \RC\}$, $h$ a non-total consistent history and let $e$ a $\so \cup \wro$-maximal event. If $e$ is a $\ibegin$ event, $h \bullet e$ is consistent as if there exists a commit order $\co$ for $h$, the relation $\co' = \co \cup \{\langle T, \tr(e) \rangle, T \in h\}$ is a commit order to $h'$. Moreover, if $e$ is either a $\iwrite$ or an $\iend$ event, $h \bullet e$ is edge-wise identical to $h$, so the commit order for $h$ is also a valid commit order for $h \bullet e$. Therefore, let $e$ a $\so \cup \wro$-maximal $\iread$ event that reads variable $x$ and let us find a $\iwrite$ event $w$ s.t. $\tr(w) \ [\so \cup \wro]^* \ \tr(r)$ and that $h'_w = h \bullet_w r$ is consistent. 
+
+For doing so, we will do an induction on the number of $\co$ cycles $h'_w$ has, for some event $w$ s.t. $\tr(w) \ [\so \cup \wro]^* \ \tr(r)$; where $\co$  Clearly, if $h'_w$ is acyclic, by theorem \textcolor{red}{cite theorem h acyclic => exists a co (another paper, I hope it exists somewhere)}, it is consistent. Hence, let's suppose that if $h'_w$ has at most $n$ cycles, there exists another $\iwrite$ event $w_n$ s.t. $r$ causally depends on and $h'_{w_n} = h \bullet_{w_n} r$ is consistent; and let's analyze if the same property can be deduced for a history $h'_{w_{n+1}} = h \bullet_{w_{n+1}} r$ with $n+1$ cycles. As $h$ is consistent and $\tr(w_{n+1}) \ [\so \cup \wro]^* \ \tr(r)$, if there were a cycle, it would be due to a transaction $T$ such that writes $x$, $\tr(w_{n+1}) \ [\co]^* \ T$ and $\varphi_{\mathcal{M}}(T, e)$, where $\varphi_{\CC}(T, e) = T \ [\so \cup \wro]^+ \ \tr(e)$, $\varphi_{\RA}(T, e) = T \ [\so \cup \wro] \ \tr(e)$ and $\varphi_{\RC}(T, e) = T \ [\wro \circ \po] \ e$. In particular, for any of the three models, $T \ [\so \cup \wro]^* \ \tr(r)$. Let $w_n$ a $\iwrite$ event in $T$ that writes $x$ and $h_{w_n} = h \bullet_w r$: if we prove that the number of $\co$-cycles in $h_{w_n}$ is strictly smaller than in $h_{w_{n+1}}$ by induction hypothesis, we can conclude the result.
+
+Firstly, as $T\ [\wro_x] \ \tr(r)$, the cycle that was between $T$ and $\tr(w_{n+1})$ does not exist in $h_{w_n}$. Moreover, analogously as before, if there is a cycle in $h_{w_n}$, it is due to the existence of a transaction $T'$ s.t. $T \ [\co] \ T'$ and $\varphi_{\mathcal{M}}(T', r)$. Therefore, in $h_{w_{n+1}}$ $\tr(w_{n+1}) \ [\co] \ T \ [\co] \ T'$, so there is a cycle between in $\tr(w_{n+1})$ and $T'$. To sum up, every cycle in $h_{w_n}$ has a counterpart in $h_{w_{n+1}}$ and it has one less cycle; so the inductive step holds.
+
+Finally, as $\init$ contains a $\iwrite$ event $w_\emptyset$ that writes $x$, $\init \ [\so \cup \wro]^* \ \tr(r)$ and every history has a finite number of transactions, we can deduce from the history $h'_{w_\emptyset} = h \bullet_{w_\emptyset} r$ that there is a $\iwrite$ event $w$ that $r$ depends causally on and $h \bullet_w r$ is consistent.
+\end{proof}
+
+\begin{theorem}
+\label{theorem:causalExtensibleModels-PRE}
+Prefix Consistency ($\PRE$) is causally-extensible.
+\end{theorem}
+\begin{proof}
+Let $h$ a non-total consistent history and $e$ a $\so \cup \wro$-maximal event. Analogously as in theorem \ref{theorem:causalExtensibleModels-CC-RA-RC}, if $e$ is a $\ibegin$ or an $\iend$ event, $h \bullet e$ is consistent. If $e$ is a $\iwrite$ event that writes a variable $x$, let us show that for $h' = h \bullet e$ we can produce a commit order for it starting from a commit order $\co$ for $h$. If there is a cycle in $h'$ it is because there exists some transactions $T_0, T_1, T_2$ s.t. $T_1 \ [\wro_x] \ T_2$, $T_0 \ [\so \cup \wro] T_2$, $\tr(e) \ [\co]^* \ T_0$ and $T_1 \ [\co] \ \tr(e)$. As $e$ is $\so \cup \wro$-maximal, for every other transaction $T$, $\lnot(\tr(e) \ [\so \cup \wro]^* \ T)$. Let $\co' = \{\langle T, T' \rangle \ | \ T \times T' \in h'^2 \text{ s.t. } T \ [\co] \ T' \land T \neq \tr(e)\} \cup \{\langle T, \tr(e) \ | \ T \in h' \rangle\}$. This relation is a total order as it is $\co\restriction_{h \setminus \tr(e)}$ juxtaposed with $\tr(e)$ which extends $\so \cup \wro$. Moreover, if $h'$ had a $\co'$-cycle, as $\tr(e)$ is $\so \cup \wro$-maximal, it would have to be due to other four transactions distinct from $\tr(e)$; contradicting $h$ is consistent. Therefore, $h'$ is a $\PRE$-consistent history.
+
+Otherwise, if $e$ is a $\iread$ event that reads variable $x$, let $h_{R|W}$ the history obtained by splitting every transaction $T$ in two, one containing every $\iread$ event ($R_T$) that immediately $\so$-precedes a complementary one with every single $\iwrite$ event ($W_T$); along with corresponding $\so_{R|W}$ and $\wro_{R|W}$ relations \textcolor{red}{Cite Ranadeep's paper}. By theorem \textcolor{red}{Cite again Ranadeep's paper}, for every history $\hat{h}$, $\isConsistent[\PRE]{\hat{h}}$ if and only if $\isConsistent[\SER]{\hat{h}_{R|W}}$. Therefore, as $\isConsistent[\SER]{h_{R|W}}$ holds, there is a commit order $\co'$ such that for every $T$ s.t. if $W_{T} \ [\co'] \ R_{\tr(e)}$ them $T \ [\so \cup \wro]^+ \tr(e)$. Therefore, let $w$ the maximum $\iwrite$ event according to $\co'$ before $R_{\tr(e)}$ that writes $x$ and $h'_{R|W} = h_{R|W} \bullet_w e$. This history is clearly serializable taking $\co'$ as commit order. Hence, $h' = h \bullet_w e$ is $\PRE$-consistent and $\tr(w) \ [\so \cup \wro]^* \tr(r)$.
+% and in particular, $\lnot(\tr(e) \ [\so \cup \wro]^* \ T)$
+\end{proof}
+
+TODO SHOW THAT SERIALIZABILITY IS NOT CAUSALLY-EXTENSIBLE.
+
+%\input{proofs:causal-extensibility}

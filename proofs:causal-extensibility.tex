@@ -1,3 +1,4 @@
+%!TEX root = main.tex
 \begin{theorem}
 Every model depicted in figure \ref{fig:consistency_defs} is prefix closed.
 \begin{proof}
@@ -5,9 +6,24 @@ Let $h$ be a consistent history. As any $\so \cup \wro$-prefix-closed sub-histor
 \end{proof}
 \end{theorem}
 
+Let  $\hist=\tup{T, \so, \wro}$ be a history. A transaction $t$ is called $(\so \cup \wro)$-maximal in $h$ if $h$ does not contain any transaction $t'$ such that $(t,t')\in \so \cup \wro$. We define a \emph{causal extension} of a pending transaction $t$ in $h$ with an event $e$ as follows:
+\begin{itemize}
+\item $e$ is added to $t$ as a maximal element of $\po_t$,
+\item if $e$ is a read event, then $\wro$ is extended with some tuple $(t',e)$ such that $t'\ [\so \cup \wro]^*\ t$
+\item the other elements of $\hist$ remain unchanged.
+\end{itemize}
+
+TODO NOTE THAT A HISTORY MAY HAVE MULTIPLE CAUSAL EXTENSIONS WITH A READ. NOT FOR THE OTHER TYPES OF EVENTS. GIVE EXAMPLES.
+
+
+\begin{definition}
+An isolation level $I$ is called \textbf{causally-extensible} if for every $I$-consistent history $h$, every $(\so \cup \wro)$-maximal pending transaction $t$ in $h$, and every event $e$, there exists a causal extension of $t$ with $e$ that is $I$-consistent.
+%	can be extended with an event from a $\so \cup \wro$-maximal pending transaction $T$ in $h$. Moreover, if that event $r$ is a $\iread$, it can always read from a $\iwrite$ event $w$ s.t. in $h$ $\tr(w) \ [\so \cup \wro]^* \ \tr(r)$.
+\end{definition}
+
 \begin{theorem}
 \label{theorem:causalExtensibleModels-CC-RA-RC}
-Causal Consistency ($\CC$), Read Atomic ($\RA$) and Read Committed ($\RC$) are causal-extensible models.
+Causal Consistency ($\CC$), Read Atomic ($\RA$) and Read Committed ($\RC$) are causally-extensible.
 \begin{proof}
 Let $\mathcal{M}$ a model in $\{\CC, \RA, \RC\}$, $h$ a non-total consistent history and let $e$ a $\so \cup \wro$-maximal event. If $e$ is a $\ibegin$ event, $h \bullet e$ is consistent as if there exists a commit order $\co$ for $h$, the relation $\co' = \co \cup \{\langle T, \tr(e) \rangle, T \in h\}$ is a commit order to $h'$. Moreover, if $e$ is either a $\iwrite$ or an $\iend$ event, $h \bullet e$ is edge-wise identical to $h$, so the commit order for $h$ is also a valid commit order for $h \bullet e$. Therefore, let $e$ a $\so \cup \wro$-maximal $\iread$ event that reads variable $x$ and let us find a $\iwrite$ event $w$ s.t. $\tr(w) \ [\so \cup \wro]^* \ \tr(r)$ and that $h'_w = h \bullet_w r$ is consistent. 
 
@@ -21,7 +37,7 @@ Finally, as $\init$ contains a $\iwrite$ event $w_\emptyset$ that writes $x$, $\
 
 \begin{theorem}
 \label{theorem:causalExtensibleModels-PRE}
-Prefix Consistency ($\PRE$) is a causal-extensible model.
+Prefix Consistency ($\PRE$) is causally-extensible.
 \begin{proof}
 Let $h$ a non-total consistent history and $e$ a $\so \cup \wro$-maximal event. Analogously as in theorem \ref{theorem:causalExtensibleModels-CC-RA-RC}, if $e$ is a $\ibegin$ or an $\iend$ event, $h \bullet e$ is consistent. If $e$ is a $\iwrite$ event that writes a variable $x$, let us show that for $h' = h \bullet e$ we can produce a commit order for it starting from a commit order $\co$ for $h$. If there is a cycle in $h'$ it is because there exists some transactions $T_0, T_1, T_2$ s.t. $T_1 \ [\wro_x] \ T_2$, $T_0 \ [\so \cup \wro] T_2$, $\tr(e) \ [\co]^* \ T_0$ and $T_1 \ [\co] \ \tr(e)$. As $e$ is $\so \cup \wro$-maximal, for every other transaction $T$, $\lnot(\tr(e) \ [\so \cup \wro]^* \ T)$. Let $\co' = \{\langle T, T' \rangle \ | \ T \times T' \in h'^2 \text{ s.t. } T \ [\co] \ T' \land T \neq \tr(e)\} \cup \{\langle T, \tr(e) \ | \ T \in h' \rangle\}$. This relation is a total order as it is $\co\restriction_{h \setminus \tr(e)}$ juxtaposed with $\tr(e)$ which extends $\so \cup \wro$. Moreover, if $h'$ had a $\co'$-cycle, as $\tr(e)$ is $\so \cup \wro$-maximal, it would have to be due to other four transactions distinct from $\tr(e)$; contradicting $h$ is consistent. Therefore, $h'$ is a $\PRE$-consistent history.
 
@@ -30,3 +46,5 @@ Otherwise, if $e$ is a $\iread$ event that reads variable $x$, let $h_{R|W}$ the
 % and in particular, $\lnot(\tr(e) \ [\so \cup \wro]^* \ T)$
 \end{proof}
 \end{theorem}
+
+TODO SHOW THAT SERIALIZABILITY IS NOT CAUSALLY-EXTENSIBLE.
