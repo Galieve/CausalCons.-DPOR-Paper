@@ -1,22 +1,24 @@
 %!TEX root = main.tex
-\section{The class of swapping based algorithms}
+\section{Swapping-Based Model Checking Algorithms}
 
 \subsection{Definition}
 
-The above-mentioned classes are, notwithstanding, quite dense and contain lots of algorithms we are not interested in (as non-DPOR algorithms for example). In particular, our work focuses on the collection of algorithms defined by the schema \ref{algorithm:algo-class} for some functions $\genericNext, \genericEvaluate, \genericValidWrites, \genericCompute, \genericProtocol, \genericSwap$ to be defined. %Thanks to this approach we will show the existence of some sound and complete algorithms and easily prove some of their properties.
+%The above-mentioned classes are, notwithstanding, quite dense and contain lots of algorithms we are not interested in (as non-DPOR algorithms for example). In particular, our work focuses on the collection of algorithms defined by the schema \ref{algorithm:algo-class} for some functions $\genericNext, \genericEvaluate, \genericValidWrites, \genericCompute, \genericProtocol, \genericSwap$ to be defined. %Thanks to this approach we will show the existence of some sound and complete algorithms and easily prove some of their properties.
 
-\begin{algorithm}[H]
+We present a class of model checking algorithms for enumerating executions of a given transactional program, that we call \emph{swapping-based algorithms}. These algorithms are defined by the recursive function \textsc{explore} listed in Algorithm~\ref{algorithm:algo-class}. The function \textsc{explore} receives as input a program $\prog$, an \emph{ordered history} $\hist_<$, which is a pair $(\hist,<)$ of a history and a total order $<$ on all the events in $\hist$, and a mapping $\locals$ that associates each event $e$ in $\hist$ with the valuation of local variables in $\trans{h}{e}$ just before executing $e$.
+
+\begin{algorithm}[t]
 	\caption{\textsc{explore} algorithm}
 	\begin{algorithmic}[1]
-	\Function{\textsc{explore}}{$\prog$, $\hist_<$, $\local$}
+	\Function{\textsc{explore}}{$\prog$, $\hist_<$, $\locals$}
 		%\InputAlgorithmic \textsc{explore}($\prog$,$\hist_<$,$\local$)
 		%\InputAlgorithmic a program $\prog$
-		\State $e \gets  \genericNext(\prog, \hist_<, \local)$
+		\State $e, \gamma \gets  \genericNext(\prog, \hist_<, \locals)$
 		
 		
-		\If{$\mathit{type}(e) = \bot$}
-			\If{$\genericEvaluate(h)$}
-				\State \textbf{output} $h$, $\local$
+		\If{$e = \bot$}
+			\If{$\genericEvaluate(\prog, h, \locals)$}
+				\State \textbf{output} $h$, $\locals[e\mapsto \gamma]$
 			\EndIf
 		%\State $\textbf{\genericEvaluate}(h)$
 		\State \Return
@@ -24,11 +26,11 @@ The above-mentioned classes are, notwithstanding, quite dense and contain lots o
 		
 		\ForAll{$w \in \genericValidWrites(h,e)$} %\writeVar{w}{x}
 		
-		\State $\textsc{explore}(\prog, h_< \bullet_w e, \local')$
+		\State $\textsc{explore}(\prog, h_< \bullet_w e, \locals[e\mapsto \gamma])$
 		\label{algorithm:algo-class:exploreRead}
 		\EndFor
 		\Else
-		\State $\textsc{explore}(\prog, h_< \bullet e,\local)$
+		\State $\textsc{explore}(\prog, h_< \bullet e,\locals[e\mapsto \gamma])$
 		\label{algorithm:algo-class:exploreStd}
 		\EndIf
 		
@@ -36,7 +38,7 @@ The above-mentioned classes are, notwithstanding, quite dense and contain lots o
 		
 		\ForAll{$(\alpha, \beta) \in l$}
 		\If{$\genericProtocol(h_<, e, \alpha, \beta)$}
-		\State $\textsc{explore}(\prog,\genericSwap(h_< \bullet e, \alpha, \beta, \local))$	
+		\State $\textsc{explore}(\prog,\genericSwap(h_< \bullet e, \alpha, \beta, \locals))$	
 		
 		\EndIf
 		\EndFor
@@ -47,10 +49,19 @@ The above-mentioned classes are, notwithstanding, quite dense and contain lots o
 	%\caption{Generic method for exploring every possible history $h$ of a program $\mathcal{P}$ running under a database with $\mathcal{M}$ as isolation level.}
 \end{algorithm}
 
-Algorithm \ref{algorithm:algo-class} explores systematically the space of histories, selecting a new event $e$ to be added to some history $h$ if possible, thanks to the function $\genericNext$ called \textit{next}. If it wasn't possible, it is due to $h$ being either a total execution or an undesirable one; both behaviors discriminated via \textit{evaluating} $h$ with the $\genericEvaluate$ function. Otherwise, $e$ will added $h$ along with an eventual $\wro$-edge obtained via $\genericValidWrites$, linking a \textit{valid} $\iwrite$ event with the new $\iread$ event. Moreover, at some point during the search traversal determined by $\genericCompute$ the algorithm will \textit{compute} some collection of events $\alpha, \beta$ that may needed to be reordered. Every events' rescheduling possibly lead to a different execution, so for controlling which reorderings we are shall explore, we enforce a \textit{reordering protocol} (function $\genericProtocol$). In the affirmative case, the new histories would be generated via $\genericSwap$, \textit{swapping} $\beta$ and all their dependencies before $\alpha$. However, the reader shall take into account that this high-level description of algorithm \ref{algorithm:algo-class} may not be satisfied for some $\textsc{explore}$'s instance.
+The function \textsc{explore} calls $\genericNext$ to obtain an event representing the next database access in the input program. A typical implementation of $\genericNext$ would execute all local instructions until the next database instruction in some transaction, and return the event $e$ corresponding to that database instruction and the current local state $\gamma$. $\genericNext$ may also return $\bot$ if the program finished or if the history $\hist$ is not consistent with some intended isolation level. The function $\genericEvaluate$ is used to select the cases in which the program finished and the history satisfies all the consistency requirements before outputting the current history (and local states).
+%Algorithm \ref{algorithm:algo-class} explores systematically the space of histories, selecting a new event $e$ to be added to some history $h$ if possible, thanks to the function $\genericNext$ called \textit{next}. If it wasn't possible, it is due to $h$ being either a total execution or an undesirable one; both behaviors discriminated via \textit{evaluating} $h$ with the $\genericEvaluate$ function. 
+
+Otherwise, the event $e$ is added to the ordered history $h_<$ along with an eventual $\wro$ dependency selected via $\genericValidWrites$, linking a \textit{valid} $\iwrite$ event with the new $\iread$ event (valid means satisfying consistency w.r.t. the intended isolation level). 
+
+
+
+Moreover, at some point during the search traversal determined by $\genericCompute$ the algorithm will \textit{compute} some collection of events $\alpha, \beta$ that may needed to be reordered. Every events' rescheduling possibly lead to a different execution, so for controlling which reorderings we are shall explore, we enforce a \textit{reordering protocol} (function $\genericProtocol$). In the affirmative case, the new histories would be generated via $\genericSwap$, \textit{swapping} $\beta$ and all their dependencies before $\alpha$. However, the reader shall take into account that this high-level description of algorithm \ref{algorithm:algo-class} may not be satisfied for some $\textsc{explore}$'s instance.
 %may not be satisfied for some $\textsc{explore}$'s instances.
 
 %determines so, we will also explore the history generated via $\genericSwap$; where $\alpha$ and $\beta$ have different relative order. It is assumed that \ref{algorithm:algo-class} maintains a total order between events in the history that doesn't contradict $\so$. Finally, let's take into account that this high-level description of the algorithm may not be satisfied for some $\textsc{explore}$'s instances. %\textcolor{red}{Here I wanted to guide the reader of what does this algorithm mean; but remarking that of course, if you add a weird function, then all what I said is a lie (for example if the swap history does not swap at all).}
+
+TODO WE ASSUME THAT THE NEXT FUNCTION IS INDEPENDENT OF THE FUTURE. IT IS A NON-DETERMINISTIC FUNCTION, BUT ITS SET OF POSSIBLE RESULTS IS THE SAME IF THE PROGRAM HAS MORE/DIFFERENT THINGS AFTER THE NEXT DATABASE ACCESS.
 
 \begin{definition}
 The \callout{swapping-based algorithm's class} for the memory model $\mathcal{M}$, $\mathcal{S}_{\mathcal{M}}$, is the minimal collection containing all algorithms $A$ that can be described as algorithm \ref{algorithm:algo-class}'s instances: $ \textsc{explore}(\genericNext, \genericEvaluate, \genericValidWrites, \genericCompute, \genericProtocol, \genericSwap)$; where $\genericNext, \genericEvaluate , \genericValidWrites, \genericCompute, \genericProtocol, \genericSwap$ are functions defined as follows: 
