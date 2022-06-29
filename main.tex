@@ -203,12 +203,13 @@
 
 %---- Theoretical algorithm
 
-\newcommand{\genericNext}{\textup{\texttt{N}}}
-\newcommand{\genericEvaluate}{\textup{\texttt{E}}}
-\newcommand{\genericCompute}{\textup{\texttt{C}}}
-\newcommand{\genericProtocol}{\textup{\texttt{P}}}
-\newcommand{\genericSwap}{\textup{\texttt{S}}}
-\newcommand{\genericValidWrites}{\textup{\texttt{V}}}
+\newcommand{\local}{\mathsf{ls}}
+\newcommand{\genericNext}{\textsc{Next}}
+\newcommand{\genericEvaluate}{\textsc{Final}}
+\newcommand{\genericCompute}{\textsc{ComputeReordering}}
+\newcommand{\genericProtocol}{\textsc{OptimalityCondition}}
+\newcommand{\genericSwap}{\textsc{Swap}}
+\newcommand{\genericValidWrites}{\textsc{ValidWrites}}
 \newcommand{\nextEvent}{\textup{\textsc{next}}}
 \newcommand{\evaluate}{\textup{\textsc{evaluate}}}
 \newcommand{\protocol}[1][\mathcal{M}]{\textup{\textsc{isSwappable}}_{#1}}
@@ -272,7 +273,8 @@
 \algtext*{EndFor}%
 \algnewcommand\Let{\State\textbf{let} }
 \algnewcommand\Break{\State\textbf{break} }
-\algnewcommand\InputAlgorithmic{\Statex\textbf{Input: }} 
+\algnewcommand\InputAlgorithmic{\Statex\textbf{Procedure }} 
+\renewcommand{\algorithmicrequire}{\textbf{Procedure }}
 \algnewcommand\OutputAlgorithmic{\Statex\textbf{Output: }}
 \algblockdefx[BlockName]{ForTo1}{EndForTo1}%
 [3][i]{\textbf{for} #1 $\gets$ #2 \textbf{to} #3 \textbf{do}}%

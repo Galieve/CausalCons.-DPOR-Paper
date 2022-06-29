@@ -1,4 +1,70 @@
+%!TEX root = main.tex
 \section{The class of swapping based algorithms}
+
+\subsection{Definition}
+
+The above-mentioned classes are, notwithstanding, quite dense and contain lots of algorithms we are not interested in (as non-DPOR algorithms for example). In particular, our work focuses on the collection of algorithms defined by the schema \ref{algorithm:algo-class} for some functions $\genericNext, \genericEvaluate, \genericValidWrites, \genericCompute, \genericProtocol, \genericSwap$ to be defined. %Thanks to this approach we will show the existence of some sound and complete algorithms and easily prove some of their properties.
+
+\begin{algorithm}[H]
+	\caption{\textsc{explore} algorithm}
+	\begin{algorithmic}[1]
+	\Function{\textsc{explore}}{$\prog$, $\hist_<$, $\local$}
+		%\InputAlgorithmic \textsc{explore}($\prog$,$\hist_<$,$\local$)
+		%\InputAlgorithmic a program $\prog$
+		\State $e \gets  \genericNext(\prog, \hist_<, \local)$
+		
+		
+		\If{$\mathit{type}(e) = \bot$}
+			\If{$\genericEvaluate(h)$}
+				\State \textbf{output} $h$, $\local$
+			\EndIf
+		%\State $\textbf{\genericEvaluate}(h)$
+		\State \Return
+		\ElsIf{$\mathit{type}(e) = \iread$}
+		
+		\ForAll{$w \in \genericValidWrites(h,e)$} %\writeVar{w}{x}
+		
+		\State $\textsc{explore}(\prog, h_< \bullet_w e, \local')$
+		\label{algorithm:algo-class:exploreRead}
+		\EndFor
+		\Else
+		\State $\textsc{explore}(\prog, h_< \bullet e,\local)$
+		\label{algorithm:algo-class:exploreStd}
+		\EndIf
+		
+		\State $l \gets \genericCompute(h)$
+		
+		\ForAll{$(\alpha, \beta) \in l$}
+		\If{$\genericProtocol(h_<, e, \alpha, \beta)$}
+		\State $\textsc{explore}(\prog,\genericSwap(h_< \bullet e, \alpha, \beta, \local))$	
+		
+		\EndIf
+		\EndFor
+	\EndFunction
+		
+	\end{algorithmic}
+	\label{algorithm:algo-class}
+	%\caption{Generic method for exploring every possible history $h$ of a program $\mathcal{P}$ running under a database with $\mathcal{M}$ as isolation level.}
+\end{algorithm}
+
+Algorithm \ref{algorithm:algo-class} explores systematically the space of histories, selecting a new event $e$ to be added to some history $h$ if possible, thanks to the function $\genericNext$ called \textit{next}. If it wasn't possible, it is due to $h$ being either a total execution or an undesirable one; both behaviors discriminated via \textit{evaluating} $h$ with the $\genericEvaluate$ function. Otherwise, $e$ will added $h$ along with an eventual $\wro$-edge obtained via $\genericValidWrites$, linking a \textit{valid} $\iwrite$ event with the new $\iread$ event. Moreover, at some point during the search traversal determined by $\genericCompute$ the algorithm will \textit{compute} some collection of events $\alpha, \beta$ that may needed to be reordered. Every events' rescheduling possibly lead to a different execution, so for controlling which reorderings we are shall explore, we enforce a \textit{reordering protocol} (function $\genericProtocol$). In the affirmative case, the new histories would be generated via $\genericSwap$, \textit{swapping} $\beta$ and all their dependencies before $\alpha$. However, the reader shall take into account that this high-level description of algorithm \ref{algorithm:algo-class} may not be satisfied for some $\textsc{explore}$'s instance.
+%may not be satisfied for some $\textsc{explore}$'s instances.
+
+%determines so, we will also explore the history generated via $\genericSwap$; where $\alpha$ and $\beta$ have different relative order. It is assumed that \ref{algorithm:algo-class} maintains a total order between events in the history that doesn't contradict $\so$. Finally, let's take into account that this high-level description of the algorithm may not be satisfied for some $\textsc{explore}$'s instances. %\textcolor{red}{Here I wanted to guide the reader of what does this algorithm mean; but remarking that of course, if you add a weird function, then all what I said is a lie (for example if the swap history does not swap at all).}
+
+\begin{definition}
+The \callout{swapping-based algorithm's class} for the memory model $\mathcal{M}$, $\mathcal{S}_{\mathcal{M}}$, is the minimal collection containing all algorithms $A$ that can be described as algorithm \ref{algorithm:algo-class}'s instances: $ \textsc{explore}(\genericNext, \genericEvaluate, \genericValidWrites, \genericCompute, \genericProtocol, \genericSwap)$; where $\genericNext, \genericEvaluate , \genericValidWrites, \genericCompute, \genericProtocol, \genericSwap$ are functions defined as follows: 
+\begin{itemize}
+	\item $\genericNext: \mathcal{H}_\mathcal{P} \to \mathcal{E}_\mathcal{P}$, where for every $h \in \mathcal{H}_{\mathcal{P}}$, $\genericNext(h) \not\in h$ and for every event $e$ s.t. $e \ [\so] \ \genericNext(h)$, $e \in h$, %\textcolor{red}{redundant with weakly optimal; it may be helpful to the reader}
+	\item $\genericEvaluate: \mathcal{H}_\mathcal{P} \to \{0, 1\}$, %which determines if an execution is total or not,
+	\item $\genericValidWrites: \mathcal{H}_\mathcal{P} \times \mathcal{E}_\mathcal{P} \to \mathcal{P}(\mathcal{E}_\mathcal{P})$, %\textcolor{red}{this is for determine when computing a total inconsistent history shall be taken into account}
+	\item $\genericCompute: \mathcal{H}^<_\mathcal{P} \to \mathcal{E}_\mathcal{P}^* \times \mathcal{E}_\mathcal{P}^*$, where for every history $h$, $\genericCompute(h) = (\alpha, \beta)$, $\alpha \cap \beta = \emptyset$ and for every $(e, e') \in \alpha \times \beta$, $e <_h e'$.
+	\item $\genericProtocol: \mathcal{H}^<_\mathcal{P} \times \mathcal{E}_\mathcal{P}^* \times \mathcal{E}_\mathcal{P}^* \to \{0,1\}$, %\textcolor{red}{shall we impose the protocol to only be true in only one history for each class? not needed though...}
+	\item $\genericSwap: \mathcal{H}^<_\mathcal{P} \times \mathcal{E}_\mathcal{P}^* \times \mathcal{E}_\mathcal{P}^* \to \mathcal{H}^<_\mathcal{P}$, where for every $h, \alpha, \beta$, we have $\genericSwap(h \bullet e, \alpha, \beta) = h'$, $\alpha, \beta \in h'$, for every $(e, e') \in \alpha \times \beta \implies e >_{h'} e'$ and there exists some $(e, e') \in (\alpha, \beta)$ s.t. $\tr(e') \ [\wro] \ \tr(e)$.
+\end{itemize}
+\end{definition}
+
+\subsection{Other}
 
 \begin{definition}
 Given an algorithm $A$ and a model $\mathcal{M}$, we say:
@@ -27,66 +93,6 @@ The algorithm's class $\mathcal{W}^n_{\mathcal{M}}$ is defined as the minimal co
 
 %\textcolor{red}{We need the three classes for the following: RA/RC/CC/PRE algorithms belong to $O^1$, our PRE+SER/PRE+SI version is $W^1$, for SER we cannot obtaining it in $O^n$ for any $n$ nor in $L^1$ and in RA/RC/CC/PRE $O^1 = L^1$. Moreover, if we allow the subindex there, we can talk about future work allowing multiple pending transactions (it may be reasonable to prove that there is an algorithm for SER in $L^n$) and indicate Viktor's algorithm is not in $L^n$ for any $n$ as it employs exp memory. If we don't want to be that expressive, we can only talk about weakly optimal and then proof that under RA/RC/CC/PRE with our algorithms there is no blocking branches as an extra feature thanks to the models; but I thought it may be clearer to distribute it in this way.}
 
-The above-mentioned classes are, notwithstanding, quite dense and contain lots of algorithms we are not interested in (as non-DPOR algorithms for example). In particular, our work focuses on the collection of algorithms defined by the schema \ref{algorithm:algo-class} for some functions $\genericNext, \genericEvaluate, \genericValidWrites, \genericCompute, \genericProtocol, \genericSwap$ to be defined. %Thanks to this approach we will show the existence of some sound and complete algorithms and easily prove some of their properties.
 
-\begin{algorithm}[H]
-	\caption{\textsc{explore} algorithm}
-	\begin{algorithmic}[1]
-		\InputAlgorithmic $h$: history
-		
-		\Statex
-		
-		\State $e \gets  \textbf{\genericNext}(h)$
-		
-		
-		\If{$\textsc{type}(e) = \bot$}
-			\If{$\textbf{\genericEvaluate}(h)$}
-				\State \textbf{output} $h$
-			\EndIf
-		%\State $\textbf{\genericEvaluate}(h)$
-		\State \Return
-		\ElsIf{$\textsc{type}(e) = \iread$}
-		
-		\ForAll{$w \in \textbf{\genericValidWrites}(h,e)$} %\writeVar{w}{x}
-		
-		\State $\textsc{explore}(h \bullet_w e)$
-		\label{algorithm:algo-class:exploreRead}
-		\EndFor
-		\Else
-		\State $\textsc{explore}(h \bullet e)$
-		\label{algorithm:algo-class:exploreStd}
-		\EndIf
-		
-		\State $l \gets \textbf{\genericCompute}(h)$
-		
-		\ForAll{$(\alpha, \beta) \in l$}
-		\If{$\textbf{\genericProtocol}(h \bullet e, \alpha, \beta)$}
-		\State $\textsc{explore}(\textbf{\genericSwap}(h \bullet e, \alpha, \beta))$	
-		
-		\EndIf
-		\EndFor
-		
-		
-	\end{algorithmic}
-	\label{algorithm:algo-class}
-	%\caption{Generic method for exploring every possible history $h$ of a program $\mathcal{P}$ running under a database with $\mathcal{M}$ as isolation level.}
-\end{algorithm}
-
-Algorithm \ref{algorithm:algo-class} explores systematically the space of histories, selecting a new event $e$ to be added to some history $h$ if possible, thanks to the function $\genericNext$ called \textit{next}. If it wasn't possible, it is due to $h$ being either a total execution or an undesirable one; both behaviors discriminated via \textit{evaluating} $h$ with the $\genericEvaluate$ function. Otherwise, $e$ will added $h$ along with an eventual $\wro$-edge obtained via $\genericValidWrites$, linking a \textit{valid} $\iwrite$ event with the new $\iread$ event. Moreover, at some point during the search traversal determined by $\genericCompute$ the algorithm will \textit{compute} some collection of events $\alpha, \beta$ that may needed to be reordered. Every events' rescheduling possibly lead to a different execution, so for controlling which reorderings we are shall explore, we enforce a \textit{reordering protocol} (function $\genericProtocol$). In the affirmative case, the new histories would be generated via $\genericSwap$, \textit{swapping} $\beta$ and all their dependencies before $\alpha$. However, the reader shall take into account that this high-level description of algorithm \ref{algorithm:algo-class} may not be satisfied for some $\textsc{explore}$'s instance.
-%may not be satisfied for some $\textsc{explore}$'s instances.
-
-%determines so, we will also explore the history generated via $\genericSwap$; where $\alpha$ and $\beta$ have different relative order. It is assumed that \ref{algorithm:algo-class} maintains a total order between events in the history that doesn't contradict $\so$. Finally, let's take into account that this high-level description of the algorithm may not be satisfied for some $\textsc{explore}$'s instances. %\textcolor{red}{Here I wanted to guide the reader of what does this algorithm mean; but remarking that of course, if you add a weird function, then all what I said is a lie (for example if the swap history does not swap at all).}
-
-\begin{definition}
-The \callout{swapping-based algorithm's class} for the memory model $\mathcal{M}$, $\mathcal{S}_{\mathcal{M}}$, is the minimal collection containing all algorithms $A$ that can be described as algorithm \ref{algorithm:algo-class}'s instances: $ \textsc{explore}(\genericNext, \genericEvaluate, \genericValidWrites, \genericCompute, \genericProtocol, \genericSwap)$; where $\genericNext, \genericEvaluate , \genericValidWrites, \genericCompute, \genericProtocol, \genericSwap$ are functions defined as follows: 
-\begin{itemize}
-	\item $\genericNext: \mathcal{H}_\mathcal{P} \to \mathcal{E}_\mathcal{P}$, where for every $h \in \mathcal{H}_{\mathcal{P}}$, $\genericNext(h) \not\in h$ and for every event $e$ s.t. $e \ [\so] \ \genericNext(h)$, $e \in h$, %\textcolor{red}{redundant with weakly optimal; it may be helpful to the reader}
-	\item $\genericEvaluate: \mathcal{H}_\mathcal{P} \to \{0, 1\}$, %which determines if an execution is total or not,
-	\item $\genericValidWrites: \mathcal{H}_\mathcal{P} \times \mathcal{E}_\mathcal{P} \to \mathcal{P}(\mathcal{E}_\mathcal{P})$, %\textcolor{red}{this is for determine when computing a total inconsistent history shall be taken into account}
-	\item $\genericCompute: \mathcal{H}^<_\mathcal{P} \to \mathcal{E}_\mathcal{P}^* \times \mathcal{E}_\mathcal{P}^*$, where for every history $h$, $\genericCompute(h) = (\alpha, \beta)$, $\alpha \cap \beta = \emptyset$ and for every $(e, e') \in \alpha \times \beta$, $e <_h e'$.
-	\item $\genericProtocol: \mathcal{H}^<_\mathcal{P} \times \mathcal{E}_\mathcal{P}^* \times \mathcal{E}_\mathcal{P}^* \to \{0,1\}$, %\textcolor{red}{shall we impose the protocol to only be true in only one history for each class? not needed though...}
-	\item $\genericSwap: \mathcal{H}^<_\mathcal{P} \times \mathcal{E}_\mathcal{P}^* \times \mathcal{E}_\mathcal{P}^* \to \mathcal{H}^<_\mathcal{P}$, where for every $h, \alpha, \beta$, we have $\genericSwap(h \bullet e, \alpha, \beta) = h'$, $\alpha, \beta \in h'$, for every $(e, e') \in \alpha \times \beta \implies e >_{h'} e'$ and there exists some $(e, e') \in (\alpha, \beta)$ s.t. $\tr(e') \ [\wro] \ \tr(e)$.
-\end{itemize}
-\end{definition}
 
 The swapping-based algorithms have been already studied in the literature as for example \textcolor{red}{cite Viktor's algorithm}, which belongs to $\mathcal{S}_{SC}$; where SC in this case is the axiomatic representation of sequential consistency memory model. \textcolor{red}{cite SC.}
