@@ -11,17 +11,15 @@ We present a class of model checking algorithms for enumerating executions of a 
 	\caption{\textsc{explore} algorithm}
 	\begin{algorithmic}[1]
 	\Function{\textsc{explore}}{$\prog$, $\hist_<$, $\locals$}
-		%\InputAlgorithmic \textsc{explore}($\prog$,$\hist_<$,$\local$)
-		%\InputAlgorithmic a program $\prog$
 		\State $e, \gamma \gets  \genericNext(\prog, \hist_<, \locals)$
 		
 		
-		\If{$e = \bot$}
-			\If{$\genericEvaluate(\prog, h, \locals)$}
-				\State \textbf{output} $h$, $\locals[e\mapsto \gamma]$
-			\EndIf
+		\If{$e = \bot$ and $\genericEvaluate(h)$}
+%			\If{$\genericEvaluate(\prog, h, \locals)$}
+			\State \textbf{output} $h$, $\locals[e\mapsto \gamma]$
+%			\EndIf
 		%\State $\textbf{\genericEvaluate}(h)$
-		\State \Return
+%		\State \Return
 		\ElsIf{$\mathit{type}(e) = \iread$}
 		
 		\ForAll{$w \in \genericValidWrites(h,e)$} %\writeVar{w}{x}
@@ -29,12 +27,14 @@ We present a class of model checking algorithms for enumerating executions of a 
 		\State $\textsc{explore}(\prog, h_< \bullet_w e, \locals[e\mapsto \gamma])$
 		\label{algorithm:algo-class:exploreRead}
 		\EndFor
-		\Else
-		\State $\textsc{explore}(\prog, h_< \bullet e,\locals[e\mapsto \gamma])$
+		\ElsIf{$\genericEvaluate(h\bullet e)$}
+			\State $\textsc{explore}(\prog, h_< \bullet e,\locals[e\mapsto \gamma])$
 		\label{algorithm:algo-class:exploreStd}
+%		\Else
+%			\State \Return
 		\EndIf
 		
-		\State $l \gets \genericCompute(h)$
+		\State $l \gets \genericCompute(h_< \bullet e)$
 		
 		\ForAll{$(\alpha, \beta) \in l$}
 		\If{$\genericProtocol(h_<, e, \alpha, \beta)$}
@@ -49,7 +49,7 @@ We present a class of model checking algorithms for enumerating executions of a 
 	%\caption{Generic method for exploring every possible history $h$ of a program $\mathcal{P}$ running under a database with $\mathcal{M}$ as isolation level.}
 \end{algorithm}
 
-The function \textsc{explore} calls $\genericNext$ to obtain an event representing the next database access in the input program. A typical implementation of $\genericNext$ would execute all local instructions until the next database instruction in some transaction, and return the event $e$ corresponding to that database instruction and the current local state $\gamma$. $\genericNext$ may also return $\bot$ if the program finished or if the history $\hist$ is not consistent with some intended isolation level. The function $\genericEvaluate$ is used to select the cases in which the program finished and the history satisfies all the consistency requirements before outputting the current history (and local states).
+The function \textsc{explore} calls $\genericNext$ to obtain an event representing the next database access in the input program. A typical implementation of $\genericNext$ would execute all local instructions until the next database instruction in some transaction, and return the event $e$ corresponding to that database instruction and the current local state $\gamma$. $\genericNext$ may also return $\bot$ if the program finished or if the history $\hist$ is not consistent with the intended isolation level. The function $\genericEvaluate$ is used to select the cases in which the program finished and the history satisfies all the consistency requirements before outputting the current history (and local states).
 %Algorithm \ref{algorithm:algo-class} explores systematically the space of histories, selecting a new event $e$ to be added to some history $h$ if possible, thanks to the function $\genericNext$ called \textit{next}. If it wasn't possible, it is due to $h$ being either a total execution or an undesirable one; both behaviors discriminated via \textit{evaluating} $h$ with the $\genericEvaluate$ function. 
 
 Otherwise, the event $e$ is added to the ordered history $h_<$ along with an eventual $\wro$ dependency selected via $\genericValidWrites$, linking a \textit{valid} $\iwrite$ event with the new $\iread$ event (valid means satisfying consistency w.r.t. the intended isolation level). 
