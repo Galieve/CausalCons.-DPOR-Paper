@@ -61,7 +61,7 @@ Isolation levels are defined as logical constraints, called \emph{axioms}, over 
 Programs interact with a database by issuing transactions formed of $\ibegin$, $\iend$, $\textsf{read}$ and $\textsf{write}$ instructions. The effect of executing one such instruction is represented using an \emph{event} $\langle e, \mathit{type} \rangle$ where $e$ is an \textit{identifier} and $\mathit{type} $ is a \textit{type}. There are four types of events: $\ebegin$, $\eend$, $\erd{x,v}$ for reading value $v$ from global variable $x$, and $\ewrt{x,v}$ for writing value $v$ to global variable $x$. The set of events is denoted by $\Events$.
 For a read or write event $e$, we use $\mathit{var}(e)$ to denote the variable $x$ and $\mathit{val}(e)$ the value $v$.
 
-A \emph{transaction log} $\tup{t,E, \po}$ is an identifier $t$ and a finite set of events $E$ along with a strict total order $\po_t$ on $E$, called \emph{program order}.
+A \emph{transaction log} $\tup{t,E, \po_t}$ is an identifier $t$ and a finite set of events $E$ along with a strict total order $\po_t$ on $E$, called \emph{program order}.
 %$T$  is a finite sequence of events ordered by a strict total order $\po_T$ called \emph{program order}. 
 The minimal element of $\po_t$ is a $\ebegin$ event. A transaction log without an $\eend$ event is called \emph{pending} (if the $\eend$ event occurs, then it is maximal in $\po_t$). Otherwise, it is called \emph{complete}.
 
