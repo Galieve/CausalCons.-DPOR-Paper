@@ -256,7 +256,8 @@ This definition is summarized in the following function:
 			\begin{array}{c}
 %				\lnot \swapped{h}{r} \land 	\isConsistent{h}\\
 %				\land \\
-				\forall r'\in \readOp{h}.\ \ (r,r')\in\po^* \implies \lnot \swapped{h_<}{r'}\\
+				%\forall r'\in \readOp{h}.\ \ (r,r')\in\po^* \implies 
+				\lnot \swapped{h_<}{r}\\
 				\land \\
 				\forall w' \in \writeOp{h}.\ \ w < w' < r \implies 
 				(h \setminus \{e \ | \ r < e\}) \oplus \wro(w',r)\not\models I)
