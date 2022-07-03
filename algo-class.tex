@@ -23,7 +23,7 @@ We present a class of model checking algorithms for enumerating executions of a 
 		\ElsIf{$\mathit{type}(e) = \iread$}
 		
 		\ForAll{$w \in \genericValidWrites(h,e)$} %\writeVar{w}{x}
-		\State $h'_< \gets h_< \oplus_j e \oplus (\trans{h}{w},e)$
+		\State $h'_< \gets h_< \oplus_j e \oplus \wro(\trans{h}{w},e)$
 		
 		\State $\textsc{explore}(\prog, h'_< , \locals')$
 		\label{algorithm:algo-class:exploreRead}

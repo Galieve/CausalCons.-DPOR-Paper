@@ -9,6 +9,7 @@
 \usepackage{mathpartir}
 \usepackage{framed}
 \usepackage{ulem}
+\normalem
 
 
 \tikzset{transaction state/.style={draw=black!0}}
@@ -70,8 +71,9 @@
 
 
 \definecolor{pinegreen}{rgb}{0.0, 0.47, 0.44}
-\newcommand{\callout}[2][pinegreen]{\normalem{\emph{\textcolor{#1}{#2}}}\ULforem
-}
+%\newcommand{\callout}[2][pinegreen]{\normalem{\emph{\textcolor{#1}{#2}}}\ULforem}
+
+\newcommand{\callout}[1]{\emph{#1}}
 
 \newenvironment{cframed}[1][black] {\def\FrameCommand{\fboxsep=\FrameSep\fcolorbox{#1}{white}}%
 	\MakeFramed {\advance\hsize-\width \FrameRestore}}

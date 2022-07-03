@@ -58,8 +58,8 @@ Isolation levels are defined as logical constraints, called \emph{axioms}, over 
 
 \subsubsection{Histories}
 
-Programs interact with a database by issuing transactions formed of $\ibegin$, $\iend$, $\textsf{read}$ and $\textsf{write}$ instructions. The effect of executing one such instruction is represented using an \emph{event} $\langle e, \mathit{type} \rangle$ where $e$ is an \textit{identifier} and $\mathit{type} $ is a \textit{type}. There are four types of events: $\ebegin$, $\eend$, $\erd{x,v}$ for reading value $v$ from global variable $x$, and $\ewrt{x,v}$ for writing value $v$ to global variable $x$. The set of events is denoted by $\Events$.
-For a read or write event $e$, we use $\mathit{var}(e)$ to denote the variable $x$ and $\mathit{val}(e)$ the value $v$.
+Programs interact with a database by issuing transactions formed of $\ibegin$, $\iend$, $\textsf{read}$ and $\textsf{write}$ instructions. The effect of executing one such instruction is represented using an \emph{event} $\langle e, \mathit{type} \rangle$ where $e$ is an \textit{identifier} and $\mathit{type} $ is a \textit{type}. There are four types of events: $\ebegin$, $\eend$, $\erd{x}$ for reading the global variable $x$, and $\ewrt{x,v}$ for writing value $v$ to global variable $x$. The set of events is denoted by $\Events$.
+For a read/write event $e$, we use $\mathit{var}(e)$ to denote the variable $x$. % and $\mathit{val}(e)$ the value $v$.
 
 A \emph{transaction log} $\tup{t,E, \po_t}$ is an identifier $t$ and a finite set of events $E$ along with a strict total order $\po_t$ on $E$, called \emph{program order}.
 %$T$  is a finite sequence of events ordered by a strict total order $\po_T$ called \emph{program order}. 
@@ -70,7 +70,7 @@ The program order $\po_t$ represents the order between instructions in the body 
 %For every transaction $T$, we denote $\po_T$ the total order existing between the events in $T$.
 %During the whole paper we will assume that every pair of transactions are disjoint and that both $\mathcal{E}$ and $\mathcal{T}$ are finite. Therefore, we denote the function $tr: \mathcal{E} \to \mathcal{T}$ that associates every event to the unique transaction it belongs to. %Moreover, we will assume there is a special transaction called \callout{initial} that contains exactly one write event for every possible variable.
 
-The set of $\erd{x,\_}$ events in a transaction log $t$ that are \textit{not} preceded by a write to $x$ in $\po_t$, for some $x$, is denoted by $\readOp{t}$. As mentioned above, the other read events take their values from writes in the same transaction and their behavior is independent of other transactions. Also, the set of $\ewrt{x,\_}$ events in $t$ that are \textit{not} followed by other writes to $x$ in $\po_t$, for some $x$, is denoted by $\writeOp{t}$. If a transaction contains multiple writes to the same key, then only the last one (w.r.t. $\po_t$) can be visible to other transactions (w.r.t. any isolation level that we are aware of). The extension to sets of transaction logs is defined as usual. 
+The set of $\erd{x}$ events in a transaction log $t$ that are \textit{not} preceded by a write to $x$ in $\po_t$, for some $x$, is denoted by $\readOp{t}$. As mentioned above, the other read events take their values from writes in the same transaction and their behavior is independent of other transactions. Also, the set of $\ewrt{x,\_}$ events in $t$ that are \textit{not} followed by other writes to $x$ in $\po_t$, for some $x$, is denoted by $\writeOp{t}$. If a transaction contains multiple writes to the same variable, then only the last one (w.r.t. $\po_t$) can be visible to other transactions (w.r.t. any isolation level that we are aware of). The extension to sets of transaction logs is defined as usual. 
 Also, we say that a transaction log $t$ \emph{writes} $x$, denoted by $\writeVar{t}{x}$, when $\writeOp{t}$ contains some $\ewrt{x,\_}$ event. 
 
 A \emph{history} contains a set of transaction logs (with distinct identifiers)
@@ -84,17 +84,19 @@ between transactions in the same session.\footnote{In the context of our program
 \emph{write-read} relation $\wro\subseteq T\times \readOp{T}$ such that
 \begin{itemize}
 	\item the inverse of $\wro$ is a total function, 
-	\item if $(t,e)\in \wro$, where $e$ is a $\erd{x,v}$ event, then $\writeOp{t}$ contains some $\ewrt{x,v}$ event, and
+	\item if $(t,e)\in \wro$, where $e$ is a $\erd{x}$ event, then $\writeOp{t}$ contains some $\ewrt{x,\_}$ event, and
 	\item $\so\cup\wro$ is acyclic.
 \end{itemize}
 \end{definition}
 
 We assume that every history includes a distinguished transaction log writing the initial values of all global variables. This transaction log precedes all the other transaction logs in $\so$. We use $\hist$, $\hist_1$, $\hist_2$, $\ldots$ to range over histories. The set of transaction logs $T$ in a history $\hist=\tup{T, \so, \wro}$ is denoted by $\tlogs{\hist}$.
 
-For a variable $\key$, $\wro[\key]$ denotes the restriction of $\wro$ to reads of $\key$, \ie, $\wro[\key]=\wro\cap (T\times \{ e\ |\ e \mbox{ is a }\erd{\key,\_} \mbox{ event}\})$. Moreover, we extend the relations $\wro$ and $\wro[\key]$ to pairs of transactions by $\tup{t_1,t_2}\in \wro$, resp., $\tup{t_1,t_2}\in \wro[\key]$, iff there exists a $\rd{\key,\_}$ event $e$ in $t_2$ such that $\tup{t_1,e}\in \wro$, resp., $\tup{t_1,e}\in \wro[\key]$. 
+For a variable $\key$, $\wro_\key$ denotes the restriction of $\wro$ to reads of $\key$, \ie, $\wro_\key=\wro\cap (T\times \{ e\ |\ e \mbox{ is a }\erd{\key} \mbox{ event}\})$. Moreover, we extend the relations $\wro$ and $\wro_\key$ to pairs of transactions by $\tup{t_1,t_2}\in \wro$, resp., $\tup{t_1,t_2}\in \wro_\key$, iff there exists a $\rd{\key}$ event $e$ in $t_2$ such that $\tup{t_1,e}\in \wro$, resp., $\tup{t_1,e}\in \wro_\key$. 
 We say that the transaction log $t_1$ is \emph{read} by the transaction log $t_2$ when $\tup{t_1,t_2}\in \wro$. 
 
 Given a history $\hist$ and an event $e$ in $\hist$, $\trans{h}{e}$ is the transaction $t$ in $\hist$ that contains $e$.
+
+TODO NOT SURE THAT THE FOLLOWING DEFINITION IS NEEDED
 
 \begin{definition}
 Let $h$ be a history:
@@ -370,7 +372,7 @@ TODO DEFINE $I$-consistent histories
     }{
       \hist,\vec{\gamma},\vec{\mathsf{B}}, \mathsf{P}
       \Rightarrow
-      \hist \oplus_j \tup{e,\erd{\key,\val}},\vec{\gamma}[(j,\xvar)\mapsto \val],\vec{\mathsf{B}}[j\mapsto \mathsf{B}],\mathsf{P}
+      \hist \oplus_j \tup{e,\erd{\key}},\vec{\gamma}[(j,\xvar)\mapsto \val],\vec{\mathsf{B}}[j\mapsto \mathsf{B}],\mathsf{P}
     } 
 
     \inferrule[read-extern]{
@@ -380,7 +382,7 @@ TODO DEFINE $I$-consistent histories
     \hist=(T,\so,\wro) \\
     \tr =\mathit{last}(\hist,j) \\
     \wrt{\key}{\val}\in\writeOp{\tr'}\mbox{ with $\tr'\in \transC{\hist}$ and $\tr\neq \tr'$} \\
-    \hist' = (\hist \oplus_j \tup{e,\erd{\key,\val}}) \oplus \wro(\tr',e) \\
+    \hist' = (\hist \oplus_j \tup{e,\erd{\key}}) \oplus \wro(\tr',e) \\
     \hist' \mbox{ satisfies }I }{
       \hist,\vec{\gamma},\vec{\mathsf{B}}, \mathsf{P}
       \Rightarrow
