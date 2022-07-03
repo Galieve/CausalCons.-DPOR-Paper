@@ -89,12 +89,12 @@ between transactions in the same session.\footnote{In the context of our program
 \end{itemize}
 \end{definition}
 
-We assume that every history includes a distinguished transaction log writing the initial values of all global variables. This transaction log precedes all the other transaction logs in $\so$. We use $\hist$, $\hist_1$, $\hist_2$, $\ldots$ to range over histories. The set of transaction logs $T$ in a history $\hist=\tup{T, \so, \wro}$ is denoted by $\tlogs{\hist}$.
+We assume that every history includes a distinguished transaction log writing the initial values of all global variables. This transaction log precedes all the other transaction logs in $\so$. We use $\hist$, $\hist_1$, $\hist_2$, $\ldots$ to range over histories. 
 
 For a variable $\key$, $\wro_\key$ denotes the restriction of $\wro$ to reads of $\key$, \ie, $\wro_\key=\wro\cap (T\times \{ e\ |\ e \mbox{ is a }\erd{\key} \mbox{ event}\})$. Moreover, we extend the relations $\wro$ and $\wro_\key$ to pairs of transactions by $\tup{t_1,t_2}\in \wro$, resp., $\tup{t_1,t_2}\in \wro_\key$, iff there exists a $\rd{\key}$ event $e$ in $t_2$ such that $\tup{t_1,e}\in \wro$, resp., $\tup{t_1,e}\in \wro_\key$. 
 We say that the transaction log $t_1$ is \emph{read} by the transaction log $t_2$ when $\tup{t_1,t_2}\in \wro$. 
 
-Given a history $\hist$ and an event $e$ in $\hist$, $\trans{h}{e}$ is the transaction $t$ in $\hist$ that contains $e$.
+The set of transaction logs $T$ in a history $\hist=\tup{T, \so, \wro}$ is denoted by $\tlogs{\hist}$. Given a history $\hist$ and an event $e$ in $\hist$, $\trans{h}{e}$ is the transaction $t$ in $\hist$ that contains $e$. Also, we define $\writeOp{\hist}=\bigcup_{t\in \tlogs{h}}\writeOp{t}$ and $\readOp{\hist}=\bigcup_{t\in \tlogs{h}}\readOp{t}$.
 
 TODO NOT SURE THAT THE FOLLOWING DEFINITION IS NEEDED
 

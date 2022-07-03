@@ -23,7 +23,7 @@ We present a class of model checking algorithms for enumerating executions of a 
 		\ElsIf{$\mathit{type}(e) = \iread$}
 		
 		\ForAll{$w \in \genericValidWrites(h,e)$} %\writeVar{w}{x}
-		\State $h'_< \gets h_< \oplus_j e \oplus \wro(\trans{h}{w},e)$
+		\State $h'_< \gets h_< \oplus_j e \oplus \wro(w,e)$
 		
 		\State $\textsc{explore}(\prog, h'_< , \locals')$
 		\label{algorithm:algo-class:exploreRead}
@@ -63,18 +63,18 @@ If $\genericNext$ returns $\bot$, then the function $\genericEvaluate$ can be us
 
 Otherwise, the event $e$ is added to the ordered history $h_<$. If $e$ is a read event, then $\genericValidWrites$ computes a set of write events $w$ in the current history that are valid for $e$, i.e., adding the event $e$ along with the $\wro$ dependency $(\trans{h}{w},e)$ leads to a history that still satisfies the intended isolation level.
 % along with a $\wro$ dependency selected via $\genericValidWrites$ if it is a read. linking a \textit{valid} $\iwrite$ event with the new $\iread$ event (valid means satisfying consistency w.r.t. the intended isolation level). 
-Concerning notations, we extend $\oplus_j$ to ordered histories in a straightforward manner: $(\hist,<) \oplus_j e$ is the ordered history $(\hist \oplus_j e, < \cdot\ e)$ where $<\cdot\ e$ means that $e$ is added as the maximal element of the total order $<$. Also, $\hist \oplus_j (e,\ebegin)$ is the same as $\hist \oplus_j \tup{\tr,\{\tup{e,\ebegin}\},\emptyset}$ for a fresh transaction id $t$.
+Concerning notations, we extend $\oplus_j$ to ordered histories in a straightforward manner: $(\hist,<) \oplus_j e$ is the ordered history $(\hist \oplus_j e, < \cdot\ e)$ where $<\cdot\ e$ means that $e$ is added as the maximal element of the total order $<$. Also, $\hist \oplus_j (e,\ebegin)$ is the same as $\hist \oplus_j \tup{\tr,\{\tup{e,\ebegin}\},\emptyset}$ for a fresh transaction id $t$. Moreover, we simplify the notation and write $h\oplus\wro(w,e)$ for $w$ a write event and $e$ a read event instead of $h\oplus\wro(\trans{h}{w},e)$.
 
 TODO GIVE AN EXAMPLE OF SUCCESSIVE EXTENSIONS OF A HISTORY USING NEXT TO GET NEXT EVENTS. ADD SOME LOCAL INSTRUCTIONS AS WELL TO EXPLAIN LOCAL STATES.
 
 Moreover, once an event is added to the current history, the algorithm may explore other histories obtained by re-ordering events in the current one. Such re-orderings are required for completeness. Otherwise, write events that are returned later by $\genericNext$ cannot be read by read events executed in the past, even-though this is permitted by the intended isolation level. TODO GIVE AN EXAMPLE (PROGRAM, CURRENT HISTORY, NEXT RETURNING A WRITE, THERE EXISTS A HISTORY WHERE THE WRITE CAN BE READ BY A READ IN THE CURRENT HISTORY).
 
-The function $\textsc{exploreSwaps}$ calls $\genericCompute$ to compute pairs of sequences of events $\alpha, \beta$ that should be re-ordered; $\alpha$ and $\beta$ are \emph{contiguous and disjoint} subsequences of the total order $<$, and $\alpha$ should end before $\beta$ (since $\beta$ will be re-ordered before $\alpha$). Avoiding redundancy, i.e., exploring the same history multiple times, may require restricting the application of such re-orderings. This is modeled by the Boolean condition called $\genericProtocol$. If this condition holds, the new explored histories are computed by the function $\genericSwap$ (this returns local states which are necessary for continuing the exploration as well). A typical implementation of this function would return ordered histories where the events in $\beta$ and their $\so$ or $\wro$ dependencies 
+The function $\textsc{exploreSwaps}$ calls $\genericCompute$ to compute pairs of sequences of events $\alpha, \beta$ that should be re-ordered; $\alpha$ and $\beta$ are \emph{contiguous and disjoint} subsequences of the total order $<$, and $\alpha$ should end before $\beta$ (since $\beta$ will be re-ordered before $\alpha$). Avoiding redundancy, i.e., exploring the same history multiple times, may require restricting the application of such re-orderings. This is modeled by the Boolean condition called $\genericProtocol$. If this condition holds, the new explored histories are computed by the function $\genericSwap$ (this returns local states as well, which are necessary for continuing the exploration). A typical implementation of this function would return ordered histories where the events in $\beta$ and their $\so$ or $\wro$ dependencies 
 %($(\so\cup\wro)^*$ predecessors) 
 are ordered before the events in $\alpha$. We assume that $\genericSwap((\hist,<), \alpha, \beta, \locals)$ returns pairs $((\hist',<'),\locals')$ such that:
 \begin{itemize}
 	\item $\hist'$ contains a subset of the events/transactions in $\hist$ that includes all the events in $(\hist,<)$ up to and including all events in $\alpha$ w.r.t. $<$, all the events in $\beta$, and all the events which are $(\so\cup\wro)^*$ predecessors of events in $\beta$,
-	\item $<'$ coincides with $<$ until the first event of $\alpha$, and it orders all events in $\beta$ before all events in $\alpha$,
+	\item $<'$ coincides with $<$ until the last event before $\alpha$, and it orders all events in $\beta$ before events in $\alpha$,
 	\item the $\so$ relation of $\hist'$ equals the $\so$ relation of $\hist$ projected on transactions in $\hist'$,
 	\item the $\wro$ relation of $\hist'$ equals the $\wro$ relation of $\hist$ projected on events/transactions in $\hist'$ except its last event w.r.t. $<'$,
 	\item $\locals'$ is the projection of $\locals$ on events in $\hist'$.

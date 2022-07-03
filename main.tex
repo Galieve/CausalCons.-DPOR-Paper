@@ -171,7 +171,7 @@
 \newcommand{\rwo}{\mathsf{RW}}
 \newcommand{\wrosi}{\mathsf{WR}}
 \newcommand{\readOp}[1]{\mathsf{reads}({#1})}
-\newcommand{\tlogs}[1]{\mathsf{TLogs}({#1})}
+\newcommand{\tlogs}[1]{\mathsf{tr}({#1})}
 \newcommand{\transC}[1]{\mathsf{compTrans}({#1})}
 \newcommand{\vars}[1]{\mathsf{vars}({#1})}
 \newcommand{\writeOp}[1]{\mathsf{writes}({#1})}
@@ -185,7 +185,7 @@
 \newcommand{\btrue}{\mathsf{true}}
 \newcommand{\bfalse}{\mathsf{false}}
 
-\newcommand{\trans}[2]{\mathsf{trans}({#1},{#2})}
+\newcommand{\trans}[2]{\mathsf{tr}({#1},{#2})}
 
 %---- Models
 \newcommand{\CC}{\textup{\texttt{CC}}}
@@ -218,13 +218,15 @@
 \newcommand{\validWrites}[1][\mathcal{M}]{\textup{\textsc{valid}}_{#1}}
 
 \newcommand{\last}[1]{\textup{\texttt{last}}(#1)}
+\newcommand{\lastTr}[1]{\mathsf{lastTr}({#1})}
+
 \newcommand{\swapped}[2]{\textup{\textsc{swapped}}(#1, #2)}
 \newcommand{\maxCompletion}{\textup{\textsc{maxCompletion}}}
 
 \newcommand{\prev}{\textup{\textsc{prev}}}
 \newcommand{\canSwap}{\textup{\textsc{canSwap}}}
 \newcommand{\isConsistent}[2][\mathcal{M}]{\textup{\textsc{isConsistent}}_{#1}(#2)}
-\newcommand{\isMaximallyAdded}[3][\mathcal{M}]{\textup{\textsc{isMaximallyAdded}}_{#1}(#2, #3)}
+\newcommand{\isMaximallyAdded}[3][I]{\mathsf{readsMax}_{#1}(#2, #3)}
 \newcommand{\dep}{\textup{\textsc{dep}}}
 \newcommand{\minimalDependency}{\textup{\textsc{minimalDependency}}}
 
