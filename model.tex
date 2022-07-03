@@ -90,7 +90,7 @@ Every model depicted in figure \ref{fig:consistency_defs} is prefix closed.
 Let $h$ be a consistent history. As any $\so \cup \wro$-prefix-closed sub-history $h'$ of $h$ is a sub-graph of it, and there is a commit order $\co$ for $h$, it suffices to restrict $\co$ to $h'$ for obtaining a commit order for $h'$.
 \end{proof}
 
-Let  $\hist=\tup{T, \so, \wro}$ be a history. A transaction $t$ is called $(\so \cup \wro)$-maximal in $h$ if $h$ does not contain any transaction $t'$ such that $(t,t')\in \so \cup \wro$. We define a \emph{causal extension} of a pending transaction $t$ in $h$ with an event $e$ as follows:
+Let  $\hist=\tup{T, \so, \wro}$ be a history. A transaction $t$ is called $(\so \cup \wro)^*$-maximal in $h$ if $h$ does not contain any transaction $t'$ such that $(t,t')\in (\so \cup \wro)^*$. We define a \emph{causal extension} of a pending transaction $t$ in $h$ with an event $e$ as follows:
 \begin{itemize}
 \item $e$ is added to $t$ as a maximal element of $\po_t$,
 \item if $e$ is a read event, then $\wro$ is extended with some tuple $(t',e)$ such that $t'\ [\so \cup \wro]^*\ t$
@@ -101,7 +101,7 @@ TODO NOTE THAT A HISTORY MAY HAVE MULTIPLE CAUSAL EXTENSIONS WITH A READ. NOT FO
 
 
 \begin{definition}
-An isolation level $I$ is called \emph{causally-extensible} if for every $I$-consistent history $h$, every $(\so \cup \wro)$-maximal pending transaction $t$ in $h$, and every event $e$, there exists a causal extension of $t$ with $e$ that is $I$-consistent.
+An isolation level $I$ is called \emph{causally-extensible} if for every $I$-consistent history $h$, every $(\so \cup \wro)^*$-maximal pending transaction $t$ in $h$, and every event $e$, there exists a causal extension of $t$ with $e$ that is $I$-consistent.
 %	can be extended with an event from a $\so \cup \wro$-maximal pending transaction $T$ in $h$. Moreover, if that event $r$ is a $\iread$, it can always read from a $\iwrite$ event $w$ s.t. in $h$ $\tr(w) \ [\so \cup \wro]^* \ \tr(r)$.
 \end{definition}
 
