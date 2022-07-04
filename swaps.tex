@@ -169,31 +169,35 @@ The core issue is related to the history in Figure \ref{fig:dead_branch:c} which
 %
 %Hence, for being always able to extend a history by invoking the model's causally-extensibility, we have to never produce pending transactions that are non $\so \cup \wro$-maximal. A simple solution is always executing histories in isolation, i.e. having exactly one pending transaction; thus, $\so \cup \wro$-maximal,  otherwise there would be a previous point where two pending transactions coexisted. To sum up, we are not going to swap just after executing a $\iwrite$ event but when its transaction is completed.
 
-TODO EXPLAIN THE DEFINITIONS BELOW
+%TODO EXPLAIN THE DEFINITIONS BELOW
 
-To enforce histories with at most one pending transaction, the function $\genericCompute$, which identifies events to reorder, has a non-empty return value only when the last added event is $\ecommit$ (the end of a transaction).
+To enforce histories with at most one pending transaction, the function $\genericCompute$, which identifies events to reorder, has a non-empty return value only when the last added event is $\ecommit$ (the end of a transaction). Therefore, in such a case, it returns pairs of read and write events on the same variable, the write event coming from the last completed transaction, and such that the transactions containing the two events are not causally dependent (i.e., related by $[\so \cup \wro]^*$).
 
 \begin{cframed}[pinegreen]
 	\begin{equation*}
 		\begin{array}{lcl}
-			\genericCompute(h_<) & \coloneqq & \{(r,w) \in \Events \ | \ r < w \land \variable{r} = \variable{w} \land w \in \writeOp{t}\\[1mm]
-			&& \hspace{1.9cm} \land\ (\trans{h}{r},t)\not\in [\so \cup \wro]^*   \} \\[1mm]
-			&& \mbox{where }t = \lastTr{h_<}
+			\genericCompute(h_<) & \coloneqq & \{(r,w) \in \Events \ | \ r < w \land r \in \readOp{t} \land w \in \writeOp{t}\\[1mm]
+			&& \hspace{1.9cm} \land\ \variable{r} = \variable{w} \\ [1mm]
+			&& \hspace{1.9cm} \land\ (\trans{h}{r},t)\not\in [\so \cup \wro]^*\land \mbox{$t$ is complete}   \} \\[1mm]
+			&& \mbox{where $t$ is the transaction log of the last event in $<$}
 		\end{array}
 	\end{equation*}
 \end{cframed}
 
+Given a pair $(r,w)$, the function $\genericSwap$ produces a new history $\hist'$ which contains all events ordered before $r$ (w.r.t. $<$), the transaction that contains $w$ and all its $[\so \cup \wro]^*$ predecessors, and the event $r$ reading from $w$. Note that the $\po$ predecessors of $r$ from the same transaction are ordered before $r$ by $<$ and they will be also included in $\hist'$. More generally, the history $\hist'$ without $r$ is a prefix of the input history $\hist$. By definition, the only pending transaction in $\hist'$ is the one containing the read $r$. The order relation is updated by moving the transaction containing the read $r$ to be the last; it remains unchanged for the rest of the events.
+
 \begin{cframed}[pinegreen]
 	\begin{equation*}
 		\begin{array}{lcl}
-			\swap(h_<, r, w, \locals) & \coloneqq &\big(h' = (h \setminus D) \oplus \wro(w,r), <'\big ), \locals', \text{ where} \\[1mm]
+			\genericSwap(h_<, r, w, \locals) & \coloneqq &\big(h' = (h \setminus D) \oplus \wro(w,r), <'\big ), \locals', \text{ where} \\[1mm]
 			&& \hspace{1cm}D = \{e \ | \ r < e \land (\trans{h}{e},\trans{h}{w})\not\in [\so \cup \wro]^*\} \\[1mm]
-			&& \hspace{1cm}<' = \big( <\ \downarrow\ (\tlogs{h'}\setminus \trans{h'}{r}) \big) \cdot \trans{h'}{r} \\[1mm]
-			&& \hspace{1cm}\mbox{$\locals'$ is the projection of $\locals$ on events in $\hist'$.}
+			&& \hspace{1cm}<' = \big( <\ \downarrow\ (\events{h'}\setminus \events{\trans{h'}{r}}) \big) \cdot \trans{h'}{r} \\[1mm]
+			&& \hspace{1cm}\mbox{$\locals' = \locals \downarrow \events{h'}$.}
 		\end{array}
 	\end{equation*}
 \end{cframed}
 
+Above, $h \setminus D$ denotes the prefix of $\hist$ obtained by deleting all the events in $D$ from its transaction logs; a transaction log is removed all together if it becomes empty. Also, $\hist'' \oplus \wro(w,r)$ denotes an \emph{update} of the $\wro$ relation of $\hist''$ where any pair $(\_,r)$ is replaced by $(w,r)$. Finally, $<'' \cdot\ \trans{h'}{r}$ denotes an extension of the total order $<''$ obtained by appending the events in $\trans{h'}{r}$ according to program order.
 
 %Following algorithm \ref{algorithm:algo-class}'s schema, we define two functions $\compute, \swap$ that plays the role of $\genericCompute, \genericSwap$ respectively. In addition, for the history $h' = \swap(h, r, w)$ we declare the algorithm order of $h'$, $\leq_{h'}$ as $\leq_{h'} = \leq_{(h \setminus \tr(r) ) \restriction_{h'}} \cup \{\langle e, e' \rangle \ | \ e \in h' \setminus \tr(r), e' \in \tr(r)\} \cup \po_{\tr(r) \restriction_{h'}}$.
 %
@@ -210,7 +214,7 @@ To enforce histories with at most one pending transaction, the function $\generi
 
 \subsection{Avoiding Redundancy}
 
-Conversely, adding a $\iwrite$ $w$ is more complicated, multiple events may read this new event; specifically. the number of possible histories is exponential, $2^{|\iread(h)|}$. Moreover, after changing a $\wro$-edge from a $\iread$ $r$, we have no knowledge of the rest of the event's presence: some conditional instruction may be executed after $r$ and it may be meaningless talking about them. Thus, checking for every possible set of $\iread$ events if reading from $w$ leads to something consistent is no reasonable. Therefore, we have to define a criterion to determine whose sets of read events shall be analyzed. One hand, the history $h \bullet w$ where no $\iread$ reads from $w$ has to be explored, with an algorithm order defined in an analogously as for any other aforementioned history. On the other hand, we select one $\iread$ $r$ that will be the first event in $h$ reading from $w$ while the ones that follow $r$ will have to be re-executed. As $r$ had already been executed, what at the end we produce is a swap between the relative orders of $r$ and $w$; so $r$ would be thereinafter called \textit{swapped}.
+%Conversely, adding a $\iwrite$ $w$ is more complicated, multiple events may read this new event; specifically. the number of possible histories is exponential, $2^{|\iread(h)|}$. Moreover, after changing a $\wro$-edge from a $\iread$ $r$, we have no knowledge of the rest of the event's presence: some conditional instruction may be executed after $r$ and it may be meaningless talking about them. Thus, checking for every possible set of $\iread$ events if reading from $w$ leads to something consistent is no reasonable. Therefore, we have to define a criterion to determine whose sets of read events shall be analyzed. One hand, the history $h \bullet w$ where no $\iread$ reads from $w$ has to be explored, with an algorithm order defined in an analogously as for any other aforementioned history. On the other hand, we select one $\iread$ $r$ that will be the first event in $h$ reading from $w$ while the ones that follow $r$ will have to be re-executed. As $r$ had already been executed, what at the end we produce is a swap between the relative orders of $r$ and $w$; so $r$ would be thereinafter called \textit{swapped}.
 
 %As in a more formal way definition \ref{def:swapped} states, this read $r$ would be thereinafter called \textit{swapped}
 
@@ -219,6 +223,101 @@ Conversely, adding a $\iwrite$ $w$ is more complicated, multiple events may read
 %Our protocol is defined as follows: we will select one $\iread$ event that will be the first event in $h$ reading from $w$ while the ones that proceed $r$ will be marked as postponed; they will have to be re-executed. As in a more formal way definition \ref{def:swapped} states, This read $r$ would be thereinafter called \textit{swapped}:
 
 %, and we will enforce the following properties: no event before $r$ will read from $w$, $r$ reads from $w$, every read after $r$ may or may not read from $w$. 
+
+
+
+While extending histories according to $\genericNext$ and recursing on re-ordered histories whenever possible (taking $\genericProtocol$ as $\mathit{true}$) guarantees soundness and completeness, it does not guarantee optimality. There are two sources of redundancy in this trivial algorithm: (1) re-ordering the same read multiple times, and (2) applying $\genericSwap$ on different histories may give the same result.
+
+TODO GIVE AN EXAMPLE FOR THE 1ST ISSUE. JUSTIFYING THE SWAPPED CONDITION
+
+\begin{figure}[H]
+	
+	\centering
+	\begin{subfigure}{.11\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (-3, -3) {\begin{tabular}{l} $a \gets \rd{x}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0] (t4) at (-3, -4.5) {\begin{tabular}{l} $b \gets \rd{x}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm] (t5) at (-3, -6) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};
+				
+				
+				\path (t1.south west) edge[above, bend right] node[left] {$\wro$} (t3.north west);
+				\path (t2.south east) edge[below, bend left] node[right] {$\wro$} (t4.north east);
+				\path (-4.5,-5.25) edge[-,dashed] (-1,-5.25);
+			\end{tikzpicture}  
+			
+		}
+		\caption{History a.}
+		\label{fig:non_optimality:a}
+	\end{subfigure}
+	\hspace{.5cm}
+	\centering
+	\begin{subfigure}{.11\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (-3, -3) {\begin{tabular}{l} $a \gets \rd{x}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0] (t4) at (-3, -4.5) {\begin{tabular}{l} $b \gets \rd{x}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm] (t5) at (-3, -6) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};
+				
+				%\path (t3) edge node {$\so$} (t5);
+				%\path (t3) edge node {$\po$} (t3);
+				%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+				%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+%				\path (t1) edge[above] node[yshift=0,xshift=0] {$\wro$} (t3);
+%				\path (t1) edge[below] node[yshift=-2,xshift=-2] {$\wro$} (t4);
+				\path (t1.south west) edge[above, bend right] node[left] {$\wro$} (t3.north west);
+				\path (t1.south east) edge[below, bend left] node[right] {$\wro$} (t4.north east);
+				\path (-4.5,-5.25) edge[-,dashed] (-1,-5.25);
+			\end{tikzpicture}  
+			
+		}
+		\caption{History b.}
+		\label{fig:non_optimality:b}
+	\end{subfigure}
+	\hspace{.5cm}
+	\centering
+	\begin{subfigure}{.11\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (-3, -4.5) {\begin{tabular}{l} $a \gets \rd{x}$ \end{tabular}};
+				
+%				\node[draw, rounded corners=2mm,outer sep=0, , opacity=0.3] (t4) at (0, -1.5) {\begin{tabular}{l} $b \gets \rd{x}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm] (t5) at (-3, -3) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};				
+				
+				\path (t5) edge[left] node {$\wro$} (t3);
+				
+			\end{tikzpicture}  
+			
+		}
+		\caption{After swap history.}
+		\label{fig:non_optimality:c}
+	\end{subfigure}
+	
+	\caption{Two different histories after swapping lead to a common one.}
+	\label{fig:non_optimality}
+	
+\end{figure}
+
+Let's suppose we have a program $\mathcal{P}$ as depicted in figure \ref{fig:non_optimality}, assuming $\leq_{\ora}$ order transactions as presented from left to right, top to bottom. Then, the algorithm computes histories \ref{fig:non_optimality:a}, $h$, and \ref{fig:non_optimality:b}, $h'$. After adding $T_4$ in both $h,h'$ we can produce a swap between $r_a \coloneqq a \gets \rd{x}$ and $w_4 \coloneqq \wrt{x}{4}$; deleting the event $r_b \coloneqq b \gets \rd{x}$ as $\lnot(\tr(r_b) \ [\wro \cup \so]^+ \ \tr(w_4)) $. Therefore, after the swap in both cases we arrive to the history depicted in Figure~\ref{fig:non_optimality:c}; obtaining a non-optimal situation. 
+
+In conclusion, we cannot swap transactions without any restriction. As the example in figure \ref{fig:non_optimality} shows, the key of redundancy lies in every $\wro$ edge that is going to be modified or erased: if two histories only differ on those, the resultant history is the same.
 
 \begin{definition}
 	A $\iread$ event $r$ is \callout{swapped} if the following conditions hold:
@@ -230,7 +329,6 @@ Conversely, adding a $\iwrite$ $w$ is more complicated, multiple events may read
 	\label{def:swapped}
 \end{definition}
 
-This definition is summarized in the following function:
 
 \begin{cframed}[pinegreen]
 	\begin{equation*}
@@ -243,7 +341,7 @@ This definition is summarized in the following function:
 				\land \\
 				\forall r' \in \readOp{h}.\ (\trans{h}{w},r')\in\wro \implies (r',r)\not\in \po  %\trans{h}{w'} \neq \trans{h}{w}
 			\end{array} \\[11mm]
-			&&\mbox{where $w$ is the write event such that $(\trans{h}{w},r)\in\wro$}
+			&&\mbox{where $w$ is the write event such that $(w,r)\in\wro$}
 		\end{array}
 	\end{equation*}
 \end{cframed}
@@ -257,8 +355,8 @@ This definition is summarized in the following function:
 %				\lnot \swapped{h}{r} \land 	\isConsistent{h}\\
 %				\land \\
 				%\forall r'\in \readOp{h}.\ \ (r,r')\in\po^* \implies 
-				\lnot \swapped{h_<}{r}\\
-				\land \\
+%				\lnot \swapped{h_<}{r}\\
+%				\land \\
 				\forall w' \in \writeOp{h}.\ \ w < w' < r \implies 
 				(h \setminus \{e \ | \ r < e\}) \oplus \wro(w',r)\not\models I)
 %				\text{where } D = \{e \ | \ r \leq_h e\}
@@ -267,8 +365,8 @@ This definition is summarized in the following function:
 				%	h'.\wro(e') = h.\wro(e') & \text{if } e' \neq e \\ 
 				%	h'.\wro(e) = w & \text{otherwise} \\ 
 				%\end{array}\right\}\right)
-			\end{array} \\[7mm]
-			&&\mbox{where $w$ is the write event such that $(\trans{h}{w},r)\in\wro$}
+			\end{array} \\[2mm]
+			&&\mbox{where $w$ is the write event such that $(w,r)\in\wro$}
 		\end{array}
 	\end{equation*}
 \end{cframed}
@@ -388,15 +486,15 @@ In a more general context, when swapping two events $r$ and $w$, we will delete 
 
 \begin{cframed}[pinegreen]
 	\begin{equation*}
-		\begin{array}{lcl}
-			\genericProtocol(h_<, r, w) & \coloneqq & 
-			\begin{array}{l}
+		\begin{array}{l}
+			\genericProtocol(h_<, r, w) \coloneqq 
+%			\begin{array}{l}
 %				\forall r'\in \readOp{h}. \ (r,r')\in \po^* \implies \lnot \swapped{h_<}{r'}\\[1mm]
 %				\land\ 
-				\forall r'\in \readOp{h}\cap (D\cup\{r\}). \ \isMaximallyAdded{h_<}{r'}
-			\end{array} \\[4mm]
-			\multicolumn{3}{c}{\text{where }  D = \{e \ | \ r < e \land (\trans{h}{e},\trans{h}{w})\not\in [\so \cup \wro]^*\}} \\
-		\end{array}
+				\forall r'\in \readOp{h}\cap (D\cup\{r\}). \ \lnot \swapped{h_<}{r'}\land \isMaximallyAdded{h_<}{r'} \\[2mm]
+%			\end{array} \\[4mm]
+			\hspace{2cm}\text{where }  D = \{e \ | \ r < e \land (\trans{h}{e},\trans{h}{w})\not\in [\so \cup \wro]^*\} %  \\ \multicolumn{3}{c}{
+ 		\end{array}
 	\end{equation*}
 \end{cframed}
 

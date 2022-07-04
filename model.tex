@@ -70,9 +70,12 @@ Besides models presented in figure \ref{fig:consistency_defs}, others isolation 
 
 Let's analyze the histories $h_1$ and $h_2$ described in figure \ref{fig:maxclosed:a} and \ref{fig:maxclosed:b} respectively under RA; isolation level under which both are consistent. $h_1$ can be extended adding the event $r_1 = b \gets \rd{y}$ and the $\wro$-edge $w_1 \ [\wro] \ r_1$, where $w_1 = \wrt{x}{0}$. However, this is not the case of $h_2$: the only event that could be added in it is $w_2 = \wrt{y}{2}$. If $w_2$ would be added in $h_2$, any relation extending $\so \cup \wro$ and satisfying RA would be cyclic, so it wouldn't be a commit order. The essential difference between these two histories is the following: in $h_1$, $\tr(r)$ is $\so \cup \wro$-maximal while in $h_2$ $\tr(w)$ is not. As real database executions forbid transactions reading from non-committed ones, it is reasonable to allow those transactions $\so \cup \wro$-maximal to be executed completed without hindering the previous committed transactions. 
 
-For a relation $R\subseteq A\times A$, the restriction of $R$ to $A'\times A'$, denoted by $R\downarrow A'\times A'$, is defined by $\{(a,b): (a,b)\in R, a,b\in A'\}$. Also, a set $A'$ is called $R$-downward closed when it contains $a\in A$ every time it contains some $b\in A$ with $a\leq b$.
+For a relation $R\subseteq A\times A$, the restriction of $R$ to $A'\times A'$, denoted by $R\downarrow A'\times A'$, is defined by $\{(a,b): (a,b)\in R, a,b\in A'\}$. Also, a set $A'$ is called $R$-downward closed when it contains $a\in A$ every time it contains some $b\in A$ with $(a,b)\in R$.
 
-A \emph{prefix} of $\hist=\tup{T, \so, \wro}$ is a history $\hist'=\tup{T',\so\downarrow T'\times T',\wro\downarrow T'\times T'}$ such that $T'$ is $(\so \cup \wro)$-downward closed.  TODO GIVE AN EXAMPLE OF A PREFIX ON THE FIGURE ABOVE.
+A \emph{prefix} of a transaction log $\tup{t,E, \po_t}$ is a transaction log $\tup{t,E', \po_t \downarrow E'\times E'}$ such that $E'$ is $\po_t$-downward closed. 
+A \emph{prefix} of a history $\hist=\tup{T, \so, \wro}$ is a history $\hist'=\tup{T',\so\downarrow T'\times T',\wro\downarrow T'\times T'}$ such that every transaction log in $T'$ is a prefix of a different transaction log in $T$ but carrying the same id, and $\events{\hist'}\subseteq\events{\hist}$ is $(\po\cup \so \cup \wro)^*$-downward closed.
+%where $T'$ contains prefixes of a subset of transaction logs $T''\subseteq T$ such that $T''$ is $(\so \cup \wro)^*$-downward closed.  
+TODO GIVE AN EXAMPLE OF A PREFIX ON THE FIGURE ABOVE.
 
 \begin{definition}
 An isolation level $I$ is called \emph{prefix-closed} when every prefix of an $I$-consistent history is also $I$-consistent.

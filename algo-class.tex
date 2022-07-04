@@ -54,31 +54,40 @@ We present a class of model checking algorithms for enumerating executions of a 
 	%\caption{Generic method for exploring every possible history $h$ of a program $\mathcal{P}$ running under a database with $\mathcal{M}$ as isolation level.}
 \end{algorithm}
 
-The function \textsc{explore} calls $\genericNext$ to obtain an event representing the next database access in some pending transaction of the input program. A typical implementation of $\genericNext$ would choose one of the pending transactions, execute all local instructions until the next database instruction in that transaction, and return the event $e$ corresponding to that database instruction and the current local state $\gamma$. $\genericNext$ may also return $\bot$ if the program finished.
+The function \textsc{explore} calls $\genericNext$ to obtain an event representing the next database access in some pending transaction of the input program. A typical implementation of $\genericNext$ would choose one of the pending transactions, execute all local instructions until the next database instruction in that transaction (applying the transition rules \textsc{if-true}, \textsc{if-false}, and \textsc{local} from Figure~\ref{fig:op:sem:baseline}) and return the event $e$ corresponding to that database instruction and the current local state $\gamma$. $\genericNext$ may also return $\bot$ if the program finished.
 %or if the history $\hist$ is not consistent with the intended isolation level. 
 If $\genericNext$ returns $\bot$, then the function $\genericEvaluate$ can be used to filter executions that satisfy the intended isolation level before outputting the current history and local states. 
 %the history satisfies the consistency requirements
 %The function $\genericEvaluate$ is used to select the cases in which the program finished and the history satisfies all the consistency requirements before outputting the current history (and local states).
 %Algorithm \ref{algorithm:algo-class} explores systematically the space of histories, selecting a new event $e$ to be added to some history $h$ if possible, thanks to the function $\genericNext$ called \textit{next}. If it wasn't possible, it is due to $h$ being either a total execution or an undesirable one; both behaviors discriminated via \textit{evaluating} $h$ with the $\genericEvaluate$ function. 
 
-Otherwise, the event $e$ is added to the ordered history $h_<$. If $e$ is a read event, then $\genericValidWrites$ computes a set of write events $w$ in the current history that are valid for $e$, i.e., adding the event $e$ along with the $\wro$ dependency $(\trans{h}{w},e)$ leads to a history that still satisfies the intended isolation level.
+Otherwise, the event $e$ is added to the ordered history $h_<$. If $e$ is a read event, then $\genericValidWrites$ computes a set of write events $w$ in the current history that are valid for $e$, i.e., adding the event $e$ along with the $\wro$ dependency $(w,e)$ leads to a history that still satisfies the intended isolation level.
 % along with a $\wro$ dependency selected via $\genericValidWrites$ if it is a read. linking a \textit{valid} $\iwrite$ event with the new $\iread$ event (valid means satisfying consistency w.r.t. the intended isolation level). 
 Concerning notations, we extend $\oplus_j$ to ordered histories in a straightforward manner: $(\hist,<) \oplus_j e$ is the ordered history $(\hist \oplus_j e, < \cdot\ e)$ where $<\cdot\ e$ means that $e$ is added as the maximal element of the total order $<$. Also, $\hist \oplus_j (e,\ebegin)$ is the same as $\hist \oplus_j \tup{\tr,\{\tup{e,\ebegin}\},\emptyset}$ for a fresh transaction id $t$. Moreover, we simplify the notation and write $h\oplus\wro(w,e)$ for $w$ a write event and $e$ a read event instead of $h\oplus\wro(\trans{h}{w},e)$.
 
 TODO GIVE AN EXAMPLE OF SUCCESSIVE EXTENSIONS OF A HISTORY USING NEXT TO GET NEXT EVENTS. ADD SOME LOCAL INSTRUCTIONS AS WELL TO EXPLAIN LOCAL STATES.
 
-Moreover, once an event is added to the current history, the algorithm may explore other histories obtained by re-ordering events in the current one. Such re-orderings are required for completeness. Otherwise, write events that are returned later by $\genericNext$ cannot be read by read events executed in the past, even-though this is permitted by the intended isolation level. TODO GIVE AN EXAMPLE (PROGRAM, CURRENT HISTORY, NEXT RETURNING A WRITE, THERE EXISTS A HISTORY WHERE THE WRITE CAN BE READ BY A READ IN THE CURRENT HISTORY).
+Moreover, once an event is added to the current history, the algorithm may explore other histories obtained by re-ordering events in the current one. Such re-orderings are required for completeness. As explained above, new read events can only read from writes executed in the past which limits the set of explored histories to the scheduling imposed by $\genericNext$. Without re-orderings, write events scheduled later by $\genericNext$ cannot be read by read events executed in the past, even-though this may be permitted by the intended isolation level. TODO GIVE AN EXAMPLE (PROGRAM, CURRENT HISTORY, NEXT RETURNING A WRITE, THERE EXISTS A HISTORY WHERE THE WRITE CAN BE READ BY A READ IN THE CURRENT HISTORY).
 
-The function $\textsc{exploreSwaps}$ calls $\genericCompute$ to compute pairs of sequences of events $\alpha, \beta$ that should be re-ordered; $\alpha$ and $\beta$ are \emph{contiguous and disjoint} subsequences of the total order $<$, and $\alpha$ should end before $\beta$ (since $\beta$ will be re-ordered before $\alpha$). Avoiding redundancy, i.e., exploring the same history multiple times, may require restricting the application of such re-orderings. This is modeled by the Boolean condition called $\genericProtocol$. If this condition holds, the new explored histories are computed by the function $\genericSwap$ (this returns local states as well, which are necessary for continuing the exploration). A typical implementation of this function would return ordered histories where the events in $\beta$ and their $\so$ or $\wro$ dependencies 
-%($(\so\cup\wro)^*$ predecessors) 
-are ordered before the events in $\alpha$. We assume that $\genericSwap((\hist,<), \alpha, \beta, \locals)$ returns pairs $((\hist',<'),\locals')$ such that:
+The function $\textsc{exploreSwaps}$ calls $\genericCompute$ to compute pairs of sequences of events $\alpha, \beta$ that should be re-ordered; $\alpha$ and $\beta$ are \emph{contiguous and disjoint} subsequences of the total order $<$, and $\alpha$ should end before $\beta$ (since $\beta$ will be re-ordered before $\alpha$). Typically, $\alpha$ should contain a read event $r$ and $\beta$ a write event $w$ such that re-ordering the two enables $r$ to read from $w$.  Avoiding redundancy, i.e., exploring the same history multiple times, may require restricting the application of such re-orderings. This is modeled by the Boolean condition called $\genericProtocol$. If this condition holds, the new explored histories are computed by the function $\genericSwap$. This function returns local states as well, which are necessary for continuing the exploration. 
+%A typical implementation of this function would return ordered histories where the events in $\beta$ and their $\so$ or $\wro$ dependencies 
+%%($(\so\cup\wro)^*$ predecessors) 
+%are ordered before the events in $\alpha$. 
+We assume that $\genericSwap((\hist,<), \alpha, \beta, \locals)$ returns pairs $((\hist',<'),\locals')$ such that 
 \begin{itemize}
-	\item $\hist'$ contains a subset of the events/transactions in $\hist$ that includes all the events in $(\hist,<)$ up to and including all events in $\alpha$ w.r.t. $<$, all the events in $\beta$, and all the events which are $(\so\cup\wro)^*$ predecessors of events in $\beta$,
-	\item $<'$ coincides with $<$ until the last event before $\alpha$, and it orders all events in $\beta$ before events in $\alpha$,
-	\item the $\so$ relation of $\hist'$ equals the $\so$ relation of $\hist$ projected on transactions in $\hist'$,
-	\item the $\wro$ relation of $\hist'$ equals the $\wro$ relation of $\hist$ projected on events/transactions in $\hist'$ except its last event w.r.t. $<'$,
-	\item $\locals'$ is the projection of $\locals$ on events in $\hist'$.
+	\item $\hist'$ contains the events in $\alpha$ and $\beta$,
+	\item $\hist'$ without the events in $\alpha$ is a prefix of $\hist$, and
+	\item for every read event $r$ in $\alpha$, if it reads from different writes in $\hist$ and $\hist'$ (i.e., the writes $w_1$ and $w_2$ associated with $r$ by the $\wro$ relations of $\hist$ and $\hist'$, respectively, are different) then it is the last event in its transaction log (w.r.t. $\po$).
 \end{itemize}
+The first condition makes the re-ordering ``meaningful'', while the last two conditions ensure that the history $\hist'$ is feasible (i.e., it can be obtained using the operational semantics defined in Section~\ref{ssec:semantics}) and restricts the possible changes of the $\wro$ relation to events in $\alpha$. Concerning the events in $\beta$, they imply that $\hist'$ contains all their $(\po\cup\so\cup\wro)^*$ predecessors. The last condition is required since changing the value returned by a read access may disable later events in the same transaction. % (they need to be re-executed).
+
+%\begin{itemize}
+%	\item $\hist'$ contains a subset of the events/transactions in $\hist$ that includes all the events in $(\hist,<)$ up to and including all events in $\alpha$ w.r.t. $<$, all the events in $\beta$, and all the events which are $(\so\cup\wro)^*$ predecessors of events in $\beta$,
+%	\item $<'$ coincides with $<$ until the last event before $\alpha$, and it orders all events in $\beta$ before events in $\alpha$,
+%	\item the $\so$ relation of $\hist'$ equals the $\so$ relation of $\hist$ projected on transactions in $\hist'$,
+%	\item the $\wro$ relation of $\hist'$ equals the $\wro$ relation of $\hist$ projected on events/transactions in $\hist'$ except its last event w.r.t. $<'$,
+%	\item $\locals'$ is the projection of $\locals$ on events in $\hist'$.
+%\end{itemize}
 
 TODO GIVE AN EXAMPLE. A HISTORY, $\alpha$ and $\beta$ such that $\beta$ has some $(\so\cup\wro)^*$ predecessors. EXPLAIN WHY ONLY THE WR OF THE LAST EVENT CAN CHANGE (OTHERWISE, WE DON'T KNOW IF EVENTS REMAIN ENABLED, LOCAL STATES MAY CHANGE.
 

@@ -63,7 +63,7 @@ For a read/write event $e$, we use $\mathit{var}(e)$ to denote the variable $x$.
 
 A \emph{transaction log} $\tup{t,E, \po_t}$ is an identifier $t$ and a finite set of events $E$ along with a strict total order $\po_t$ on $E$, called \emph{program order}.
 %$T$  is a finite sequence of events ordered by a strict total order $\po_T$ called \emph{program order}. 
-The minimal element of $\po_t$ is a $\ebegin$ event. A transaction log without an $\eend$ event is called \emph{pending} (if the $\eend$ event occurs, then it is maximal in $\po_t$). Otherwise, it is called \emph{complete}.
+The minimal element of $\po_t$ is a $\ebegin$ event. A transaction log without an $\eend$ event is called \emph{pending}. Otherwise, it is called \emph{complete}. If the $\eend$ event occurs, then it is maximal in $\po_t$. The set $E$ of events in a transaction log $t$ is denoted by $\events{t}$.
 
 The program order $\po_t$ represents the order between instructions in the body of a transaction. We assume that each transaction log is well-formed in the sense that if a read of a global variable $x$ is preceded by a write to $x$ in $\po_t$, then it should return the value written by the last write to $x$ before the read (w.r.t. $\po_t$). This property is implicit in the definition of every isolation level that we are aware of. For simplicity, we may use the term \emph{transaction} instead of transaction log. %The  set of all transaction logs is denoted by $\mathsf{Tlogs}$.
 
@@ -94,7 +94,9 @@ We assume that every history includes a distinguished transaction log writing th
 For a variable $\key$, $\wro_\key$ denotes the restriction of $\wro$ to reads of $\key$, \ie, $\wro_\key=\wro\cap (T\times \{ e\ |\ e \mbox{ is a }\erd{\key} \mbox{ event}\})$. Moreover, we extend the relations $\wro$ and $\wro_\key$ to pairs of transactions by $\tup{t_1,t_2}\in \wro$, resp., $\tup{t_1,t_2}\in \wro_\key$, iff there exists a $\rd{\key}$ event $e$ in $t_2$ such that $\tup{t_1,e}\in \wro$, resp., $\tup{t_1,e}\in \wro_\key$. 
 We say that the transaction log $t_1$ is \emph{read} by the transaction log $t_2$ when $\tup{t_1,t_2}\in \wro$. 
 
-The set of transaction logs $T$ in a history $\hist=\tup{T, \so, \wro}$ is denoted by $\tlogs{\hist}$. Given a history $\hist$ and an event $e$ in $\hist$, $\trans{h}{e}$ is the transaction $t$ in $\hist$ that contains $e$. Also, we define $\writeOp{\hist}=\bigcup_{t\in \tlogs{h}}\writeOp{t}$ and $\readOp{\hist}=\bigcup_{t\in \tlogs{h}}\readOp{t}$.
+The set of transaction logs $T$ in a history $\hist=\tup{T, \so, \wro}$ is denoted by $\tlogs{\hist}$, and the union of $\events{t}$ for $t\in T$ is denoted by $\events{\hist}$. Given a history $\hist$ and an event $e$ in $\hist$, $\trans{h}{e}$ is the transaction $t$ in $\hist$ that contains $e$. Also, we define $\writeOp{\hist}=\bigcup_{t\in \tlogs{h}}\writeOp{t}$ and $\readOp{\hist}=\bigcup_{t\in \tlogs{h}}\readOp{t}$.
+
+To simplify the notation, we extend $\so$ and $\wro$ to pairs of events by $(e_1,e_2)\in \so$ if $(\trans{h}{e_1},\trans{h}{e_2})\in\so$ and $(e_1,e_2)\in \wro$ if $e_1\in\writeOp{\trans{h}{e_1}}$, $(\trans{h}{e_1},e_2)\in\wro$, and $\mathit{var}(e_1)=\mathit{var}(e_2)$. We also define $\po=\bigcup_{t\in T} \po_t$.
 
 TODO NOT SURE THAT THE FOLLOWING DEFINITION IS NEEDED
 
@@ -322,7 +324,7 @@ In figure \ref{fig:consistency_defs} it is depicted five axioms which correspond
 
 TODO DEFINE $I$-consistent histories
 
-\subsection{Program Semantics}
+\subsection{Program Semantics}\label{ssec:semantics}
 
 \begin{figure} [t]
 \small
