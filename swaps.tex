@@ -338,7 +338,7 @@ TODO GIVE AN EXAMPLE FOR THE 1ST ISSUE. JUSTIFYING THE SWAPPED CONDITION.
 	\label{fig:non_optimality}	
 \end{figure}
 
-Without further restrictions on swaps, it is also possible that different branches of the recursion lead to the same history, thereby, violating optimality. As an example, consider a program with 2 transactions that only read some variable $x$ and 2 transactions that only write on $x$. Assume that $\textsc{explore}$ reaches the ordered history pictured in Figure~\ref{fig:non_optimality:a} and $\genericNext$ is about to return the second reading transaction. $\textsc{explore}$ will recurse on the two histories pictured in Figure~\ref{fig:non_optimality:b} and Figure~\ref{fig:non_optimality:c} that differ in the write that this last read is reading from (either the initial write or the first write transaction). On both branches of the recursion, $\genericNext$ will extend the history with the last write transaction. For both histories, swapping this last write with the first read on $x$ will result in the history pictured in Figure~\ref{fig:non_optimality:d} (cf. the definition of $\genericCompute$ and $\genericSwap$). Therefore, both branches of the recursion will continue extending the same history and optimality is violated. To solve this issue, we will focus on the $\wro$ dependencies that are \emph{removed} when computing the result of $\genericSwap$. In Figure~\ref{fig:non_optimality:b} and Figure~\ref{fig:non_optimality:c}, both $\wro$ dependencies involving reads are removed. We will require that 
+Without further restrictions on swaps, it is also possible that different branches of the recursion lead to the same history, thereby, violating optimality. As an example, consider a program with 2 transactions that only read some variable $x$ and 2 transactions that only write on $x$. Assume that $\textsc{explore}$ reaches the ordered history pictured in Figure~\ref{fig:non_optimality:a} and $\genericNext$ is about to return the second reading transaction. $\textsc{explore}$ will recurse on the two histories pictured in Figure~\ref{fig:non_optimality:b} and Figure~\ref{fig:non_optimality:c} that differ in the write that this last read is reading from (either the initial write or the first write transaction). On both branches of the recursion, $\genericNext$ will extend the history with the last write transaction. For both histories, swapping this last write with the first read on $x$ will result in the history pictured in Figure~\ref{fig:non_optimality:d} (cf. the definition of $\genericCompute$ and $\genericSwap$). Therefore, both branches of the recursion will continue extending the same history and optimality is violated. To solve this issue, we will focus on the $\wro$ dependencies that are \emph{removed} when computing the result of $\genericSwap$. In Figure~\ref{fig:non_optimality:b} and Figure~\ref{fig:non_optimality:c}, both $\wro$ dependencies involving reads are removed. We will require that TODO
 
 %Let's suppose we have a program $\mathcal{P}$ as depicted in figure \ref{fig:non_optimality}, assuming $\leq_{\ora}$ order transactions as presented from left to right, top to bottom. Then, the algorithm computes histories \ref{fig:non_optimality:a}, $h$, and \ref{fig:non_optimality:b}, $h'$. After adding $T_4$ in both $h,h'$ we can produce a swap between $r_a \coloneqq a \gets \rd{x}$ and $w_4 \coloneqq \wrt{x}{4}$; deleting the event $r_b \coloneqq b \gets \rd{x}$ as $\lnot(\tr(r_b) \ [\wro \cup \so]^+ \ \tr(w_4)) $. Therefore, after the swap in both cases we arrive to the history depicted in Figure~\ref{fig:non_optimality:c}; obtaining a non-optimal situation. 
 
@@ -399,118 +399,120 @@ EXPLAIN THE SWAPPED CONDITION
 	\end{equation*}
 \end{cframed}
 
-\begin{figure}[H]
-	
-	\centering
-	\begin{subfigure}[b]{.3\textwidth}
-		\resizebox{\textwidth}{!}{
-			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
-				semithick, transform shape]
-				
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $a \gets \rd{x}$ \end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.75) {\begin{tabular}{l} $b \gets \rd{x}$\end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, 0) {\begin{tabular}{l} $\wrt{x}{2}$ \\ $\wrt{y}{2}$\end{tabular}};
-				\node[draw, rounded corners=2mm, outer sep=0] (t4) at (3, -0) {
-					\begin{tabular}{l} 
-						$c \gets \rd{x}$ \\
-						{\pgfsetfillopacity{0.3}$\wrt{x}{3}$}
-				\end{tabular}};
-				\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{y}{4}$ \end{tabular}};
-				\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
-				
-				
-				\path (t3.south east) -- (t3.east) coordinate[pos=0.67] (t3x);
-				\path (t4.south west) -- (t4.west) coordinate[pos=0.67] (t4x);
-				\path (t3x) edge[above] node[yshift=0,xshift=0] {$\wro_x$} (t4x);
-				
-				\path (t1.north west) -- (t1.north) coordinate[pos=0.5] (t1a);
-				\path (t1.west) edge [out=140, in=120, looseness=2.25] (t1a);
-				%[out=100,in=120,looseness=5] bend left=50, 
-				
-				\node[above left =0.125 and 0.05 of t1.north](t1alab) {$\wro_x$};
-				\path (t1) edge [left] node {$\wro_x$} (t2);
-			\end{tikzpicture}  
-			
-		}
-		\caption{Current history.}
-		\label{fig:add_write:a}
-	\end{subfigure}
-	\hspace{.5cm}
-	\centering
-	\begin{subfigure}[b]{.3\textwidth}
-		\resizebox{\textwidth}{!}{
-			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
-				semithick, transform shape]
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $a \gets \rd{x}$ \end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.75) {\begin{tabular}{l} $b \gets \rd{x}$\end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, 0) {\begin{tabular}{l} $\wrt{x}{2}$ \\ $\wrt{y}{2}$\end{tabular}};
-				\node[draw, rounded corners=2mm, outer sep=0] (t4) at (3, -0) {
-					\begin{tabular}{l} 
-						$c \gets \rd{x}$ \\
-						$\wrt{x}{3}$
-				\end{tabular}};
-				\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{y}{4}$ \end{tabular}};
-				\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
-				
-				
-				\path (t3.south east) -- (t3.east) coordinate[pos=0.67] (t3x);
-				\path (t4.south west) -- (t4.west) coordinate[pos=0.67] (t4x);
-				\path (t3x) edge[above] node[yshift=0,xshift=0] {$\wro_x$} (t4x);
-				
-				\path (t4.south west) edge [bend left=15] node[above] {$\wro_x$} (t2.east);
-				
-				\path (t1.north west) -- (t1.north) coordinate[pos=0.5] (t1a);
-				\path (t1.west) edge [out=140, in=120, looseness=2.25] (t1a);
-				%[out=100,in=120,looseness=5] bend left=50, 
-				
-				\node[above left =0.125 and 0.05 of t1.north](t1alab) {$\wro_x$};
-				
-			\end{tikzpicture}  
-			
-		}
-		\caption{One possible swap.}
-		\label{fig:add_write:b}
-	\end{subfigure}
-	\hspace{.5cm}
-	\centering
-	\begin{subfigure}[b]{.29\textwidth}
-		\resizebox{\textwidth}{!}{
-			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
-				semithick, transform shape]
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $a \gets \rd{x}$ \end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0, opacity=0.3] (t2) at (-3, -1.75) {\begin{tabular}{l} $b \gets \rd{x}$\end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, 0) {\begin{tabular}{l} $\wrt{x}{2}$ \\ $\wrt{y}{2}$\end{tabular}};
-				\node[draw, rounded corners=2mm, outer sep=0] (t4) at (3, -0) {
-					\begin{tabular}{l} 
-						$c \gets \rd{x}$ \\
-						$\wrt{x}{3}$
-				\end{tabular}};
-				\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{y}{4}$ \end{tabular}};
-				\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
-				
-				
-				\path (t3.south east) -- (t3.east) coordinate[pos=0.67] (t3x);
-				\path (t4.south west) -- (t4.west) coordinate[pos=0.67] (t4x);
-				\path (t3x) edge[above] node[yshift=0,xshift=0] {$\wro_x$} (t4x);
-				
-				\path (t4.north west) edge [bend right=15] node[above] {$\wro_x$} (t1.north east);
-				
-			\end{tikzpicture}  
-			
-		}
-		\caption{Another possible swap.}
-		\label{fig:add_write:c}
-	\end{subfigure}
-	\caption{Extensions of a history by adding a $\iwrite$ event.}
-	\label{fig:add_write}
-	%\vspace{-3mm}
-\end{figure}
+Intuitively, definition~\ref{def:max_added} allow us to detect when a $\iread$ event $r$ reads from some \textit{default} value, the last $\iwrite$ $w$ event writing $x$ that was added before $r$ and such that the resultant history is consistent. In general, the source of non-optimality comes from the existence of histories differing in some $\wro$-edge involving a transaction that will be deleted. Therefore, we can stablish a simple criterion for guaranteeing optimality: a swap between two events can only happen when every event that have to be re-executed is maximally added. This criterion is defined as function $\protocol$ and it will play the role of $\genericProtocol$ function in our algorithm \ref{algorithm:algo-class}'s instance.
 
-%\textcolor{red}{Talk about this example, explain why t2 disappears in 4.3}
-
-Let us show with an example the power of swapping. Here, in Figure~\ref{fig:add_write:a} we can see an incomplete history whose $\nextEvent$ event, $w \coloneqq \wrt{x}{3}$, is a $\iwrite$ event. There are four possible histories, depending if the first and second $\iread$ events, $r_a \coloneqq a \gets \rd{x} $ and $r_b \coloneqq b \gets \rd{x}$, read or not from $w$ (as $c \gets \rd{x}$ will never be able to read from $w$). In Figure~\ref{fig:add_write:b} we can see the history $h_b$ where only $r_b$ reads from $w$. As $r_a <_h r_b$, we simply state that $w \ [\wro] \ r_b$ in $h_b$. The other two cases that modify the write-read relation are due to the edge $w \ [\wro] \ r_a$; their common root. Therefore, we can construct the history $h_c$ depicted in Figure~\ref{fig:add_write:c}, mark $r_b$ as no executed to later on re-execute it and decide, in a later moment, if $w \ [\wro] \ r_b$ or not. In even in this small case we can realize that if $h_c$ would be inconsistent, we would already reduce the number of explored histories by one; its extensions would also be inconsistent. %we can delete $r_b$ for re-executing it later as depicted in Figure~\ref{fig:add_write:c} and by the rules described above, we know that two histories, one where $r_a$ reads from $w$ and another where it does not will be generated. 
-
-In a more general context, when swapping two events $r$ and $w$, we will delete all those events $e$ that are between $r$ and $w$ in the history-order such that $\tr(w)$ does not depends on. Otherwise, deleting some event $e$ such that $\tr(e) \ [\so \cup \wro]^* \ \tr(w)$ holds will produce a history where either some $\iread$ is reading from a deleted $\iwrite$ or some event would be executed before its $\so$-predecessor; both impossible situations in real life.
+%\begin{figure}[H]
+%	
+%	\centering
+%	\begin{subfigure}[b]{.3\textwidth}
+%		\resizebox{\textwidth}{!}{
+%			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+%				semithick, transform shape]
+%				
+%				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $a \gets \rd{x}$ \end{tabular}};
+%				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.75) {\begin{tabular}{l} $b \gets \rd{x}$\end{tabular}};
+%				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, 0) {\begin{tabular}{l} $\wrt{x}{2}$ \\ $\wrt{y}{2}$\end{tabular}};
+%				\node[draw, rounded corners=2mm, outer sep=0] (t4) at (3, -0) {
+%					\begin{tabular}{l} 
+%						$c \gets \rd{x}$ \\
+%						{\pgfsetfillopacity{0.3}$\wrt{x}{3}$}
+%				\end{tabular}};
+%				\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{y}{4}$ \end{tabular}};
+%				\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
+%				
+%				
+%				\path (t3.south east) -- (t3.east) coordinate[pos=0.67] (t3x);
+%				\path (t4.south west) -- (t4.west) coordinate[pos=0.67] (t4x);
+%				\path (t3x) edge[above] node[yshift=0,xshift=0] {$\wro_x$} (t4x);
+%				
+%				\path (t1.north west) -- (t1.north) coordinate[pos=0.5] (t1a);
+%				\path (t1.west) edge [out=140, in=120, looseness=2.25] (t1a);
+%				%[out=100,in=120,looseness=5] bend left=50, 
+%				
+%				\node[above left =0.125 and 0.05 of t1.north](t1alab) {$\wro_x$};
+%				\path (t1) edge [left] node {$\wro_x$} (t2);
+%			\end{tikzpicture}  
+%			
+%		}
+%		\caption{Current history.}
+%		\label{fig:add_write:a}
+%	\end{subfigure}
+%	\hspace{.5cm}
+%	\centering
+%	\begin{subfigure}[b]{.3\textwidth}
+%		\resizebox{\textwidth}{!}{
+%			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+%				semithick, transform shape]
+%				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $a \gets \rd{x}$ \end{tabular}};
+%				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.75) {\begin{tabular}{l} $b \gets \rd{x}$\end{tabular}};
+%				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, 0) {\begin{tabular}{l} $\wrt{x}{2}$ \\ $\wrt{y}{2}$\end{tabular}};
+%				\node[draw, rounded corners=2mm, outer sep=0] (t4) at (3, -0) {
+%					\begin{tabular}{l} 
+%						$c \gets \rd{x}$ \\
+%						$\wrt{x}{3}$
+%				\end{tabular}};
+%				\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{y}{4}$ \end{tabular}};
+%				\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
+%				
+%				
+%				\path (t3.south east) -- (t3.east) coordinate[pos=0.67] (t3x);
+%				\path (t4.south west) -- (t4.west) coordinate[pos=0.67] (t4x);
+%				\path (t3x) edge[above] node[yshift=0,xshift=0] {$\wro_x$} (t4x);
+%				
+%				\path (t4.south west) edge [bend left=15] node[above] {$\wro_x$} (t2.east);
+%				
+%				\path (t1.north west) -- (t1.north) coordinate[pos=0.5] (t1a);
+%				\path (t1.west) edge [out=140, in=120, looseness=2.25] (t1a);
+%				%[out=100,in=120,looseness=5] bend left=50, 
+%				
+%				\node[above left =0.125 and 0.05 of t1.north](t1alab) {$\wro_x$};
+%				
+%			\end{tikzpicture}  
+%			
+%		}
+%		\caption{One possible swap.}
+%		\label{fig:add_write:b}
+%	\end{subfigure}
+%	\hspace{.5cm}
+%	\centering
+%	\begin{subfigure}[b]{.29\textwidth}
+%		\resizebox{\textwidth}{!}{
+%			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+%				semithick, transform shape]
+%				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $a \gets \rd{x}$ \end{tabular}};
+%				\node[draw, rounded corners=2mm,outer sep=0, opacity=0.3] (t2) at (-3, -1.75) {\begin{tabular}{l} $b \gets \rd{x}$\end{tabular}};
+%				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, 0) {\begin{tabular}{l} $\wrt{x}{2}$ \\ $\wrt{y}{2}$\end{tabular}};
+%				\node[draw, rounded corners=2mm, outer sep=0] (t4) at (3, -0) {
+%					\begin{tabular}{l} 
+%						$c \gets \rd{x}$ \\
+%						$\wrt{x}{3}$
+%				\end{tabular}};
+%				\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{y}{4}$ \end{tabular}};
+%				\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
+%				
+%				
+%				\path (t3.south east) -- (t3.east) coordinate[pos=0.67] (t3x);
+%				\path (t4.south west) -- (t4.west) coordinate[pos=0.67] (t4x);
+%				\path (t3x) edge[above] node[yshift=0,xshift=0] {$\wro_x$} (t4x);
+%				
+%				\path (t4.north west) edge [bend right=15] node[above] {$\wro_x$} (t1.north east);
+%				
+%			\end{tikzpicture}  
+%			
+%		}
+%		\caption{Another possible swap.}
+%		\label{fig:add_write:c}
+%	\end{subfigure}
+%	\caption{Extensions of a history by adding a $\iwrite$ event.}
+%	\label{fig:add_write}
+%	%\vspace{-3mm}
+%\end{figure}
+%
+%%\textcolor{red}{Talk about this example, explain why t2 disappears in 4.3}
+%
+%Let us show with an example the power of swapping. Here, in Figure~\ref{fig:add_write:a} we can see an incomplete history whose $\nextEvent$ event, $w \coloneqq \wrt{x}{3}$, is a $\iwrite$ event. There are four possible histories, depending if the first and second $\iread$ events, $r_a \coloneqq a \gets \rd{x} $ and $r_b \coloneqq b \gets \rd{x}$, read or not from $w$ (as $c \gets \rd{x}$ will never be able to read from $w$). In Figure~\ref{fig:add_write:b} we can see the history $h_b$ where only $r_b$ reads from $w$. As $r_a <_h r_b$, we simply state that $w \ [\wro] \ r_b$ in $h_b$. The other two cases that modify the write-read relation are due to the edge $w \ [\wro] \ r_a$; their common root. Therefore, we can construct the history $h_c$ depicted in Figure~\ref{fig:add_write:c}, mark $r_b$ as no executed to later on re-execute it and decide, in a later moment, if $w \ [\wro] \ r_b$ or not. In even in this small case we can realize that if $h_c$ would be inconsistent, we would already reduce the number of explored histories by one; its extensions would also be inconsistent. %we can delete $r_b$ for re-executing it later as depicted in Figure~\ref{fig:add_write:c} and by the rules described above, we know that two histories, one where $r_a$ reads from $w$ and another where it does not will be generated. 
+%
+%In a more general context, when swapping two events $r$ and $w$, we will delete all those events $e$ that are between $r$ and $w$ in the history-order such that $\tr(w)$ does not depends on. Otherwise, deleting some event $e$ such that $\tr(e) \ [\so \cup \wro]^* \ \tr(w)$ holds will produce a history where either some $\iread$ is reading from a deleted $\iwrite$ or some event would be executed before its $\so$-predecessor; both impossible situations in real life.
 
 \begin{cframed}[pinegreen]
 	\begin{equation*}
