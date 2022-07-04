@@ -1,11 +1,13 @@
 %!TEX root = main.tex
 \section{Swapping-Based Model Checking Algorithms}
 
-\subsection{Definition}
+%\subsection{Definition}
 
 %The above-mentioned classes are, notwithstanding, quite dense and contain lots of algorithms we are not interested in (as non-DPOR algorithms for example). In particular, our work focuses on the collection of algorithms defined by the schema \ref{algorithm:algo-class} for some functions $\genericNext, \genericEvaluate, \genericValidWrites, \genericCompute, \genericProtocol, \genericSwap$ to be defined. %Thanks to this approach we will show the existence of some sound and complete algorithms and easily prove some of their properties.
 
-We present a class of model checking algorithms for enumerating executions of a given transactional program, that we call \emph{swapping-based algorithms}. These algorithms are defined by the recursive function \textsc{explore} listed in Algorithm~\ref{algorithm:algo-class}. The function \textsc{explore} receives as input a program $\prog$, an \emph{ordered history} $\hist_<$, which is a pair $(\hist,<)$ of a history and a total order $<$ on all the events in $\hist$, and a mapping $\locals$ that associates each event $e$ in $\hist$ with the valuation of local variables in $\trans{h}{e}$ just before executing $e$. For an ordered history $(\hist,<)$ with $\hist=\tup{T, \so, \wro}$, we assume that $e_1 < e_2$ if $(\trans{h}{e_1},\trans{h}{e_2})\in (\so\cup\wro)^+$ or $\trans{h}{e_1}=\trans{h}{e_2}=t$ and $(e_1,e_2)\in\po_t$.
+We present a class of model checking algorithms for enumerating executions of a given transactional program, that we call \emph{swapping-based algorithms}. Section~\ref{sec:CC-algorithm} will describe a concrete instance that applies to isolation levels that are prefix-closed and causally extensible.
+
+These algorithms are defined by the recursive function \textsc{explore} listed in Algorithm~\ref{algorithm:algo-class}. The function \textsc{explore} receives as input a program $\prog$, an \emph{ordered history} $\hist_<$, which is a pair $(\hist,<)$ of a history and a total order $<$ on all the events in $\hist$, and a mapping $\locals$ that associates each event $e$ in $\hist$ with the valuation of local variables in the transaction of $e$ ($\trans{h}{e}$) just before executing $e$. For an ordered history $(\hist,<)$ with $\hist=\tup{T, \so, \wro}$, we assume that $<$ is consistent with $\po$, $\so$, and $\wro$, i.e., $e_1 < e_2$ if $(\trans{h}{e_1},\trans{h}{e_2})\in (\so\cup\wro)^+$ or $(e_1,e_2)\in\po$. Initially, the ordered history and the mapping $\locals$ are empty.
 
 \begin{algorithm}[t]
 	\caption{\textsc{explore} algorithm}
@@ -65,9 +67,9 @@ Otherwise, the event $e$ is added to the ordered history $h_<$. If $e$ is a read
 % along with a $\wro$ dependency selected via $\genericValidWrites$ if it is a read. linking a \textit{valid} $\iwrite$ event with the new $\iread$ event (valid means satisfying consistency w.r.t. the intended isolation level). 
 Concerning notations, we extend $\oplus_j$ to ordered histories in a straightforward manner: $(\hist,<) \oplus_j e$ is the ordered history $(\hist \oplus_j e, < \cdot\ e)$ where $<\cdot\ e$ means that $e$ is added as the maximal element of the total order $<$. Also, $\hist \oplus_j (e,\ebegin)$ is the same as $\hist \oplus_j \tup{\tr,\{\tup{e,\ebegin}\},\emptyset}$ for a fresh transaction id $t$. Moreover, we simplify the notation and write $h\oplus\wro(w,e)$ for $w$ a write event and $e$ a read event instead of $h\oplus\wro(\trans{h}{w},e)$.
 
-TODO GIVE AN EXAMPLE OF SUCCESSIVE EXTENSIONS OF A HISTORY USING NEXT TO GET NEXT EVENTS. ADD SOME LOCAL INSTRUCTIONS AS WELL TO EXPLAIN LOCAL STATES.
-
-Moreover, once an event is added to the current history, the algorithm may explore other histories obtained by re-ordering events in the current one. Such re-orderings are required for completeness. As explained above, new read events can only read from writes executed in the past which limits the set of explored histories to the scheduling imposed by $\genericNext$. Without re-orderings, write events scheduled later by $\genericNext$ cannot be read by read events executed in the past, even-though this may be permitted by the intended isolation level. TODO GIVE AN EXAMPLE (PROGRAM, CURRENT HISTORY, NEXT RETURNING A WRITE, THERE EXISTS A HISTORY WHERE THE WRITE CAN BE READ BY A READ IN THE CURRENT HISTORY).
+%TODO GIVE AN EXAMPLE OF SUCCESSIVE EXTENSIONS OF A HISTORY USING NEXT TO GET NEXT EVENTS. ADD SOME LOCAL INSTRUCTIONS AS WELL TO EXPLAIN LOCAL STATES.
+Moreover, once an event is added to the current history, the algorithm may explore other histories obtained by re-ordering events in the current one. Such re-orderings are required for completeness. As explained above, new read events can only read from writes executed in the past which limits the set of explored histories to the scheduling imposed by $\genericNext$. Without re-orderings, write events scheduled later by $\genericNext$ cannot be read by read events executed in the past, even-though this may be permitted by the intended isolation level. 
+%TODO GIVE AN EXAMPLE (PROGRAM, CURRENT HISTORY, NEXT RETURNING A WRITE, THERE EXISTS A HISTORY WHERE THE WRITE CAN BE READ BY A READ IN THE CURRENT HISTORY).
 
 The function $\textsc{exploreSwaps}$ calls $\genericCompute$ to compute pairs of sequences of events $\alpha, \beta$ that should be re-ordered; $\alpha$ and $\beta$ are \emph{contiguous and disjoint} subsequences of the total order $<$, and $\alpha$ should end before $\beta$ (since $\beta$ will be re-ordered before $\alpha$). Typically, $\alpha$ should contain a read event $r$ and $\beta$ a write event $w$ such that re-ordering the two enables $r$ to read from $w$.  Avoiding redundancy, i.e., exploring the same history multiple times, may require restricting the application of such re-orderings. This is modeled by the Boolean condition called $\genericProtocol$. If this condition holds, the new explored histories are computed by the function $\genericSwap$. This function returns local states as well, which are necessary for continuing the exploration. 
 %A typical implementation of this function would return ordered histories where the events in $\beta$ and their $\so$ or $\wro$ dependencies 
@@ -89,7 +91,7 @@ The first condition makes the re-ordering ``meaningful'', while the last two con
 %	\item $\locals'$ is the projection of $\locals$ on events in $\hist'$.
 %\end{itemize}
 
-TODO GIVE AN EXAMPLE. A HISTORY, $\alpha$ and $\beta$ such that $\beta$ has some $(\so\cup\wro)^*$ predecessors. EXPLAIN WHY ONLY THE WR OF THE LAST EVENT CAN CHANGE (OTHERWISE, WE DON'T KNOW IF EVENTS REMAIN ENABLED, LOCAL STATES MAY CHANGE.
+%TODO GIVE AN EXAMPLE. A HISTORY, $\alpha$ and $\beta$ such that $\beta$ has some $(\so\cup\wro)^*$ predecessors. EXPLAIN WHY ONLY THE WR OF THE LAST EVENT CAN CHANGE (OTHERWISE, WE DON'T KNOW IF EVENTS REMAIN ENABLED, LOCAL STATES MAY CHANGE.
 
 %some collection of events $\alpha, \beta$ that may needed to be reordered. Every events' rescheduling possibly lead to a different execution, so for controlling which reorderings we are shall explore, we enforce a \textit{reordering protocol} (function $\genericProtocol$). In the affirmative case, the new histories would be generated via $\genericSwap$, \textit{swapping} $\beta$ and all their dependencies before $\alpha$. However, the reader shall take into account that this high-level description of algorithm \ref{algorithm:algo-class} may not be satisfied for some $\textsc{explore}$'s instance.
 %may not be satisfied for some $\textsc{explore}$'s instances.
@@ -148,6 +150,6 @@ A concrete implementation of \textsc{explore} is called:
 %
 %%\textcolor{red}{We need the three classes for the following: RA/RC/CC/PRE algorithms belong to $O^1$, our PRE+SER/PRE+SI version is $W^1$, for SER we cannot obtaining it in $O^n$ for any $n$ nor in $L^1$ and in RA/RC/CC/PRE $O^1 = L^1$. Moreover, if we allow the subindex there, we can talk about future work allowing multiple pending transactions (it may be reasonable to prove that there is an algorithm for SER in $L^n$) and indicate Viktor's algorithm is not in $L^n$ for any $n$ as it employs exp memory. If we don't want to be that expressive, we can only talk about weakly optimal and then proof that under RA/RC/CC/PRE with our algorithms there is no blocking branches as an extra feature thanks to the models; but I thought it may be clearer to distribute it in this way.}
 %
-
-TODO
-The swapping-based algorithms have been already studied in the literature as for example \textcolor{red}{cite Viktor's algorithm}, which belongs to $\mathcal{S}_{SC}$; where SC in this case is the axiomatic representation of sequential consistency memory model. \textcolor{red}{cite SC.}
+%
+%TODO
+%The swapping-based algorithms have been already studied in the literature as for example \textcolor{red}{cite Viktor's algorithm}, which belongs to $\mathcal{S}_{SC}$; where SC in this case is the axiomatic representation of sequential consistency memory model. \textcolor{red}{cite SC.}

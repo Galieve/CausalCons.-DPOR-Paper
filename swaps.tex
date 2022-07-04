@@ -334,28 +334,42 @@ TODO GIVE AN EXAMPLE FOR THE 1ST ISSUE. JUSTIFYING THE SWAPPED CONDITION.
 		\label{fig:non_optimality:d}
 	\end{subfigure}
 	
-	\caption{Re-ordering events versus optimality.}
+	\caption{Re-ordering events versus optimality. Every history starts with a transaction writing the initial value 0.}
 	\label{fig:non_optimality}	
 \end{figure}
 
-Without further restrictions on swaps, it is also possible that different branches of the recursion lead to the same history, thereby, violating optimality. As an example, consider a program with 2 transactions that only read some variable $x$ and 2 transactions that only write on $x$. Assume that $\textsc{explore}$ reaches the ordered history pictured in Figure~\ref{fig:non_optimality:a} and $\genericNext$ is about to return the second reading transaction. $\textsc{explore}$ will recurse on the two histories pictured in Figure~\ref{fig:non_optimality:b} and Figure~\ref{fig:non_optimality:c} that differ in the write that this last read is reading from (either the initial write or the first write transaction). On both branches of the recursion, $\genericNext$ will extend the history with the last write transaction. For both histories, swapping this last write with the first read on $x$ will result in the history pictured in Figure~\ref{fig:non_optimality:d} (cf. the definition of $\genericCompute$ and $\genericSwap$). Therefore, both branches of the recursion will continue extending the same history and optimality is violated. To solve this issue, we will focus on the $\wro$ dependencies that are \emph{removed} when computing the result of $\genericSwap$. In Figure~\ref{fig:non_optimality:b} and Figure~\ref{fig:non_optimality:c}, both $\wro$ dependencies involving reads are removed. We will require that TODO
+Without further restrictions on swaps, it is also possible that different branches of the recursion lead to the same history, thereby, violating optimality. As an example, consider a program with 2 transactions that only read some variable $x$ and 2 transactions that only write on $x$. Assume that $\textsc{explore}$ reaches the ordered history pictured in Figure~\ref{fig:non_optimality:a} and $\genericNext$ is about to return the second reading transaction. $\textsc{explore}$ will recurse on the two histories pictured in Figure~\ref{fig:non_optimality:b} and Figure~\ref{fig:non_optimality:c} that differ in the write that this last read is reading from (either the initial write or the first write transaction). On both branches of the recursion, $\genericNext$ will extend the history with the last write transaction. For both histories, swapping this last write with the first read on $x$ will result in the history pictured in Figure~\ref{fig:non_optimality:d} (cf. the definition of $\genericCompute$ and $\genericSwap$). Therefore, both branches of the recursion will continue extending the same history and optimality is violated. The source of non-optimality is related to $\wro$ dependencies that are \emph{removed} when computing the result of $\genericSwap$. The histories in Figure~\ref{fig:non_optimality:b} and Figure~\ref{fig:non_optimality:c} were different because of the $\wro$ dependency involving the last read, but this difference was discarded during the computation of $\genericSwap$. Therefore, we will restrict the application of $\genericSwap$ on histories where the discarded $\wro$ dependencies relate to some ``fixed'' set of writes, i.e., latest writes (w.r.t. <) that are valid, i.e., preserve consistency with the intended isolation level (see the definition of $\isMaximallyAdded{\_}{\_}$ below), e.g., when the second read reads from $\ewrt{x,2}$.
 
 %Let's suppose we have a program $\mathcal{P}$ as depicted in figure \ref{fig:non_optimality}, assuming $\leq_{\ora}$ order transactions as presented from left to right, top to bottom. Then, the algorithm computes histories \ref{fig:non_optimality:a}, $h$, and \ref{fig:non_optimality:b}, $h'$. After adding $T_4$ in both $h,h'$ we can produce a swap between $r_a \coloneqq a \gets \rd{x}$ and $w_4 \coloneqq \wrt{x}{4}$; deleting the event $r_b \coloneqq b \gets \rd{x}$ as $\lnot(\tr(r_b) \ [\wro \cup \so]^+ \ \tr(w_4)) $. Therefore, after the swap in both cases we arrive to the history depicted in Figure~\ref{fig:non_optimality:c}; obtaining a non-optimal situation. 
 
-In conclusion, we cannot swap transactions without any restriction. As the example in figure \ref{fig:non_optimality} shows, the key of redundancy lies in every $\wro$ edge that is going to be modified or erased: if two histories only differ on those, the resultant history is the same.
+%In conclusion, we cannot swap transactions without any restriction. As the example in figure \ref{fig:non_optimality} shows, the key of redundancy lies in every $\wro$ edge that is going to be modified or erased: if two histories only differ on those, the resultant history is the same.
 
-EXPLAIN THE SWAPPED CONDITION
+The $\genericProtocol$ condition, which restricts re-orderings, requires that every read that will be deleted by $\genericSwap$ or the re-ordered read $r$ (whose $\wro$ dependency will be modified) is not already swapped and it reads from a latest valid write ($D$ has the same definition as in $\genericSwap$):
+\begin{cframed}[pinegreen]
+	\begin{equation*}
+		\begin{array}{l}
+			\genericProtocol(h_<, r, w) \coloneqq 
+%			\begin{array}{l}
+%				\forall r'\in \readOp{h}. \ (r,r')\in \po^* \implies \lnot \swapped{h_<}{r'}\\[1mm]
+%				\land\ 
+				\forall r'\in \readOp{h}\cap (D\cup\{r\}). \ \lnot \swapped{h_<}{r'}\land \isMaximallyAdded{h_<}{r'} \\[2mm]
+%			\end{array} \\[4mm]
+%			\hspace{2cm}\text{where }  D = \{e \ | \ r < e \land (\trans{h}{e},\trans{h}{w})\not\in [\so \cup \wro]^*\} %  \\ \multicolumn{3}{c}{
+ 		\end{array}
+	\end{equation*}
+\end{cframed}
 
-\begin{definition}
-	A $\iread$ event $r$ is \callout{swapped} if the following conditions hold:
-	\begin{itemize}
-		\item For $w= h.\wro(r)$, $w <_h r$ and $w >_{\ora} r$.
-		\item $\tr(r)$ is the first transaction that depends on $\tr(w)$: $\nexists T <_{\ora} \tr(r)$ s $T <_h \tr(r)$ and $\tr(w) \ [\so \cup \wro]^+ \ T$. %\textcolor{red}{Note: I changed $T \neq \tr(r)$ to $T <_{\ora} \tr(r)$ for the proof as by $\ora$-respectfulness (defined in proof's section), we obtain both are equivalent.}
-		\item $r$ is the first $\iread$ event that reads from $\tr(w)$: $\nexists r'\in \tr(r), r' \leq_{\ora} r$ such that $\tr(h.\wro(r')) = \tr(w)$
-	\end{itemize}
-	\label{def:swapped}
-\end{definition}
-
+We say that a read $r$ is \emph{swapped} in $\hist_<$ when (1) it reads from a write $w$ that is a successor in the oracle order (the write was added by $\genericNext$ after the read), which is now a predecessor\footnote{The $\textsc{explore}$ maintains the invariant that every read follows the write it reads from in the history order $<$.} in the history order $<$ (2) there is no transaction $t$ that is before $r$ in both the oracle order $<_{\ora}$ and the history order $<$, and which is a $[\so \cup \wro]^+$ successor of $w$'s transaction, and (3) $r$ is the first read in its transaction to read from $w$. Formally, 
+% of $r$ is the first in oracle order to be after transaction containing $w$ in $[\so \cup \wro]^+$, and 
+%\begin{definition}
+%	A $\iread$ event $r$ is \callout{swapped} if the following conditions hold:
+%	\begin{itemize}
+%		\item For $w= h.\wro(r)$, $w <_h r$ and $w >_{\ora} r$.
+%		\item $\tr(r)$ is the first transaction that depends on $\tr(w)$: $\nexists T <_{\ora} \tr(r)$ s $T <_h \tr(r)$ and $\tr(w) \ [\so \cup \wro]^+ \ T$. %\textcolor{red}{Note: I changed $T \neq \tr(r)$ to $T <_{\ora} \tr(r)$ for the proof as by $\ora$-respectfulness (defined in proof's section), we obtain both are equivalent.}
+%		\item $r$ is the first $\iread$ event that reads from $\tr(w)$: $\nexists r'\in \tr(r), r' \leq_{\ora} r$ such that $\tr(h.\wro(r')) = \tr(w)$
+%	\end{itemize}
+%	\label{def:swapped}
+%\end{definition}
 
 \begin{cframed}[pinegreen]
 	\begin{equation*}
@@ -373,6 +387,7 @@ EXPLAIN THE SWAPPED CONDITION
 	\end{equation*}
 \end{cframed}
 
+A read $r$ reads from a latest valid write, denoted as $\isMaximallyAdded{h_<}{r}$, if reading from any other later write w.r.t. $<$ violates the isolation level $I$. Formally,
 
 \begin{cframed}[pinegreen]
 	\begin{equation*}
@@ -399,7 +414,7 @@ EXPLAIN THE SWAPPED CONDITION
 	\end{equation*}
 \end{cframed}
 
-Intuitively, definition~\ref{def:max_added} allow us to detect when a $\iread$ event $r$ reads from some \textit{default} value, the last $\iwrite$ $w$ event writing $x$ that was added before $r$ and such that the resultant history is consistent. In general, the source of non-optimality comes from the existence of histories differing in some $\wro$-edge involving a transaction that will be deleted. Therefore, we can stablish a simple criterion for guaranteeing optimality: a swap between two events can only happen when every event that have to be re-executed is maximally added. This criterion is defined as function $\protocol$ and it will play the role of $\genericProtocol$ function in our algorithm \ref{algorithm:algo-class}'s instance.
+%Intuitively, definition~\ref{def:max_added} allow us to detect when a $\iread$ event $r$ reads from some \textit{default} value, the last $\iwrite$ $w$ event writing $x$ that was added before $r$ and such that the resultant history is consistent. In general, the source of non-optimality comes from the existence of histories differing in some $\wro$-edge involving a transaction that will be deleted. Therefore, we can stablish a simple criterion for guaranteeing optimality: a swap between two events can only happen when every event that have to be re-executed is maximally added. This criterion is defined as function $\protocol$ and it will play the role of $\genericProtocol$ function in our algorithm \ref{algorithm:algo-class}'s instance.
 
 %\begin{figure}[H]
 %	
@@ -514,19 +529,7 @@ Intuitively, definition~\ref{def:max_added} allow us to detect when a $\iread$ e
 %
 %In a more general context, when swapping two events $r$ and $w$, we will delete all those events $e$ that are between $r$ and $w$ in the history-order such that $\tr(w)$ does not depends on. Otherwise, deleting some event $e$ such that $\tr(e) \ [\so \cup \wro]^* \ \tr(w)$ holds will produce a history where either some $\iread$ is reading from a deleted $\iwrite$ or some event would be executed before its $\so$-predecessor; both impossible situations in real life.
 
-\begin{cframed}[pinegreen]
-	\begin{equation*}
-		\begin{array}{l}
-			\genericProtocol(h_<, r, w) \coloneqq 
-%			\begin{array}{l}
-%				\forall r'\in \readOp{h}. \ (r,r')\in \po^* \implies \lnot \swapped{h_<}{r'}\\[1mm]
-%				\land\ 
-				\forall r'\in \readOp{h}\cap (D\cup\{r\}). \ \lnot \swapped{h_<}{r'}\land \isMaximallyAdded{h_<}{r'} \\[2mm]
-%			\end{array} \\[4mm]
-			\hspace{2cm}\text{where }  D = \{e \ | \ r < e \land (\trans{h}{e},\trans{h}{w})\not\in [\so \cup \wro]^*\} %  \\ \multicolumn{3}{c}{
- 		\end{array}
-	\end{equation*}
-\end{cframed}
+
 
 
 %The name ``swapping'' $w$ and $r$ refers to the change of relative order between those two events; $r <_{\ora} w$ but in the new history their order is reversed: $w <_h r$. Moreover, every event $e$ after $r$ that does not unlock $w$ (i.e. the condition $\tr(e) \ [\so \cup \wro]^+ \ \tr(w) $ does not hold) will be not taking into account to check this consistency. The reason for this is simple: if we want to compute every possible history, we may need to restate where some read-events read from, and we achieve this by re-executing them. To avoid redundancies, only those that $\tr(w)$ not depend on should being able to be re-executed.

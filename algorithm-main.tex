@@ -4,7 +4,7 @@
 
 %The main goal in this section is describing a deterministic algorithm for transactional model-checking under a causally-closed model $\mathcal{M}$ that obtains all possible behaviors a program may have. We present during this section a swapping-based sound, complete and optimal algorithm employing polynomial memory. In particular, we will show that our algorithm has at most one pending transaction and why this is key to guarantee the rest of the properties. For the legibility of this document, we will postpone their proofs to section \ref{sec:proofs-algorithm}.
 
-We present a concrete implementation of $\textsc{explore}$ that is $I$-sound, $I$-complete, and strongly optimal for any isolation level $I$ that is prefix-closed and causally-extensible. Moreover, the space complexity of this algorithm is polynomial in the size of the program. An important invariant of this implementation is that it explores histories with \emph{at most one} pending transaction and this transaction is maximal w.r.t. session order. This invariant is used to avoid fruitless explorations: since $I$ is assumed to be causally-extensible, there always exists an extension of the current history with one more event that continues to satisfy $I$.
+We present a concrete implementation of $\textsc{explore}$ that is $I$-sound, $I$-complete, and strongly optimal for any isolation level $I$ that is prefix-closed and causally-extensible. Moreover, the space complexity of this algorithm is polynomial in the size of the program. An important invariant of this implementation is that it explores histories with \emph{at most one} pending transaction and this transaction is maximal w.r.t. session order. This invariant is used to avoid fruitless explorations: since $I$ is assumed to be causally-extensible, there always exists an extension of the current history with one more event that continues to satisfy $I$. We prove the correctness of the algorithm in Section~\ref{sec:proofs-algorithm}.
 
 \input{extending}
 
@@ -16,7 +16,7 @@ We present a concrete implementation of $\textsc{explore}$ that is $I$-sound, $I
 
 \subsection{Outputting histories}
 
-TODO SAY THAT $\genericEvaluate(h)$ DOES NOTHING.
+As we show in Section~\ref{sec:proofs-algorithm}, the algorithm described above is $I$-sound assuming that $\genericEvaluate(\hist) ::= true$. Therefore, any history computed by applying the functions described above will satisfy the intended isolation level $I$.
 
 %Altogether, our swapping-based algorithm can simply being defined as an instance of \ref{algorithm:algo-class}: $\textsc{explore}_{\mathcal{M}}(\nextEvent,\evaluate , \validWrites, \compute, \protocol, \swap)$. A full detailed pseudocode of this procedure can be seen as algorithm \ref{algorithm:optimal-instantiated}; with initial call $h = \emptyset$.
 
