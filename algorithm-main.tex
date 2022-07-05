@@ -18,6 +18,8 @@ We present a concrete implementation of $\textsc{explore}$ that is $I$-sound, $I
 
 As we show in Section~\ref{sec:proofs-algorithm}, the algorithm described above is $I$-sound assuming that $\genericEvaluate(\hist) ::= true$. Therefore, any history computed by applying the functions described above will satisfy the intended isolation level $I$.
 
+TODO THIS SHOULD PROBABLY BE ABOUT CORRECTNESS, STATING IT AND EXPLAINING A LITTLE BIT THE PROOFS.
+
 %Altogether, our swapping-based algorithm can simply being defined as an instance of \ref{algorithm:algo-class}: $\textsc{explore}_{\mathcal{M}}(\nextEvent,\evaluate , \validWrites, \compute, \protocol, \swap)$. A full detailed pseudocode of this procedure can be seen as algorithm \ref{algorithm:optimal-instantiated}; with initial call $h = \emptyset$.
 
 %\begin{algorithm}[H]
