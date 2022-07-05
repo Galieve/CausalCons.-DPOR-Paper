@@ -1,0 +1,425 @@
+\subsection{Prefix impossibility}
+	
+	
+\begin{figure}[H]
+	
+	\centering
+	\begin{subfigure}[b]{.25\textwidth}
+		%		\resizebox{\textwidth}{!}{
+		%			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+		%				semithick, transform shape]
+		%				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-1.5, -0.25) {\begin{tabular}{l} $\init$ \end{tabular}};
+		%				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]130:$T_1$}] (t2) at (-3, -2) {\begin{tabular}{l} 
+		%						$\wrt{z}{1}$ \\ $a \gets \rd{x}$ \\ $\wrt{y}{1}$ \\ \ldots
+		%				\end{tabular}};
+		%				\node[draw, rounded corners=2mm,outer sep=0,  label={[font=\small]50:$T_2$}] (t2) at (0, -2) {\begin{tabular}{l} 
+		%						$\wrt{z}{2}$ \\ $b \gets \rd{y}$ \\ $\wrt{x}{2}$ \\ \ldots
+		%				\end{tabular}};		
+		%				
+		%				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1x);
+		%				\path (t2.north west) -- (t2.north) coordinate[pos=0.67] (t2x);
+		%				\path (t3.north west) -- (t3.west) coordinate[pos=0.67] (t3x);
+		%				
+		%				%\path (t3x) edge [above] node[yshift=8,xshift=0] {$\wro_x$} (t2.north east);
+		%				%\path (t1x) edge [right] node {$\wro_y$} (t2x);
+		%			\end{tikzpicture}  
+		%		}
+		\begin{minipage}{2cm}
+			\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}]
+				begin;
+				write((*$z$*),1);
+				a = read((*$x$*));
+				write((*$y$*),1);
+				commit
+			\end{lstlisting}
+		\end{minipage}
+		\begin{minipage}{1mm}
+			||
+		\end{minipage}
+		\hspace{-5mm}
+		\begin{minipage}{1.3cm}
+			\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}]
+				begin;
+				write((*$z$*),2);
+				b = read((*$y$*));
+				write((*$x$*),2);
+				commit
+			\end{lstlisting}
+		\end{minipage}
+		\caption{Program.}
+		\label{fig:ser-non-optimal:prog}
+	\end{subfigure}
+	\hspace{.5cm}
+	\centering
+	\begin{subfigure}[b]{.25\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-1.5, -0.25) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -2) {\begin{tabular}{l} 
+						$\wrt{z}{1}$ \\ $\rd{x}$ \\ \pgfsetfillopacity{0.3}$\wrt{y}{1}$ 
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, -2) {\begin{tabular}{l} 
+						$\wrt{z}{2}$ \\ \pgfsetfillopacity{0.3}$\rd{y}$ \\ \pgfsetfillopacity{0.3}$\wrt{x}{2}$ 
+				\end{tabular}};		
+				
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1sw);
+				\path (t1.south east) -- (t1.south) coordinate[pos=0.67] (t1se);
+				\path (t2.north east) -- (t2.north) coordinate[pos=0.67] (t2x);
+				\path (t3.north west) -- (t3.north) coordinate[pos=0.67] (t3x);
+				
+				%\path (t3x) edge [above] node[yshift=8,xshift=0] {$\wro_x$} (t2.north east);
+				\path (t1sw) edge [left] node {$\wro_x$} (t2x);
+				%				\path (t1se) edge [right] node {$\wro_y$} (t3x);
+			\end{tikzpicture}  
+			
+		}
+		\caption{History.}
+		\label{fig:ser-non-optimal:a}
+	\end{subfigure}
+	\hspace{.3cm}
+	\centering
+	\begin{subfigure}[b]{.10\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (0, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (0, -1.8) {\begin{tabular}{l} 
+						$\wrt{z}{1}$ \\ $\rd{x}$ \\ $\wrt{y}{1}$ 
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, -4) {\begin{tabular}{l} 
+						\pgfsetfillopacity{0.3}$\wrt{z}{2}$ \\ \pgfsetfillopacity{0.3}$\rd{y}$ \\ \pgfsetfillopacity{0.3}$\wrt{x}{2}$ 
+				\end{tabular}};		
+				
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1sw);
+				\path (t1.south east) -- (t1.south) coordinate[pos=0.67] (t1se);
+				\path (t2.north east) -- (t2.north) coordinate[pos=0.67] (t2x);
+				\path (t3.north west) -- (t3.north) coordinate[pos=0.67] (t3x);
+				
+				%\path (t3x) edge [above] node[yshift=8,xshift=0] {$\wro_x$} (t2.north east);
+				\path (t1.south) edge [left] node {$\wro_x$} (t2.north);
+				%				\path (t2.south) edge [left] node {$\wro_y$} (t3.north);
+			\end{tikzpicture}  			
+		}
+		\caption{History.}
+		\label{fig:ser-non-optimal:a}
+	\end{subfigure}
+	\hspace{.3cm}
+	\centering
+	\begin{subfigure}[b]{.25\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-1.5, -0.25) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -2) {\begin{tabular}{l} 
+						$\wrt{z}{1}$ \\ $\rd{x}$ \\ \pgfsetfillopacity{0.3}$\wrt{y}{1}$ 
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, -2) {\begin{tabular}{l} 
+						$\wrt{z}{2}$ \\ $\rd{y}$ \\ \pgfsetfillopacity{0.3}$\wrt{x}{2}$ 
+				\end{tabular}};		
+				
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1sw);
+				\path (t1.south east) -- (t1.south) coordinate[pos=0.67] (t1se);
+				\path (t2.north east) -- (t2.north) coordinate[pos=0.67] (t2x);
+				\path (t3.north west) -- (t3.north) coordinate[pos=0.67] (t3x);
+				
+				%\path (t3x) edge [above] node[yshift=8,xshift=0] {$\wro_x$} (t2.north east);
+				\path (t1sw) edge [left] node {$\wro_x$} (t2x);
+				\path (t1se) edge [right] node {$\wro_y$} (t3x);
+			\end{tikzpicture}  
+			
+		}
+		\caption{History.}
+		\label{fig:ser-non-optimal:a}
+	\end{subfigure}
+	\hspace{.3cm}
+	\centering
+	\begin{subfigure}[b]{.22\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (0, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (0, -1.8) {\begin{tabular}{l} 
+						$\wrt{z}{1}$ \\ $\rd{x}$ \\ $\wrt{y}{1}$ 
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, -4) {\begin{tabular}{l} 
+						$\wrt{z}{2}$ \\ $\rd{y}$ \\ \pgfsetfillopacity{0.3}$\wrt{x}{2}$ 
+				\end{tabular}};		
+				
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1sw);
+				\path (t1.south east) -- (t1.south) coordinate[pos=0.67] (t1se);
+				\path (t2.north east) -- (t2.north) coordinate[pos=0.67] (t2x);
+				\path (t3.north west) -- (t3.north) coordinate[pos=0.67] (t3x);
+				
+				%\path (t3x) edge [above] node[yshift=8,xshift=0] {$\wro_x$} (t2.north east);
+				\path (t1.south) edge [left] node {$\wro_x$} (t2.north);
+				\path (t2.south) edge [left] node {$\wro_y$} (t3.north);
+			\end{tikzpicture}  
+			\hspace{2mm}
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (0, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (0, -1.8) {\begin{tabular}{l} 
+						$\wrt{z}{2}$ \\ $\rd{y}$ \\ $\wrt{x}{2}$ 
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, -4) {\begin{tabular}{l} 
+						$\wrt{z}{1}$ \\ $\rd{x}$ \\ \pgfsetfillopacity{0.3}$\wrt{y}{1}$ 
+				\end{tabular}};		
+				
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1sw);
+				\path (t1.south east) -- (t1.south) coordinate[pos=0.67] (t1se);
+				\path (t2.north east) -- (t2.north) coordinate[pos=0.67] (t2x);
+				\path (t3.north west) -- (t3.north) coordinate[pos=0.67] (t3x);
+				
+				%\path (t3x) edge [above] node[yshift=8,xshift=0] {$\wro_x$} (t2.north east);
+				\path (t1.south) edge [left] node {$\wro_y$} (t2.north);
+				\path (t2.south) edge [left] node {$\wro_x$} (t3.north);
+			\end{tikzpicture}  			
+		}
+		\caption{Histories.}
+		\label{fig:ser-non-optimal:b}
+	\end{subfigure}
+	\hspace{.5cm}
+	\centering
+	\begin{subfigure}[b]{.25\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-1.5, -0.25) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -2) {\begin{tabular}{l} 
+						$\wrt{z}{1}$ \\ $\rd{x}$ \\ $\wrt{y}{1}$ 
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, -2) {\begin{tabular}{l} 
+						$\wrt{z}{2}$ \\ $\rd{y}$ \\ $\wrt{x}{2}$ 
+				\end{tabular}};		
+				
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1sw);
+				\path (t1.south east) -- (t1.south) coordinate[pos=0.67] (t1se);
+				\path (t2.north east) -- (t2.north) coordinate[pos=0.67] (t2x);
+				\path (t3.north west) -- (t3.north) coordinate[pos=0.67] (t3x);
+				
+				%\path (t3x) edge [above] node[yshift=8,xshift=0] {$\wro_x$} (t2.north east);
+				\path (t1sw) edge [left] node {$\wro_x$} (t2x);
+				\path (t1se) edge [right] node {$\wro_y$} (t3x);
+			\end{tikzpicture}  
+		}
+		\caption{Inconsistent history.}
+		\label{fig:ser-non-optimal:c}
+	\end{subfigure}
+	\caption{A program and some partial histories. In gray, instructions not yet executed.}
+	\label{fig:ser-non-optimal}
+	%\vspace{-3mm}
+\end{figure}
+
+
+\begin{figure}[H]
+	
+	\centering
+	\begin{subfigure}[b]{.2\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				
+				%\\ \multicolumn{1}{c}{ \ldots}
+				\node[draw, rounded corners=2mm,outer sep=0] (t0) at (-2, -0.25) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]130:$t_1$}] (t1) at (-4, -2) {\begin{tabular}{l} 
+						$a \gets \rd{x}$ \\ $\wrt{x}{1}$
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]130:$t_2$}] (t2) at (-4, -5) {\begin{tabular}{l} 
+						$a \gets \rd{y}$ \\ $\wrt{y}{2}$
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0,  label={[font=\small]50:$t_3$}] (t3) at (0, -2) {\begin{tabular}{l} 
+						$b \gets \rd{y}$ \\ $\wrt{y}{1}$
+				\end{tabular}};	
+				
+				\node[draw, rounded corners=2mm,outer sep=0,  label={[font=\small]50:$t_4$}] (t4) at (0, -5) {\begin{tabular}{l} 
+						$b \gets \rd{x}$ \\ $\wrt{x}{2}$
+				\end{tabular}};		
+				
+				\path (t0.south west) -- (t0.south) coordinate[pos=0.67] (t0x);
+				\path (t0.south east) -- (t0.south) coordinate[pos=0.67] (t0y);
+				\path (t1.north west) -- (t1.north) coordinate[pos=0.67] (t1nw);
+				\path (t2.north west) -- (t2.north) coordinate[pos=0.67] (t2nw);
+				\path (t2.north east) -- (t2.north) coordinate[pos=0.67] (t2ne);
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1sw);
+				\path (t1.south east) -- (t1.south) coordinate[pos=0.67] (t1se);
+				\path (t3.south east) -- (t3.south) coordinate[pos=0.67] (t3se);
+				\path (t3.north east) -- (t3.north) coordinate[pos=0.67] (t3ne);
+				\path (t3.south west) -- (t3.south) coordinate[pos=0.67] (t3sw);
+				\path (t4.north east) -- (t4.north) coordinate[pos=0.67] (t4ne);
+				\path (t4.north west) -- (t4.north) coordinate[pos=0.67] (t4nw);
+
+				
+				\path (t0x) edge [above left] node {$\so$} (t1nw);
+				\path (t0x) edge [below right] node {$\wro_x$} (t4nw);
+				\path (t0y) edge [above right] node {$\so \cap \wro_y$} (t3ne);
+				\path (t1sw) edge [left] node {$\so$} (t2nw);
+				\path (t3se) edge [right] node {$\so$} (t4ne);
+				\path (t4nw) edge [left] node {$\wro_x$} (t1se);
+				\path (t3sw) edge [right] node {$\wro_y$} (t2ne);
+				%\path (t2) edge [right] node {$\wro_x$} (t3);
+			\end{tikzpicture}  
+			
+		}
+		\caption{Current.}
+		\label{fig:pre-extensibility:a}
+	\end{subfigure}
+	\hspace{.5cm}
+	\centering
+	\begin{subfigure}[b]{.2\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				
+				%\\ \multicolumn{1}{c}{ \ldots}
+				\node[draw, rounded corners=2mm,outer sep=0] (t0) at (-2, -0.25) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]130:$t_1$}] (t1) at (-4, -2) {\begin{tabular}{l} 
+						$a \gets \rd{x}$ \\ $\wrt{x}{1}$
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]130:$t_2$}] (t2) at (-4, -5) {\begin{tabular}{l} 
+						$a \gets \rd{y}$ \\ $\wrt{y}{2}$
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0,  label={[font=\small]50:$t_3$}] (t3) at (0, -2) {\begin{tabular}{l} 
+						$b \gets \rd{y}$ \\ $\wrt{y}{1}$
+				\end{tabular}};	
+				
+				\node[draw, rounded corners=2mm,outer sep=0,  label={[font=\small]50:$t_4$}] (t4) at (0, -5) {\begin{tabular}{l} 
+						$b \gets \rd{x}$ \\ $\wrt{x}{2}$
+				\end{tabular}};		
+				
+				\path (t0.south west) -- (t0.south) coordinate[pos=0.67] (t0x);
+				\path (t0.south east) -- (t0.south) coordinate[pos=0.67] (t0y);
+				\path (t1.north west) -- (t1.north) coordinate[pos=0.67] (t1nw);
+				\path (t2.north west) -- (t2.north) coordinate[pos=0.67] (t2nw);
+				\path (t2.north east) -- (t2.north) coordinate[pos=0.67] (t2ne);
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1sw);
+				\path (t1.south east) -- (t1.south) coordinate[pos=0.67] (t1se);
+				\path (t3.south east) -- (t3.south) coordinate[pos=0.67] (t3se);
+				\path (t3.north east) -- (t3.north) coordinate[pos=0.67] (t3ne);
+				\path (t3.south west) -- (t3.south) coordinate[pos=0.67] (t3sw);
+				\path (t4.north east) -- (t4.north) coordinate[pos=0.67] (t4ne);
+				\path (t4.north west) -- (t4.north) coordinate[pos=0.67] (t4nw);
+				
+				
+				\path (t0y) edge [right] node {$\so$} (t3ne);
+				\path (t0y) edge [below right] node {$\wro_x$} (t2ne);
+				\path (t0x) edge [above left] node {$\so \cap \wro_x$} (t1nw);
+				\path (t1sw) edge [left] node {$\so$} (t2nw);
+				\path (t3se) edge [right] node {$\so$} (t4ne);
+				\path (t1se) edge [left] node {$\wro_x$} (t4nw);
+				\path (t2ne) edge [right] node {$\wro_y$} (t3sw);
+				%\path (t2) edge [right] node {$\wro_x$} (t3);
+			\end{tikzpicture}  
+			
+		}
+		\caption{Swapped.}
+		\label{fig:pre-extensibility:b}
+	\end{subfigure}
+	\hspace{.5cm}
+	\centering
+	\begin{subfigure}[b]{.2\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				
+				%\\ \multicolumn{1}{c}{ \ldots}
+				\node[draw, rounded corners=2mm,outer sep=0] (t0) at (-2, -0.25) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]130:$t_1$}] (t1) at (-4, -2) {\begin{tabular}{l} 
+						$a \gets \rd{x}$ \\ $\wrt{x}{1}$
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]130:$t_2$}] (t2) at (-4, -5) {\begin{tabular}{l} 
+						$a \gets \rd{y}$ \\ $\wrt{y}{2}$
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0,  label={[font=\small]50:$t_3$}] (t3) at (0, -2) {\begin{tabular}{l} 
+						$b \gets \rd{y}$ \\ $\wrt{y}{1}$
+				\end{tabular}};	
+				
+				\node[draw, rounded corners=2mm,outer sep=0,  label={[font=\small]50:$t_4$}] (t4) at (0, -5) {\begin{tabular}{l} 
+						$b \gets \rd{x}$ \\ $\wrt{x}{2}$
+				\end{tabular}};		
+				
+				\path (t0.south west) -- (t0.south) coordinate[pos=0.67] (t0x);
+				\path (t0.south east) -- (t0.south) coordinate[pos=0.67] (t0y);
+				\path (t1.north west) -- (t1.north) coordinate[pos=0.67] (t1nw);
+				\path (t2.north west) -- (t2.north) coordinate[pos=0.67] (t2nw);
+				\path (t2.north east) -- (t2.north) coordinate[pos=0.67] (t2ne);
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1sw);
+				\path (t1.south east) -- (t1.south) coordinate[pos=0.67] (t1se);
+				\path (t3.south east) -- (t3.south) coordinate[pos=0.67] (t3se);
+				\path (t3.north east) -- (t3.north) coordinate[pos=0.67] (t3ne);
+				\path (t3.south west) -- (t3.south) coordinate[pos=0.67] (t3sw);
+				\path (t4.north east) -- (t4.north) coordinate[pos=0.67] (t4ne);
+				\path (t4.north west) -- (t4.north) coordinate[pos=0.67] (t4nw);
+				
+				
+				\path (t0y) edge [above right] node {$\so \cap \wro_y$} (t3ne);
+				\path (t0y) edge [below right] node {$\wro_x$} (t2ne);
+				\path (t0x) edge [above left] node {$\so \cap \wro_x$} (t1nw);
+				\path (t1sw) edge [left] node {$\so$} (t2nw);
+				\path (t3se) edge [right] node {$\so$} (t4ne);
+				\path (t1se) edge [left] node {$\wro_x$} (t4nw);
+				%\path (t2ne) edge [right] node {$\wro_y$} (t3sw);
+				%\path (t2) edge [right] node {$\wro_x$} (t3);
+			\end{tikzpicture}  
+			
+		}
+		\caption{Swapped.}
+		\label{fig:pre-extensibility:c}
+	\end{subfigure}
+	
+	\caption{Two histories that satisfy $\PRE$}
+	\label{fig:pre-extensibility}
+	%\vspace{-3pre-extensibilitymm}
+\end{figure}
+
+Let's suppose there exists a sound, complete and strong optimal algorithm $A \in \mathcal{S}_{\PRE}$. As the histories $h_1$ and $h_2$ depicted in figure \ref{fig:pre-extensibility} (\ref{fig:pre-extensibility:a} and \ref{fig:pre-extensibility:b} respectively) satisfy $\PRE$; both have to be computed by $A$. However, as $A \in \mathcal{S}_{\PRE}$, at least one of them have to be computed by swapping at least once; without loss of generality we can assume it is $h_1$. Therefore $h_1$ is an extension of a history $h^* = \genericSwap(h'_<, \alpha, \beta, \locals)$ for some history $h'$ and some collection $\alpha, \beta$ of events. \textcolor{red}{do we agree that extension => no swaps from $h^*$ to $h_1$?} On one hand, by $\genericSwap$'s definition, there has to be an event $r \in \alpha$ and a transaction $t \in \beta$ s.t. $(t, r) \in \wro$. On the other hand, $A$ is strong-optimal, so neither $h^*$ nor $h'$ are inconsistent; so in particular $(t, \trans{h'}r) \not \in \so$. Altogether we deduce that $(\alpha, \beta) \in \mathcal{P}(\{t_1, t_2\}) \times \mathcal{P}(\{t_3, t_4\})$. 
+
+Let's analyze which possible values $\alpha, \beta$ may have. Firstly, neither $\alpha$ nor $\beta$ are empty. As $(t_4, t_1) \in \wro$, $(t_3, t_4), (t_1, t_2) \in \so$, we deduce $t_1 \in \alpha, t_4 \in \beta$. Therefore, five possible orders are admissible for $h'$: $\sigma_1 = (t_1, t_2, t_3, t_4)$, $\sigma_2 = (t_1, t_3, t_2, t_4)$, $\sigma_3 = (t_1, t_3, t_4, t_2)$, $\sigma_4 = (t_3, t_1, t_2, t_4)$, $\sigma_5 = (t_3, t_1, t_4, t_2)$ ($t_2$ is included as last transaction if it is not in $h'$). Among those orderings, $\sigma_2$ and $\sigma_4$ are not feasible: if that would be the case, $t_3, t_4$ would belong to $\beta$. By contiguity of $\alpha$ and $\beta$, $t_2 \in \beta$; which contradicts $\beta \in \mathcal{P}(\{t_3, t_4\})$. Moreover, as $h'$ is consistent, if $\sigma_1$ were the order of $h'$, $(t_2, t_3) \in \wro$ or $(t_1, t_4) \in \wro$; which contradicts that $h'$ without $\alpha$ is a prefix of $h$. Finally, if $h'$ has either $\sigma_3$ or $\sigma_5$ as ordering, we deduce that $(t_3, t_2) \in \wro$ and $(\init, t_i) \in \wro$ for every $i \neq 2$. If $h'$ would have a predecessor ${h^*}^* = \genericSwap(h_<'', \alpha', \beta', \locals')$ for some history $h''$ and $\alpha', \beta'$, $t_2$ would be in $ \beta'$. By contiguity of $\alpha'$ and $\beta'$, $\sigma_5$ is discarded and if it were $\sigma_3$, every transaction would read from $\init$; which contradict that $A$ is strongly-optimal as $h''$ is inconsistent.
+
+To sum up, $h*$ is the unique predecessor of $h$ that comes from a $\genericSwap$ call. Let us see if from the initial state we can compute the history $h_2$. If that would be possible, as $t_3 < t_2$ and there is no swaps before $h'$; we would find a $\genericSwap$ call in the path. As $t_1$ and $t_3$ are independent and swapping $t_4$ with $t_1$ leads to two histories with order $(t_4, t_3, t_1, t_2)$ that cannot be swapped anymore, we would obtain $h_2$ after swapping $t_3$ and $t_2$ in a histor
+
+As $t_1$ and $t_3$ update different values, 
+In $h'$, $(t_3, t_2) \in \wro$.
+
+	
+\begin{comment}
+	contenidos...
+
+	\begin{subfigure}[b]{.2\textwidth}
+%	\resizebox{\textwidth}{!}{
+\begin{minipage}{1.8cm}
+\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}]
+begin;
+a=read((*$x$*));
+write((*$x$*),1);
+commit
+begin;
+b=read((*$y$*));
+write((*$y$*),1);
+commit
+\end{lstlisting}
+\end{minipage}
+\begin{minipage}{1mm}
+||
+\end{minipage}
+\hspace{-5mm}
+\begin{minipage}{1.3cm}
+\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}]
+begin;
+a=read((*$y$*));
+write((*$y$*),2);
+commit
+begin;
+b=read((*$x$*));
+write((*$x$*),2);
+commit
+\end{lstlisting}
+\end{minipage}
+\vspace{1.2cm}
+%		}
+		\caption{Program.}
+		\label{fig:pre-extensibility:prog}
+	\end{subfigure}
+	\end{comment}
+
+
