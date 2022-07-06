@@ -136,29 +136,58 @@ TODO: THIS SHOULD BE AN EXAMPLE OF A STEP OF NEXT. ADD TO THE ABOVE EXAMPLE SOME
 For example, given the history $h$ in Figure~\ref{fig:oracle_order:b}, the function $\nextEvent$ would return the event $d \gets \rd{y}$ instead of $a \gets \rd{x}$; as the forth transaction is pending in $h$. 
 
 \begin{figure}[H]
-	
+
+\begin{subfigure}[b]{.25\textwidth}
+%	\resizebox{\textwidth}{!}{
+\begin{minipage}{1.8cm}
+\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}]
+begin;
+write((*$x$*),1);
+write((*$y$*),1);
+commit
+\end{lstlisting}
+\end{minipage}
+\begin{minipage}{1mm}
+||
+\end{minipage}
+\hspace{-5mm}
+\begin{minipage}{1.3cm}
+\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}]
+begin;
+a=read((*$x$*));
+b=read((*$y$*));
+commit
+begin;
+c=read((*$x$*));
+commit
+\end{lstlisting}
+\end{minipage}
+%		}
+\caption{Program.}
+\label{fig:add_read:prog}
+\end{subfigure}
 	\centering
-	\begin{subfigure}[b]{.29\textwidth}
+	\begin{subfigure}[b]{.2\textwidth}
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.75) {\begin{tabular}{l} $\wrt{x}{1}$\end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, 0) {\begin{tabular}{l} $a \gets \rd{x}$ \\ $b \gets \rd{y}$\end{tabular}};
-				\node[draw, rounded corners=2mm, outer sep=0] (t4) at (3, -0) {
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.75) {\begin{tabular}{l} $\wrt{x}{1}$ \\ $\wrt{y}{1}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, 0) {\begin{tabular}{l} $\rd{y}$\end{tabular}};
+				\node[draw, rounded corners=2mm, outer sep=0, opacity=0.3] (t4) at (0, -1.75) {
 					\begin{tabular}{l} 
-						$\wrt{y}{3}$ \\
-						{\pgfsetfillopacity{0.3}$c \gets \rd{x}$}
+					$\rd{x}$
 				\end{tabular}};
-				\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};
-				\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
 				
 				\path (t1.south east) -- (t1.east) coordinate[pos=0.67] (t1y);
 				\path (t1.north east) -- (t1.east) coordinate[pos=0.67] (t1x);
 				\path (t3.south west) -- (t3.west) coordinate[pos=0.67] (t3y);
 				\path (t3.north west) -- (t3.west) coordinate[pos=0.67] (t3x);
-				\path (t1x) edge[above] node[yshift=0,xshift=0] {$\wro_x$} (t3x);
-				\path (t1y) edge[below] node[yshift=0,xshift=0] {$\wro_y$} (t3y);
+				%\path (t1x) edge[above] node[yshift=0,xshift=0] {$\wro_x$} (t3x);
+				\path (t1.east) edge[above] node[yshift=0,xshift=0] {$\so$} (t3.west);
+				\path (t1.south) edge[above] node[left] {$\so$} (t2.north);
+				\path (t2.north east) edge[above] node [yshift=2,xshift=0] {$\wro_y$} (t3.south west);
+				\path[opacity=0.3] (t3.south) edge[below] node [right]{$\so$} (t4.north); %[yshift=0,xshift=0]
 			\end{tikzpicture}  
 			
 		}
@@ -167,78 +196,75 @@ For example, given the history $h$ in Figure~\ref{fig:oracle_order:b}, the funct
 	\end{subfigure}
 	\hspace{.5cm}
 	\centering
-	\begin{subfigure}[b]{.29\textwidth}
+	\begin{subfigure}[b]{.2\textwidth}
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.75) {\begin{tabular}{l} $\wrt{x}{1}$\end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, 0) {\begin{tabular}{l} $a \gets \rd{x}$ \\ $b \gets \rd{y}$\end{tabular}};
-				
-				\node[draw, rounded corners=2mm, outer sep=0] (t4) at (3, -0) {
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.75) {\begin{tabular}{l} $\wrt{x}{1}$ \\ $\wrt{y}{1}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, 0) {\begin{tabular}{l} $\rd{y}$\end{tabular}};
+				\node[draw, rounded corners=2mm, outer sep=0] (t4) at (0, -1.75) {
 					\begin{tabular}{l} 
-						$\wrt{y}{3}$ \\
-						$c \gets \rd{x}$
+						$\rd{x}$
 				\end{tabular}};
-				\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};
-				\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
 				
 				\path (t1.south east) -- (t1.east) coordinate[pos=0.67] (t1y);
 				\path (t1.north east) -- (t1.east) coordinate[pos=0.67] (t1x);
 				\path (t3.south west) -- (t3.west) coordinate[pos=0.67] (t3y);
 				\path (t3.north west) -- (t3.west) coordinate[pos=0.67] (t3x);
-				\path (t1x) edge[above] node[yshift=0,xshift=0] {$\wro_x$} (t3x);
-				\path (t1y) edge[below] node[yshift=0,xshift=0] {$\wro_y$} (t3y);
-				\path (t1.north east) edge[bend left=35] node[below] {$\wro_x$} (t4.north west);
+				%\path (t1x) edge[above] node[yshift=0,xshift=0] {$\wro_x$} (t3x);
+				\path (t1.east) edge[above] node[yshift=0,xshift=0] {$\so$} (t3.west);
+				\path (t1.south) edge[above] node[left] {$\so$} (t2.north);
+				\path (t2.north east) edge[above] node [yshift=2,xshift=0] {$\wro_y$} (t3.south west);
+				\path (t3.south) edge[below] node [right]{$\so$} (t4.north);
+				\path (t2.east) edge[below] node [above]{$\wro_x$} (t4.west); %[yshift=0,xshift=0] %[yshift=0,xshift=0]
 			\end{tikzpicture}  
 			
 		}
-		\caption{One possible extension.}
+		\caption{One extension.}
 		\label{fig:add_read:b}
-	\end{subfigure}
-	\hspace{.5cm}
+	\end{subfigure}\hspace{.5cm}
 	\centering
-	\begin{subfigure}[b]{.29\textwidth}
+	\begin{subfigure}[b]{.2\textwidth}
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \\ $\wrt{y}{0}$\end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.75) {\begin{tabular}{l} $\wrt{x}{1}$\end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, 0) {\begin{tabular}{l} $a \gets \rd{x}$ \\ $b \gets \rd{y}$\end{tabular}};
-				
-				\node[draw, rounded corners=2mm, outer sep=0] (t4) at (3, -0) {
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.75) {\begin{tabular}{l} $\wrt{x}{1}$ \\ $\wrt{y}{1}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, 0) {\begin{tabular}{l} $\rd{y}$\end{tabular}};
+				\node[draw, rounded corners=2mm, outer sep=0] (t4) at (0, -1.75) {
 					\begin{tabular}{l} 
-						$\wrt{y}{3}$ \\
-						$c \gets \rd{x}$
+						$\rd{x}$
 				\end{tabular}};
-				\node[draw, rounded corners=2mm, opacity=0.3] (t5) at (3, -1.75) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};
-				\path[opacity=0.3] (t4) edge node[opacity=0.3] {$\so$} (t5);
 				
 				\path (t1.south east) -- (t1.east) coordinate[pos=0.67] (t1y);
 				\path (t1.north east) -- (t1.east) coordinate[pos=0.67] (t1x);
 				\path (t3.south west) -- (t3.west) coordinate[pos=0.67] (t3y);
 				\path (t3.north west) -- (t3.west) coordinate[pos=0.67] (t3x);
-				\path (t1x) edge[above] node[yshift=0,xshift=0] {$\wro_x$} (t3x);
-				\path (t1y) edge[below] node[yshift=0,xshift=0] {$\wro_y$} (t3y);
-				\path (t2.east) edge[bend right=15] node[yshift=-2,xshift=0] {$\wro_x$} (t4.south west);
+				%\path (t1x) edge[above] node[yshift=0,xshift=0] {$\wro_x$} (t3x);
+				\path (t1.east) edge[above] node[yshift=0,xshift=0] {$\so$} (t3.west);
+				\path (t1.south) edge[above] node[left] {$\so$} (t2.north);
+				\path (t2.north east) edge[above] node [yshift=2,xshift=0] {$\wro_y$} (t3.south west);
+				\path (t3.south) edge[below] node [right]{$\so$} (t4.north);
+				\path (t1.south east) edge[below] node [yshift=6,xshift=-12]{$\wro_x$} (t4.north west); %[yshift=0,xshift=0] %[yshift=0,xshift=0]
 			\end{tikzpicture}  
 			
 		}
-		\caption{Another possible extension.}
+		\caption{Another extension.}
 		\label{fig:add_read:c}
-	\end{subfigure}
+	\end{subfigure}\hspace{.5cm}
 	\caption{Extensions of a history by adding a $\iread$ event. TODO MAY NEED TO EXPLAIN THE CONVENTIONS IN THE PICTURE.}
 	\label{fig:add_read}
 	%\vspace{-3mm}
 \end{figure}
 
-TODO REDO THE ABOVE FIGURE IN THE SPIRIT OF FIGURE \ref{fig:dead_branch}. MODIFY THE EXAMPLE SO ONE OF THE TWO CHOICES DOES NOT SATISFY SOME ISOLATION LEVEL, TO EXEMPLIFY THE USE OF $\genericValidWrites$.
+%TODO REDO THE ABOVE FIGURE IN THE SPIRIT OF FIGURE \ref{fig:dead_branch}. MODIFY THE EXAMPLE SO ONE OF THE TWO CHOICES DOES NOT SATISFY SOME ISOLATION LEVEL, TO EXEMPLIFY THE USE OF $\genericValidWrites$.
 
 If the event returned by $\genericNext$ is not a read event, then it is simply added to the current history, as the maximal element of the order $<$ (cf. the definition of $\oplus_j$ on ordered histories). If it is a read event, then adding this event may result in multiple histories depending on the associated $\wro$ dependency. 
 %
 %The incremental process of obtaining histories with more information it is called \textit{extension}. In essence, given a history $h$ and an event $e \not\in h$, all possible graphs using these two elements must be constructed. 
 %If $e$'s type is $\ibegin$ or $\iend$, there is only one possible way to extend it by the operator $\bullet$'s definition. When $e$ is a $\iread$, however, we have to explore multiple histories, one per $\wro$-dependency that can be generated with a $\iwrite$ event $w\in h$ and $e$. That is, all histories $h \bullet_w e$. 
-For example, in Figure \ref{fig:add_read}, extending the history in Figure \ref{fig:add_read:a} with the $\erd{x}$ event could result in two different histories, pictured in Figure \ref{fig:add_read:b} and \ref{fig:add_read:c}, depending on the write with whom this read event is associated by $\wro$. 
+For example, in Figure \ref{fig:add_read}, extending the history in Figure \ref{fig:add_read:a} with the $\erd{x}$ event could result in two different histories, pictured in Figure \ref{fig:add_read:b} and \ref{fig:add_read:c}, depending on the write with whom this read event is associated by $\wro$. However, under $\CC$, the latter history is inconsistent.
 %we can obtain two different histories depending on the $\wro$ dependency created (figures \ref{fig:add_read:b} and \ref{fig:add_read:c}). In both three cases, we declare the algorithm order for this new history $h'$ by simply juxtaposing $e$ to all the previous ones: $\leq_{h'} = \leq_h \cup \{\langle e', e \rangle \ | \  e' \in h\}$.
 The function $\genericValidWrites$ limits the choices to those that preserve consistency with the intended isolation level $I$, i.e.,
 %However, we will only select those $\iwrite$ event such that the extended history $h \bullet_w e$ is consistent, as described by function $\validWrites$; which will eventually play the $\genericValidWrites$'s role in our algorithm.  

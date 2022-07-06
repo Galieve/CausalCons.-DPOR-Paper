@@ -232,7 +232,120 @@ TODO CONTINUE THE EXAMPLE ABOVE SHOWING THE RESULT OF SWAP IN ONE CASE.
 
 While extending histories according to $\genericNext$ and recursing on re-ordered histories whenever possible (taking $\genericProtocol$ as $\mathit{true}$) guarantees soundness and completeness, it does not guarantee optimality. There are two sources of redundancy in this trivial algorithm: (1) re-ordering the same read multiple times, and (2) applying $\genericSwap$ on different histories may give the same result.
 
-TODO GIVE AN EXAMPLE FOR THE 1ST ISSUE. JUSTIFYING THE SWAPPED CONDITION. 
+\begin{figure}[h]
+	
+\begin{subfigure}[b]{.3\textwidth}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{c||c}
+	\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+begin;
+a=read((*$x$*));
+commit
+	\end{lstlisting} &
+	\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+begin;
+b=read((*$y$*));
+commit
+	\end{lstlisting} 
+
+\\
+\multicolumn{1}{c}{} & \multicolumn{1}{c}{}
+\\
+	\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+begin;
+write((*$y$*),3);
+commit
+	\end{lstlisting} &
+	\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+begin;
+write((*$x$*),4);
+commit
+	\end{lstlisting}
+\end{tabular} 
+\end{adjustbox}
+
+\caption{Program.}
+\label{fig:redundant_Swap:prog}
+\end{subfigure}
+	\centering
+	\begin{subfigure}[b]{.21\textwidth}
+		\resizebox{.6\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t0) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t1) at (-3, -1.5) {\begin{tabular}{l} $\rd{x}$\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t2) at (-3, -3) {\begin{tabular}{l} $\rd{y}$  \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t3) at (-3, -4.5) {\begin{tabular}{l} $\wrt{y}{3}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_4$}] (t4) at (-3, -6) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};
+				
+				%\path (t0.south west) edge[above, bend right] node[left] {$\wro$} (t3.north west);
+				\path (t0.south west) edge[above, bend right] node[left] {$\wro$} (t2.north west);
+				\path (t0.south) edge node[left] {$\wro$} (t1.north);
+				%\path (t0.south east) edge[above, bend left] node[left] {$\wro$} (t4.north east);
+			\end{tikzpicture}  
+		}
+		\caption{Current history.}
+		\label{fig:redundant_swap:a}
+	\end{subfigure}
+	\hspace{.25cm}
+	\centering
+	\begin{subfigure}[b]{.21\textwidth}
+		\resizebox{.63\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t0) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t1) at (-3, -1.5) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t2) at (-3, -4.5) {\begin{tabular}{l} $\rd{y}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t3) at (-3, -3) {\begin{tabular}{l} $\wrt{y}{3}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_4$}] (t4) at (-3, -6) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};
+				
+				\path (t0.south west) edge[above, bend right] node[left] {$\wro$} (t3.north west);
+				\path (t3.south) edge node[left] {$\wro$} (t2.north);
+				\path (t0.south) edge node[left] {$\wro$} (t1.north);
+				%\path (t0.south east) edge[above, bend left] node[left] {$\wro$} (t4.north east);
+			\end{tikzpicture}  
+		}
+		
+		\caption{Swap $t_2$ and $t_3$.}
+		\label{fig:redundant_swap:b}
+	\end{subfigure}
+	\hspace{.25cm}
+	\centering
+	\begin{subfigure}[b]{.21\textwidth}
+		\resizebox{.65\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t0) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t1) at (-3, -3) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t2) at (-3, -4.5) {\begin{tabular}{l} $\rd{y}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t3) at (-3, -6) {\begin{tabular}{l} $\wrt{y}{3}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_4$}] (t4) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};
+				
+				%\path (t0.south west) edge[above, bend right] node[left] {$\wro$} (t3.north west);
+				\path (t0.south west) edge[above, bend right] node[left] {$\wro$} (t2.north west);
+				\path (t4.south) edge node[left] {$\wro$} (t1.north);
+				%\path (t0.south) edge node[left] {$\wro$} (t4.north);
+			\end{tikzpicture}  
+		}
+		
+		\caption{Swap $t_1$ and $t_4$.}
+		\label{fig:redundant_swap:c}
+	\end{subfigure}\hspace{.5cm}
+	\caption{Two possible computable histories starting from a current one. The four transactions belong each one to a different independent thread.}
+	\label{fig:redundant_swap}
+	%\vspace{-3mm}
+\end{figure}
+
+For example, under the program depicted in Figure~\ref{fig:redundant_Swap:prog} with four independent threads, the algorithm may compute the history $h_1$ pictured in figure \ref{fig:redundant_swap:a}. Therefore, two different histories will also be computed via swapping two transactions: $h_2$ if we swap $t_2$ and $t_3$  (Figure~\ref{fig:redundant_swap:b}) and $h_3$ if we swap $t_1$ and $t_4$ (Figure~\ref{fig:redundant_swap:c}). However, from $h_2$ we can also swap $t_1$ and $t_4$ to produce a history that can be extended to $h_3$; obtaining twice the same history.
+
+
+%TODO GIVE AN EXAMPLE FOR THE 1ST ISSUE. JUSTIFYING THE SWAPPED CONDITION. 
 
 \begin{figure}[t]
 	\centering
@@ -240,7 +353,7 @@ TODO GIVE AN EXAMPLE FOR THE 1ST ISSUE. JUSTIFYING THE SWAPPED CONDITION.
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
 				
 				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
 				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (-3, -3) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
@@ -261,7 +374,7 @@ TODO GIVE AN EXAMPLE FOR THE 1ST ISSUE. JUSTIFYING THE SWAPPED CONDITION.
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
 				
 				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
 				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (-3, -3) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
@@ -291,7 +404,7 @@ TODO GIVE AN EXAMPLE FOR THE 1ST ISSUE. JUSTIFYING THE SWAPPED CONDITION.
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
 				
 				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
 				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (-3, -3) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
@@ -316,7 +429,7 @@ TODO GIVE AN EXAMPLE FOR THE 1ST ISSUE. JUSTIFYING THE SWAPPED CONDITION.
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\wrt{x}{0}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
 				
 				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
 				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (-3, -4.5) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
