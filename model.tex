@@ -79,8 +79,35 @@ A \emph{prefix} of a transaction log $\tup{t,E, \po_t}$ is a transaction log $\t
 A \emph{prefix} of a history $\hist=\tup{T, \so, \wro}$ is a history $\hist'=\tup{T',\so\downarrow T'\times T',\wro\downarrow T'\times T'}$ such that every transaction log in $T'$ is a prefix of a different transaction log in $T$ but carrying the same id, and $\events{\hist'}\subseteq\events{\hist}$ is $(\po\cup \so \cup \wro)^*$-downward closed.
 
 \begin{figure}[H]
-	\centering
+		\centering
 	\begin{subfigure}[b]{.25\textwidth}
+		\begin{adjustbox}{max width=\textwidth}
+			\begin{tabular}{c||c||c}
+				\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+begin;
+a = read((*x*));
+b = read((*y*));
+commit
+				\end{lstlisting} &
+				\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+begin;
+write((*$x$*),2);
+commit
+				\end{lstlisting} &
+			\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+begin;
+read((*$x$*));
+commit
+			\end{lstlisting} 
+			\end{tabular} 
+		\end{adjustbox}
+		
+		\caption{Program.}
+		\label{fig:prefix:prog}
+	\end{subfigure}
+	\hspace{.15cm}
+	\centering
+	\begin{subfigure}[b]{.22\textwidth}
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
@@ -111,9 +138,9 @@ A \emph{prefix} of a history $\hist=\tup{T, \so, \wro}$ is a history $\hist'=\tu
 		\caption{A history.}
 		\label{fig:prefix:a}
 	\end{subfigure}
-	\hspace{.75cm}
+	\hspace{.15cm}
 	\centering
-	\begin{subfigure}[b]{.25\textwidth}
+	\begin{subfigure}[b]{.22\textwidth}
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
@@ -135,12 +162,12 @@ A \emph{prefix} of a history $\hist=\tup{T, \so, \wro}$ is a history $\hist'=\tu
 
 			\end{tikzpicture}
 		}
-		\caption{A prefix of that history.}
+		\caption{A prefix.}
 		\label{fig:prefix:b}
 	\end{subfigure}
-	\hspace{.75cm}
+	\hspace{.15cm}
 	\centering
-	\begin{subfigure}[b]{.25\textwidth}
+	\begin{subfigure}[b]{.22\textwidth}
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
@@ -167,11 +194,11 @@ A \emph{prefix} of a history $\hist=\tup{T, \so, \wro}$ is a history $\hist'=\tu
 			\end{tikzpicture}
 			
 		}
-		\caption{A non-prefix.}
+		\caption{Not a prefix.}
 		\label{fig:prefix:c}
 	\end{subfigure}
 	
-	\caption{A history and one of its prefixes. The third picture does not correspond to a prefix as some transactions read from the missing one.}
+	\caption{A history and one of its prefixes. The last picture does not correspond to a prefix as some transactions read from the missing one.}
 \end{figure}
 %where $T'$ contains prefixes of a subset of transaction logs $T''\subseteq T$ such that $T''$ is $(\so \cup \wro)^*$-downward closed.  
 
@@ -197,9 +224,153 @@ Let  $\hist=\tup{T, \so, \wro}$ be a history. A transaction $t$ is called $(\so 
 \item if $e$ is a read event, then $\wro$ is extended with some tuple $(t',e)$ such that $t'\ [\so \cup \wro]^*\ t$
 \item the other elements of $\hist$ remain unchanged.
 \end{itemize}
-\textcolor{red}{TODO: MAXIMAL EXTENSIBILITY FOR PREFIX?}
 
-TODO NOTE THAT A HISTORY MAY HAVE MULTIPLE CAUSAL EXTENSIONS WITH A READ. NOT FOR THE OTHER TYPES OF EVENTS. GIVE EXAMPLES.
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[b]{.25\textwidth}
+		\begin{adjustbox}{max width=\textwidth}
+			\begin{tabular}{c||c}
+				\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+begin;
+write((*$y$*),1);
+write((*$x$*),1);
+commit
+begin;
+write((*$x$*),2);
+commit
+				\end{lstlisting} &
+				\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+begin;
+write((*$x$*),3);
+commit
+begin;
+a = read((*$y$*));
+b = read((*$x$*));
+commit
+				\end{lstlisting}
+			\end{tabular} 
+		\end{adjustbox}
+		
+		\caption{Program.\\$ $}
+		\label{fig:extension:prog}
+	\end{subfigure}
+	\hspace{.15cm}
+	\centering
+	\begin{subfigure}[b]{.22\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t0) at (-1.5, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t1) at (-3, -2) {\begin{tabular}{l} 
+					$\wrt{x}{1}$ \\ $\wrt{y}{1}$
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t2) at (-3, -4) {\begin{tabular}{l} 
+					$\wrt{x}{2}$
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t3) at (0, -2) {\begin{tabular}{l} 
+						$\wrt{x}{3}$
+				\end{tabular}};	
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_4$}] (t4) at (0, -4)
+				{\begin{tabular}{l} 
+						$\rd{y}$ \\ {\pgfsetfillopacity{0.3}$\rd{x}$}
+				\end{tabular}};			
+				
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1x);
+				\path (t2.north west) -- (t2.north) coordinate[pos=0.67] (t2x);
+				\path (t3.north west) -- (t3.west) coordinate[pos=0.67] (t3x);
+				
+				%\path (t3.west) edge [below] node[right] {$\wro_x$} (t2.north east);
+				%\path (t1.south) edge [above] node[left] {$\so \cap \wro_y$} (t2.north);
+				\path (t3.south) edge node[right] {$\so$} (t4.north);
+				\path (t1.south) edge node[left] {$\so$} (t2.north);
+				\path (t1.south east) edge node[above] {$\wro_y$} (t4.north west);
+				\path (t0.south) edge node[above] {$\so$} (t1.north);
+				\path (t0.south) edge node[above] {$\so$} (t3.north);
+			\end{tikzpicture}
+			
+		}
+		\caption{Current history.\\$ $}
+		\label{fig:extension:a}
+	\end{subfigure}
+	\hspace{.15cm}
+	\centering
+	\begin{subfigure}[b]{.22\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t0) at (-1.5, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t1) at (-3, -2) {\begin{tabular}{l} 
+						$\wrt{x}{1}$ \\ $\wrt{y}{1}$
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t2) at (-3, -4) {\begin{tabular}{l} 
+						$\wrt{x}{2}$
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t3) at (0, -2) {\begin{tabular}{l} 
+						$\wrt{x}{3}$
+				\end{tabular}};	
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_4$}] (t4) at (0, -4)
+				{\begin{tabular}{l} 
+						$\rd{y}$ \\$\rd{x}$
+				\end{tabular}};			
+				
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1x);
+				\path (t2.north west) -- (t2.north) coordinate[pos=0.67] (t2x);
+				\path (t3.north west) -- (t3.west) coordinate[pos=0.67] (t3x);
+				
+				%\path (t3.west) edge [below] node[right] {$\wro_x$} (t2.north east);
+				%\path (t1.south) edge [above] node[left] {$\so \cap \wro_y$} (t2.north);
+				\path (t3.south) edge node[right] {$\so$} (t4.north);
+				\path (t1.south) edge node[left] {$\so$} (t2.north);
+				\path (t1.south east) edge node[above] {$\wro$} (t4.north west);
+				\path (t0.south) edge node[above] {$\so$} (t1.north);
+				\path (t0.south) edge node[above] {$\so$} (t3.north);
+			\end{tikzpicture}
+		}
+		\caption{$t_4$ reads $x$ and $y$ from $t_1$.}
+		\label{fig:extension:b}
+	\end{subfigure}
+	\hspace{.15cm}
+	\centering
+	\begin{subfigure}[b]{.22\textwidth}
+		\resizebox{1.1\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t0) at (-1.5, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t1) at (-3, -2) {\begin{tabular}{l} 
+						$\wrt{x}{1}$ \\ $\wrt{y}{1}$
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t2) at (-3, -4) {\begin{tabular}{l} 
+						$\wrt{x}{2}$
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t3) at (0, -2) {\begin{tabular}{l} 
+						$\wrt{x}{3}$
+				\end{tabular}};	
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_4$}] (t4) at (0, -4)
+				{\begin{tabular}{l} 
+						$\rd{y}$ \\$\rd{x}$
+				\end{tabular}};			
+				
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1x);
+				\path (t2.north west) -- (t2.north) coordinate[pos=0.67] (t2x);
+				\path (t3.north west) -- (t3.west) coordinate[pos=0.67] (t3x);
+				
+				%\path (t3.west) edge [below] node[right] {$\wro_x$} (t2.north east);
+				%\path (t1.south) edge [above] node[left] {$\so \cap \wro_y$} (t2.north);
+				\path (t1.south east) edge node[above] {$\wro_y$} (t4.north west);
+				\path (t3.south) edge node[right] {$\so \cap \wro_x$} (t4.north);
+				\path (t1.south) edge node[left] {$\so$} (t2.north);
+				\path (t0.south) edge node[above] {$\so$} (t1.north);
+				\path (t0.south) edge node[above] {$\so$} (t3.north);
+			\end{tikzpicture}
+			
+		}
+		\caption{$t_4$ reads $x$ from $t_3$, $y$ from $t_1$.}
+		\label{fig:extension:c}
+	\end{subfigure}
+	
+	\caption{Two causal extensions of a history $h$. The extension of $h$ where $t_4$ reads $x$ from $t_2$ and $y$ from $t_1$ is not included as it is not a causal extension ($(t_2, t_4) \not\in \so \cup \wro$). Events in gray are not yet added to the history. }
+\end{figure}
+
 
 
 \begin{definition}
@@ -222,6 +393,9 @@ On one hand, if $e$ is a $\ibegin$ event, let $\co' = \co \cup \{\langle t, \tr(
 As $\co'\restriction_{h} = \co$, it is clearly a commit order for $h$. Moreover, if it does not witness $\mathcal{I}$-consistency for $h'$, there would exist $t_1, t_2, t_3$ transactions s.t. $t_2$ writes some variable $x$, $(t_1, t_3) \in \wro_x$ and $\varphi_{\mathcal{I}}(h, t_2, e)$ but $(t_1, t_2) \in \co'$. Firstly, as $h'$ is an extension of $h$ and $\mathcal{I}$ is prefix-closed, if $\trans{h}{e}$ is not equal to any of them, $\co$ would not witness $\mathcal{I}$-consistency for $h$. As $\trans{h}{e}$ is $\so \cup \wro$-maximal, $t_1 \neq \trans{h}{e} \neq t_2$. Moreover, if $e$ is not a $\iread$ event, $\trans{h}{e}$ cannot be $t_3$, as $t_1$, $t_2$ and $t_3$ would satisfy the same constraints in $h$, which is impossible. On the contrary, if $e$ is a $\iread$ event, $t$ cannot be $t_1$ as it is the $\co$-maximum history among those that write $x$ and $\trans{h}{e}$ causally depends on. In addition, $\trans{h}{e}$ cannot be $t_2$ as that would mean $\co$ does not witness $\mathcal{I}$-completeness. And analogously, as $\trans{h}{w}$ is neither of them, those transactions cannot exists, otherwise $h$ would not be $\mathcal{I}$-consistent. Succinctly, $h'$ is $\mathcal{I}$-consistent.
 \end{proof}
 
+\begin{comment}
+
+
 \begin{theorem}
 \label{theorem:maximally-extensible-PRE}
 Prefix Consistency ($\PRE$) is maximally-extensible.
@@ -234,9 +408,10 @@ Let $\co' = \{\langle t, t' \rangle \ | \ t \times t' \in h^2 \text{ s.t. } t \ 
 If $e$ is not a read event let $h' = h \oplus e$ and otherwise $h' = h \oplus \wro(t, e)$ for some transaction $t$ defined as in theorem \ref{theorem:causalExtensibleModels-CC-RA-RC}: the $\co$-maximum among those transactions that writes $x$ and that $\trans{h}{e}$ causally depends on. Then, once again by contrapositive, if $\co'$ does not witness $h'$'s $\PRE$-consistency, there would exist four transactions $t_1,t_2, t_3, t_4$ s.t. $(t_1, t_3) \in \wro_x$, $t_2$ writes $x$, $(t_2, t_4) \in \co'^*$ and $(t_4, t_3) \in \so \cup \wro$ but $(t_1, t_2) \in \co'$. Firstly, by prefix-closedness of $\PRE$, if $\trans{h}{e}$ is not equal to any of those four, $h$ would not be $\PRE$-consistent. But by $\co'$-maximality of $\trans{h}{e}$, t can only take the role of $t_4$. If $e$ is not a $\iread$ and $\trans{h}{e} = t_4$, by prefix-closedness we deduce $h$ is not $\PRE$-consistent; and if it is, by the same property, $\trans{h}{w}$ must take the role of one of the three remaining. By definition of $\trans{h}{w}$, it cannot be any other than $t_3$, as it is the $\co$-maximum among the transactions $\trans{h}{e}$ depends on; but that, by prefix-closedness, leads again that $h$ is $\PRE$-inconsistent. Hence, $h'$ must be $\PRE$-consistent.
 \end{proof}
 
+\end{comment}
 \begin{figure}[H]
 	\centering
-	\begin{subfigure}[b]{.23\textwidth}
+	\begin{subfigure}[b]{.3\textwidth}
 		\begin{adjustbox}{max width=\textwidth}
 			\begin{tabular}{c||c}
 			\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
@@ -256,12 +431,12 @@ commit
 			\end{tabular} 
 		\end{adjustbox}
 		
-		\caption{Program $1$.}
+		\caption{Program.}
 		\label{fig:non-causally-extensible:prog-ser}
 	\end{subfigure}
 	\hspace{.15cm}
 	\centering
-	\begin{subfigure}[b]{.23\textwidth}
+	\begin{subfigure}[b]{.3\textwidth}
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
@@ -283,46 +458,80 @@ commit
 				\path (t1se) edge [right] node {$\wro_y$} (t3x);
 			\end{tikzpicture}  
 		}
-		\caption{History non-maximally extensible under $\SER$ nor $\SI$.}
+		\caption{Current history.}
 		\label{fig:non-causally-extensible:ser}
 	\end{subfigure}
+	\hspace{.15cm}
 	\centering
+	\begin{subfigure}[b]{.3\textwidth}
+		\resizebox{\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-1.5, -0.25) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3, -2) {\begin{tabular}{l} 
+						$\wrt{z}{1}$ \\ $\rd{x}$ \\ $\wrt{y}{1}$ 
+				\end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, -2) {\begin{tabular}{l} 
+						$\wrt{z}{2}$ \\ $\rd{y}$ \\ $\wrt{x}{2}$
+				\end{tabular}};		
+				
+				\path (t1.south west) -- (t1.south) coordinate[pos=0.67] (t1sw);
+				\path (t1.south east) -- (t1.south) coordinate[pos=0.67] (t1se);
+				\path (t2.north east) -- (t2.north) coordinate[pos=0.67] (t2x);
+				\path (t3.north west) -- (t3.north) coordinate[pos=0.67] (t3x);
+				
+				%\path (t3x) edge [above] node[yshift=8,xshift=0] {$\wro_x$} (t2.north east);
+				\path (t1sw) edge [left] node {$\wro_x$} (t2x);
+				\path (t1se) edge [right] node {$\wro_y$} (t3x);
+			\end{tikzpicture}  
+		}
+		\caption{$\SI$/ $\SER$-inconsistent history}
+		\label{fig:non-causally-extensible:ser-cont}
+	\end{subfigure}
+	
+\caption{A bi-threaded program and a $\SER$/ $\SI$-consistent history. Events in gray are not yet added to the history. All $\so$-edges from $\init$ to the other transactions are omitted for legibility.}
+\label{fig:non-causally-extensible}
+\end{figure}
+\begin{comment}
+	contenidos...
+
+\centering
 \begin{subfigure}[b]{.23\textwidth}
-\begin{adjustbox}{max width=\textwidth}
-	\begin{tabular}{c||c}
-		\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
-begin;
-a = read((*x*));
-write((*$x$*),1);
-commit
-		\end{lstlisting} &
-		\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
-begin;
-b = read((*y*));
-write((*$y$*),2);
-commit
-		\end{lstlisting} 
-		
-		\\
-		\multicolumn{1}{c}{} & \multicolumn{1}{c}{}
-		\\
-		\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
-begin;
-a = read((*y*));
-write((*$y$*),1);
-commit
-			commit
-		\end{lstlisting} &
-		\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
-begin;
-b = read((*x*));
-write((*$x$*),2);
-commit
-		\end{lstlisting}
-	\end{tabular} 
-\end{adjustbox}
-
-
+	\begin{adjustbox}{max width=\textwidth}
+		\begin{tabular}{c||c}
+			\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+				begin;
+				a = read((*x*));
+				write((*$x$*),1);
+				commit
+			\end{lstlisting} &
+			\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+				begin;
+				b = read((*y*));
+				write((*$y$*),2);
+				commit
+			\end{lstlisting} 
+			
+			\\
+			\multicolumn{1}{c}{} & \multicolumn{1}{c}{}
+			\\
+			\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+				begin;
+				a = read((*y*));
+				write((*$y$*),1);
+				commit
+				commit
+			\end{lstlisting} &
+			\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+				begin;
+				b = read((*x*));
+				write((*$x$*),2);
+				commit
+			\end{lstlisting}
+		\end{tabular} 
+	\end{adjustbox}
+	
+	
 	\caption{Program $2$.}
 	\label{fig:non-causally-extensible:prog-pre}
 \end{subfigure}
@@ -342,9 +551,9 @@ commit
 					$\rd{y}$ \\ $\wrt{y}{2}$
 			\end{tabular}};
 			\node[draw, rounded corners=2mm,outer sep=0,  label={[font=\small]50:$t_3$}] (t3) at (3, -2) {\begin{tabular}{l} 
-				$\rd{y}$ \\ $\wrt{y}{1}$
+					$\rd{y}$ \\ $\wrt{y}{1}$
 			\end{tabular}};	
-		
+			
 			\node[draw, rounded corners=2mm,outer sep=0,  label={[font=\small]50:$t_4$}] (t4) at (3, -4) {\begin{tabular}{l} 
 					\pgfsetfillopacity{0.3} $\rd{x}$ \\ $\wrt{x}{2}$
 			\end{tabular}};		
@@ -380,12 +589,12 @@ commit
 	\caption{History non-causally extensible under $\PRE$.}
 	\label{fig:non-causally-extensible:pre}
 \end{subfigure}
-	\caption{A bi-threaded program and a $\SER$/ $\SI$-consistent history joint with a four-threaded program and a $\PRE$-consistent history. Events in grey are not yet added to the history.}
-	\label{fig:non-causally-extensible}
-	%\vspace{-3mm}
-\end{figure}
 
-In Figure~\ref{fig:non-causally-extensible} we exhibit why $\PRE, \SI$ and $\SER$ are not causally extensible. In the first case, the program in Figure~\ref{fig:non-causally-extensible:prog-ser}, the history presented in Figure~\ref{fig:non-causally-extensible:ser} is $\SI$-consistent (and therefore $\SER$-consistent) but whose only extension (adding $\wrt{x}{2}$0 )is not maximally-extensible nor causally-extensible. In the second case, the program in Figure~\ref{fig:non-causally-extensible:prog-pre}, the history $h_2$ described in Figure~\ref{fig:non-causally-extensible:pre} is maximally-extensible ($h_2 \oplus \wro(t_1, \rd{x})$ is consistent) but no causally extensible, as ($h_2 \oplus \wro(\init, \rd{x})$ is inconsistent and $(t_1, t_4) \not\in \so\cup \wro$).
+\end{comment}
+%\vspace{-3mm}
+
+In Figure~\ref{fig:non-causally-extensible} we exhibit why $\SI$ and $\SER$ are not causally extensible. For the program in Figure~\ref{fig:non-causally-extensible:prog-ser}, the history presented in Figure~\ref{fig:non-causally-extensible:ser} is $\SER$-consistent (and therefore $\SI$-consistent) but whose only extension (Figure~\ref{fig:non-causally-extensible:ser-cont}) is $\SI$-inconsistent (and therefore $\SER$-inconsistent).
+
 
 
 

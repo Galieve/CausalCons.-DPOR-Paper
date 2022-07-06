@@ -37,131 +37,168 @@ This implementation of $\genericNext$ is deterministic and it prioritizes the co
 %Thanks to this function, we will be able to extend any history $h = \langle E, \so, \wro \rangle$ in a deterministic way. Moreover, by its definition, we observe that $\nextEvent$ always propose to complete pending transactions before starting new ones. Therefore, it is a reasonable candidate as $\genericNext$ function in a algorithm \ref{algorithm:algo-class} instance.
 
 \begin{figure}[H]
-	
 	\centering
 	\begin{subfigure}[b]{.32\textwidth}
-		\resizebox{\textwidth}{!}{
-			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
-				semithick, transform shape]
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3.5, 0) {\begin{tabular}{l} 
-						$\wrt{x}{0}$ \\
-						$\wrt{y}{0}$
-				\end{tabular}};
-				
-				\node[draw, rounded corners=2mm,outer sep=0] (t2) at (-3.5, -2) {
-					\begin{tabular}{l}
-						$a \gets \rd{x}$ \\
-						$b \gets \rd{y}$						
-				\end{tabular}};
-				
-				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, 0) {
-					\begin{tabular}{l}
-						$c \gets \rd{x}$ \\
-						$\wrt{y}{2}$
-				\end{tabular}};
-				
-				\node[draw, rounded corners=2mm,outer sep=0] (t4) at (0, -2) {
-					\begin{tabular}{l} 
-						$\wrt{y}{3}$ \\
-						$d \gets \rd{y}$
-				\end{tabular}};
-				
-				\path (t1) edge[left] node[yshift=0,xshift=0] {$\ora$} (t2);
-				\path (t2) edge[above] node[yshift=0,xshift=0] {$\ora$} (t3);
-				
-				\path (t3.south east) -- (t3.south) coordinate[pos=0.67] (t3so);
-				\path (t3.south west) -- (t3.south) coordinate[pos=0.67] (t3or);
-				\path (t4.north east) -- (t4.north) coordinate[pos=0.67] (t4so);
-				\path (t4.north west) -- (t4.north) coordinate[pos=0.67] (t4or);
-				\path (t3or) edge[left] node[yshift=0,xshift=0] {$\ora$} (t4or);
-				\path (t3so) edge[right] node[yshift=0,xshift=0] {$\so$} (t4so);
-			\end{tikzpicture}  
-			
-		}
-		\caption{$\ora$ produce a total order between all transactions in the program.}
-		\label{fig:oracle_order:a}
+		\begin{adjustbox}{max width=\textwidth}
+			\begin{tabular}{c||c}
+				\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+begin;
+a = read((*x*));
+if(a == 3){
+	write((*$y$*),1);
+}
+commit
+begin;
+b = read((*x*));
+c = read((*y*));
+commit
+				\end{lstlisting} &
+				\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
+begin;
+d = read((*x*));
+write((*$x$*),3);
+commit
+				\end{lstlisting} 
+			\end{tabular} 
+		\end{adjustbox}
+		
+		
+		\caption{Program $2$.}
+		\label{fig:oracle-order:prog}
 	\end{subfigure}
-	\hspace{.7cm}
+\centering
+\begin{subfigure}[b]{.31\textwidth}
+	\resizebox{\textwidth}{!}{
+		\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+			semithick, transform shape]
+			\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3.5, 0) {\begin{tabular}{l} 
+					\init
+			\end{tabular}};
+			
+			\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t2) at (-3.5, -2) {
+				\begin{tabular}{l}
+					$\rd{x}$\\
+					{\pgfsetfillopacity{0.3}$\wrt{y}{1}$}						
+			\end{tabular}};
+			
+			\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t3) at (0, 0) {
+				\begin{tabular}{l}
+					$\rd{x}$ \\
+					$\wrt{x}{3}$
+			\end{tabular}};
+			
+			\node[draw, rounded corners=2mm,outer sep=0, opacity=0.3, label={[font=\small]50:$t_2$}] (t4) at (0, -2) {
+				\begin{tabular}{l} 
+					 $\rd{x}$ \\
+					 $\rd{y}$
+			\end{tabular}};
+			
+			\path (t1) edge[left] node[yshift=0,xshift=0] {$\ora$} (t2);
+			\path (t4) edge[left] node[yshift=0,xshift=0] {$\ora$} (t3);
+			\path (t1) edge[above] node[yshift=0,xshift=0] {$\wro$} (t3);
+						
+			\path (t2.north east) -- (t2.east) coordinate[pos=0.67] (t2or);
+			\path (t2.south east) -- (t2.east) coordinate[pos=0.67] (t2so);
+			\path (t4.south west) -- (t4.west) coordinate[pos=0.67] (t4so);
+			\path (t4.north west) -- (t4.west) coordinate[pos=0.67] (t4or);
+			
+			
+			\path (t2or) edge[above] node[yshift=0,xshift=0] {$\ora$} (t4or);
+			\path [opacity=0.3](t2so) edge[below] node[yshift=0,xshift=0] {$\so$} (t4so);
+			
+			
+			\path (t3.south west) edge[left] node[yshift=0,xshift=0] {$\wro$} (t2.north east);
+			
+			%\path (t3or) edge[left] node[yshift=0,xshift=0] {$\ora$} (t4or);
+			%\path (t3so) edge[right] node[yshift=0,xshift=0] {$\wro$} (t4so);
+		\end{tikzpicture}  
+		
+	}
+	\caption{An incomplete history and its $\ora$ order.}
+	\label{fig:oracle_order:a}
+\end{subfigure}
+	\hspace{.5cm}
 	\centering
-	\begin{subfigure}[b]{.32\textwidth}
+	\begin{subfigure}[b]{.31\textwidth}
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
 				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3.5, 0) {\begin{tabular}{l} 
-						$\wrt{x}{0}$ \\
-						$\wrt{y}{0}$
+						\init
 				\end{tabular}};
 				
-				\node[draw, rounded corners=2mm,outer sep=0, opacity=0.3] (t2) at (-3.5, -2) {
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t2) at (-3.5, -2) {
 					\begin{tabular}{l}
-						$a \gets \rd{x}$ \\
-						$b \gets \rd{y}$						
+						$\rd{x}$\\
+						$\wrt{y}{1}$					
 				\end{tabular}};
 				
-				\node[draw, rounded corners=2mm,outer sep=0] (t3) at (0, 0) {
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t3) at (0, 0) {
 					\begin{tabular}{l}
-						$c \gets \rd{x}$ \\
-						$\wrt{y}{2}$
+						$\rd{x}$ \\
+						$\wrt{x}{3}$
 				\end{tabular}};
 				
-				\node[draw, rounded corners=2mm,outer sep=0] (t4) at (0, -2) {
+				\node[draw, rounded corners=2mm,outer sep=0, opacity=0.3, label={[font=\small]50:$t_2$}] (t4) at (0, -2) {
 					\begin{tabular}{l} 
-						$\wrt{y}{3}$ \\
-						{\pgfsetfillopacity{0.3}$d \gets \rd{y}$}
+						$\rd{x}$ \\
+						$\rd{y}$
 				\end{tabular}};
 				
 				\path (t1) edge[left] node[yshift=0,xshift=0] {$\ora$} (t2);
-				\path (t2) edge[above] node[yshift=0,xshift=0] {$\ora$} (t3);
+				\path (t4) edge[left] node[yshift=0,xshift=0] {$\ora$} (t3);
 				\path (t1) edge[above] node[yshift=0,xshift=0] {$\wro$} (t3);
 				
-				\path (t3.south east) -- (t3.south) coordinate[pos=0.67] (t3so);
-				\path (t3.south west) -- (t3.south) coordinate[pos=0.67] (t3or);
-				\path (t4.north east) -- (t4.north) coordinate[pos=0.67] (t4so);
-				\path (t4.north west) -- (t4.north) coordinate[pos=0.67] (t4or);
-				\path (t3or) edge[left] node[yshift=0,xshift=0] {$\ora$} (t4or);
-				\path (t3so) edge[right] node[yshift=0,xshift=0] {$\so$} (t4so);
+				\path (t2.north east) -- (t2.east) coordinate[pos=0.67] (t2or);
+				\path (t2.south east) -- (t2.east) coordinate[pos=0.67] (t2so);
+				\path (t4.south west) -- (t4.west) coordinate[pos=0.67] (t4so);
+				\path (t4.north west) -- (t4.west) coordinate[pos=0.67] (t4or);
+				
+				
+				\path (t2or) edge[above] node[yshift=0,xshift=0] {$\ora$} (t4or);
+				\path [opacity=0.3](t2so) edge[below] node[yshift=0,xshift=0] {$\so$} (t4so);
+				
+				
+				\path (t3.south west) edge[left] node[yshift=0,xshift=0] {$\wro$} (t2.north east);
+				
+				%\path (t3or) edge[left] node[yshift=0,xshift=0] {$\ora$} (t4or);
+				%\path (t3so) edge[right] node[yshift=0,xshift=0] {$\wro$} (t4so);
 			\end{tikzpicture}  
 			
 		}
-		\caption{An incomplete history and its $\ora$ order.}
+		\caption{The extension of a history using $\nextEvent$ function.}
 		\label{fig:oracle_order:b}
 	\end{subfigure}
-	\caption{Some possible oracle order between transactions. TODO MAY NEED TO EXPLAIN THE CONVENTIONS IN THE PICTURE.}
+	\caption{A program and two histories, where $h$ is the former and the latter is $h \oplus \nextEvent(h)$. All $\so$-edges from $\init$ to the other transactions are omitted for legibility. Events in gray are not yet added to the history.}
 	\label{fig:oracle_order}
 	
 \end{figure}
 
-TODO: THIS SHOULD BE AN EXAMPLE OF A STEP OF NEXT. ADD TO THE ABOVE EXAMPLE SOME LOCAL INSTRUCTION BEFORE THE READ(Y), AND TALK ABOUT LOCAL STATES AS WELL. ALSO, ON THE LEFT, PUT THE PROGRAM AND NOT A HISTORY (PROGRAM WRITTEN WITH THE SYNTAX PRESENTED AT THE BEGINNING OF THE PAPER).
-
-For example, given the history $h$ in Figure~\ref{fig:oracle_order:b}, the function $\nextEvent$ would return the event $d \gets \rd{y}$ instead of $a \gets \rd{x}$; as the forth transaction is pending in $h$. 
+For example, given the history $h$ in Figure~\ref{fig:oracle_order:a}, as in the local state of the first thread, $d = 2$, the boolean condition in transaction $t_1$ is satisfied and the second database call ($\wrt{y}{1}$) can be executed. Thus, $\nextEvent(h)$ would return the event $\wrt{y}{1}$ as its transaction is pending.
 
 \begin{figure}[H]
 
 \begin{subfigure}[b]{.25\textwidth}
 %	\resizebox{\textwidth}{!}{
-\begin{minipage}{1.8cm}
-\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}]
+		\begin{adjustbox}{max width=\textwidth}
+	\begin{tabular}{c||c}
+		\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
 begin;
 write((*$x$*),1);
 write((*$y$*),1);
 commit
-\end{lstlisting}
-\end{minipage}
-\begin{minipage}{1mm}
-||
-\end{minipage}
-\hspace{-5mm}
-\begin{minipage}{1.3cm}
-\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}]
+		\end{lstlisting} &
+		\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
 begin;
-a=read((*$x$*));
-b=read((*$y$*));
+a = read((*x*));
+b = read((*y*));
 commit
 begin;
-c=read((*$x$*));
+c = read((*x*));
 commit
-\end{lstlisting}
-\end{minipage}
+		\end{lstlisting} 
+	\end{tabular} 
+\end{adjustbox}
 %		}
 \caption{Program.}
 \label{fig:add_read:prog}
@@ -253,7 +290,7 @@ commit
 		\caption{Another extension.}
 		\label{fig:add_read:c}
 	\end{subfigure}\hspace{.5cm}
-	\caption{Extensions of a history by adding a $\iread$ event. TODO MAY NEED TO EXPLAIN THE CONVENTIONS IN THE PICTURE.}
+	\caption{Extensions of a history by adding a $\iread$ event. Events in gray are not yet added to the history.}
 	\label{fig:add_read}
 	%\vspace{-3mm}
 \end{figure}
