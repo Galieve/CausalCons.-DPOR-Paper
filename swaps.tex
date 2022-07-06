@@ -172,8 +172,8 @@ To enforce histories with at most one pending transaction, the function $\generi
 \begin{cframed}[pinegreen]
 	\begin{equation*}
 		\begin{array}{lcl}
-			\genericCompute(h_<) & \coloneqq & \{(r,w) \in \Events \ | \ r < w \land r \in \readOp{t} \land w \in \writeOp{t}\\[1mm]
-			&& \hspace{1.9cm} \land\ \variable{r} = \variable{w} \\ [1mm]
+			\genericCompute(h_<) & \coloneqq & \{(r,t) \in \Events \times T \ | \ \trans{h}{r} < t \land r \in \readOp{T} \land \writeVar{t}{\variable{r}}\\[1mm]
+			%&& \hspace{1.9cm} \land\  \\ [1mm]
 			&& \hspace{1.9cm} \land\ (\trans{h}{r},t)\not\in [\so \cup \wro]^*\land \mbox{$t$ is complete}   \} \\[1mm]
 			&& \mbox{where $t$ is the transaction log of the last event in $<$}
 		\end{array}
