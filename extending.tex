@@ -1,5 +1,5 @@
 %!TEX root = main.tex
-\subsection{Extending Histories According to An Oracle Order}
+\subsection{Extending Histories According to An Oracle Order}\label{ssec:extensions}
 
 The function $\genericNext$ generating events that represent database accesses is parametrized by an \emph{arbitrary but fixed} order between the transactions in the program called \callout{oracle order}. 
 %The version here presented employs as parameter the program to analyze along with a total order called \callout{oracle order} between its transactions. 
@@ -63,7 +63,7 @@ commit
 		\end{adjustbox}
 		
 		
-		\caption{Program $2$.}
+		\caption{Program.}
 		\label{fig:oracle-order:prog}
 	\end{subfigure}
 \centering
@@ -114,7 +114,7 @@ commit
 		\end{tikzpicture}  
 		
 	}
-	\caption{An incomplete history and its $\ora$ order.}
+	\caption{An incomplete history.}
 	\label{fig:oracle_order:a}
 \end{subfigure}
 	\hspace{.5cm}
@@ -166,19 +166,24 @@ commit
 			\end{tikzpicture}  
 			
 		}
-		\caption{The extension of a history using $\nextEvent$ function.}
+		\caption{An extension.} % of a history using $\nextEvent$ function.}
 		\label{fig:oracle_order:b}
 	\end{subfigure}
-	\caption{A program and two histories, where $h$ is the former and the latter is $h \oplus \nextEvent(h)$. All $\so$-edges from $\init$ to the other transactions are omitted for legibility. Events in gray are not yet added to the history.}
+	\caption{A program (a), a history $h$ (b), and an extension of $h$ with an event returned by $\genericNext$ (c). 
+%	and two histories, where $h$ is the former and the latter is $h \oplus \nextEvent(h)$. 
+	The $\so$-edges from $\init$ to the other transactions are omitted for legibility. 
+	We use edges labeled by $\ora$ to represent the $<_{\ora}$ order.
+	Events in gray are not yet added to the history.}
 	\label{fig:oracle_order}
 	
 \end{figure}
 
-For example, given the history $h$ in Figure~\ref{fig:oracle_order:a}, as in the local state of the first thread, $d = 2$, the boolean condition in transaction $t_1$ is satisfied and the second database call ($\wrt{y}{1}$) can be executed. Thus, $\nextEvent(h)$ would return the event $\wrt{y}{1}$ as its transaction is pending.
+For example, consider the program in Figure~\ref{fig:oracle-order:prog} and the history $h$ as depicted in Figure~\ref{fig:oracle_order:a}. Since the local state of the pending transaction on the left stores $3$ to the local variable $a$ (as a result of the previous $\erd{x}$ event) and the Boolean condition in \texttt{if} holds, $\genericNext$ will return the event $\wrt{y}{1}$ when called with history $\hist$.
+% history $h$ in Figure~\ref{fig:oracle_order:a}, as in the local state of the first thread, $d = 2$, the boolean condition in transaction $t_1$ is satisfied and the second database call ($\wrt{y}{1}$) can be executed. Thus, $\nextEvent(h)$ would return the event $\wrt{y}{1}$ as its transaction is pending.
 
 \begin{figure}[H]
 
-\begin{subfigure}[b]{.25\textwidth}
+\begin{subfigure}[b]{.24\textwidth}
 %	\resizebox{\textwidth}{!}{
 		\begin{adjustbox}{max width=\textwidth}
 	\begin{tabular}{c||c}
@@ -187,14 +192,13 @@ begin;
 write((*$x$*),1);
 write((*$y$*),1);
 commit
-		\end{lstlisting} &
+		\end{lstlisting} & %a = read((*x*));
 		\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
 begin;
-a = read((*x*));
-b = read((*y*));
+a = read((*y*));
 commit
 begin;
-c = read((*x*));
+b = read((*x*));
 commit
 		\end{lstlisting} 
 	\end{tabular} 
@@ -203,8 +207,8 @@ commit
 \caption{Program.}
 \label{fig:add_read:prog}
 \end{subfigure}
-	\centering
-	\begin{subfigure}[b]{.2\textwidth}
+\hspace{-2mm}
+	\begin{subfigure}[b]{.253\textwidth}
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
@@ -231,9 +235,9 @@ commit
 		\caption{Current history.}
 		\label{fig:add_read:a}
 	\end{subfigure}
-	\hspace{.5cm}
+	%\hspace{.5cm}
 	\centering
-	\begin{subfigure}[b]{.2\textwidth}
+	\begin{subfigure}[b]{.253\textwidth}
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
@@ -260,9 +264,9 @@ commit
 		}
 		\caption{One extension.}
 		\label{fig:add_read:b}
-	\end{subfigure}\hspace{.5cm}
+	\end{subfigure}%\hspace{.5cm}
 	\centering
-	\begin{subfigure}[b]{.2\textwidth}
+	\begin{subfigure}[b]{.25\textwidth}
 		\resizebox{\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
@@ -309,7 +313,7 @@ The function $\genericValidWrites$ limits the choices to those that preserve con
 \begin{cframed}[pinegreen]
 	\begin{equation*}
 		\begin{array}{ccc}
-			\validWrites(h, e) & \coloneqq & \{w \ | \ h \oplus_j e \oplus \wro(w,e) \mbox{ satisfies }I\}
+			\genericValidWrites(h, e) & \coloneqq & \{w \ | \ h \oplus_j e \oplus \wro(w,e) \mbox{ satisfies }I\}
 		\end{array}
 	\end{equation*}
 \end{cframed}

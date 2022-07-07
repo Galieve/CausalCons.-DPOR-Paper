@@ -2,7 +2,7 @@
 \subsection{Re-Ordering Events in Histories}
 \label{subsection:SwappingHistories} %Provisional
 
-After extending the current history with one more event, $\textsc{explore}$ may recurse on other histories obtained by re-ordering events in the current one (and dropping some other events).
+After extending the current history with one more event, $\textsc{explore}$ may be called recursively on other histories obtained by re-ordering events in the current one (and dropping some other events).
 %Besides sound and complete, we would also seek for an optimal algorithm, i.e. that avoids computing a history $h$ whose extensions are all inconsistent; also called a \textit{blocking} execution. If this is not achieved, our search would employ more resources such as time or memory than it actually needs for doing its purpose.
 
 \begin{figure}[H]
@@ -142,7 +142,9 @@ commit
 		\caption{Inconsistent.}
 		\label{fig:dead_branch:d}
 	\end{subfigure}
-	\caption{Example of inconsistency after swapping two events. All $\so$-edges from $\init$ to the other transactions are omitted for legibility. All transaction logs are history-ordered top to bottom according to their position in the figure. Events in gray are not yet added to the history. }
+	\caption{Example of inconsistency after swapping two events. All $\so$-edges from $\init$ to the other transactions are omitted for legibility. The history order $<$ is represented by the top to bottom order in each figure.
+	%All transaction logs are history-ordered top to bottom according to their position in the figure. 
+	Events in gray are not yet added to the history. }
 	\label{fig:dead_branch}
 	%\vspace{-3mm}
 \end{figure}
@@ -167,20 +169,22 @@ The core issue is related to the history in Figure \ref{fig:dead_branch:c} which
 
 %TODO EXPLAIN THE DEFINITIONS BELOW
 
-To enforce histories with at most one pending transaction, the function $\genericCompute$, which identifies events to reorder, has a non-empty return value only when the last added event is $\ecommit$ (the end of a transaction). Therefore, in such a case, it returns pairs of read and write events on the same variable, the write event coming from the last completed transaction, and such that the transactions containing the two events are not causally dependent (i.e., related by $[\so \cup \wro]^*$).
+To enforce histories with at most one pending transaction, the function $\genericCompute$, which identifies events to reorder, has a non-empty return value only when the last added event is $\ecommit$ (the end of a transaction). Therefore, in such a case, it returns pairs that contain some read $r$ and the last completed transaction log $t$, such that the transaction log containing $r$ and $t$ are not causally dependent (i.e., related by $[\so \cup \wro]^*$).
 
 \begin{cframed}[pinegreen]
 	\begin{equation*}
 		\begin{array}{lcl}
-			\genericCompute(h_<) & \coloneqq & \{(r,t) \in \Events \times T \ | \ \trans{h}{r} < t \land r \in \readOp{T} \land \writeVar{t}{\variable{r}}\\[1mm]
+			\genericCompute(h_<) & \coloneqq & \{(r,t) \in \Events \times T \ | \ r \in \readOp{T} \land \writeVar{t}{\mathit{var}(r)}\\[1mm]
 			%&& \hspace{1.9cm} \land\  \\ [1mm]
-			&& \hspace{1.9cm} \land\ (\trans{h}{r},t)\not\in [\so \cup \wro]^*\land \mbox{$t$ is complete}   \} \\[1mm]
-			&& \mbox{where $t$ is the transaction log of the last event in $<$}
+			&& \hspace{1.7cm} \land\ \trans{h}{r} < t\land (\trans{h}{r},t)\not\in [\so \cup \wro]^* \\[1mm]
+			&& \hspace{1.7cm} \land\ \mbox{$t$ is the transaction log of the last event in $<$} \\[1mm]
+			&& \hspace{1.7cm} \land\ \mbox{$t$ is complete}   \} 
+%			&& \mbox{where $t$ is the transaction log of the last event in $<$}
 		\end{array}
 	\end{equation*}
 \end{cframed}
 
-\begin{figure}[H]
+\begin{figure}[t]
 \centering
 \begin{subfigure}[b]{.25\textwidth}
 	\begin{adjustbox}{max width=\textwidth}
@@ -211,7 +215,7 @@ commit
 \end{subfigure} 
 \hspace{.15cm}%\pgfsetfillopacity{0.3}\\
 	\centering
-	\begin{subfigure}[b]{.2\textwidth}
+	\begin{subfigure}[b]{.21\textwidth}
 		\resizebox{.81\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
@@ -250,7 +254,7 @@ commit
 	\end{subfigure}
 	\hspace{.15cm}
 	\centering
-	\begin{subfigure}[b]{.2\textwidth}
+	\begin{subfigure}[b]{.21\textwidth}
 
 		\resizebox{.77\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
@@ -290,7 +294,7 @@ commit
 	\end{subfigure}
 	\hspace{.15cm}
 	\centering
-	\begin{subfigure}[b]{.2\textwidth}
+	\begin{subfigure}[b]{.21\textwidth}
 		\resizebox{.6\textwidth}{!}{
 				\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
@@ -325,29 +329,29 @@ commit
 		\caption{Swap $t_1$ and $t_4$.}
 		\label{fig:compute-reordering:c}
 	\end{subfigure}
-	\caption{Example of inconsistency after swapping two events. All $\so$-edges from $\init$ to the other transactions are omitted for legibility. All transaction logs are history-ordered top to bottom according to their position in the figure. Events in gray are not yet added to the history.}
+	\caption{Re-ordering events. All $\so$-edges from $\init$ to the other transactions are omitted for legibility. The history order $<$ is represented by the top to bottom order in each figure. Events in gray are deleted from the history.}
 	\label{fig:compute-reordering}
 	%\vspace{-3mm}
 \end{figure}
 
-For example, given the program in Figure~\ref{fig:compute-reordering:prog} and history $h$ in Figure~\ref{fig:compute-reordering:b}, $\compute(h)$ would return $(r_1, t_4)$ and $(r_2, t_4)$ where $r_1$ and $r_2$ are the event $\rd{x}$ both belonging to $t_1$ and $t_2$ respectively.
+For example, given the program in Figure~\ref{fig:compute-reordering:prog} and history $h$ in Figure~\ref{fig:compute-reordering:a}, $\genericCompute(h)$ would return $(r_1, t_4)$ and $(r_2, t_4)$ where $r_1$ and $r_2$ are the $\rd{x}$ events in $t_1$ and $t_2$ respectively.
 
-Given a pair $(r,w)$, the function $\genericSwap$ produces a new history $\hist'$ which contains all events ordered before $r$ (w.r.t. $<$), the transaction that contains $w$ and all its $[\so \cup \wro]^*$ predecessors, and the event $r$ reading from $w$. Note that the $\po$ predecessors of $r$ from the same transaction are ordered before $r$ by $<$ and they will be also included in $\hist'$. More generally, the history $\hist'$ without $r$ is a prefix of the input history $\hist$. By definition, the only pending transaction in $\hist'$ is the one containing the read $r$. The order relation is updated by moving the transaction containing the read $r$ to be the last; it remains unchanged for the rest of the events.
+For a pair $(r,t)$, the function $\genericSwap$ produces a new history $\hist'$ which contains all the events ordered before $r$ (w.r.t. $<$), the transaction $t$ and all its $[\so \cup \wro]^*$ predecessors, and the event $r$ reading from $t$. All the other events are removed. Note that the $\po$ predecessors of $r$ from the same transaction are ordered before $r$ by $<$ and they will be also included in $\hist'$. The history $\hist'$ without $r$ is a prefix of the input history $\hist$. By definition, the only pending transaction in $\hist'$ is the one containing the read $r$. The order relation is updated by moving the transaction containing the read $r$ to be the last; it remains unchanged for the rest of the events.
 
 \begin{cframed}[pinegreen]
 	\begin{equation*}
 		\begin{array}{lcl}
-			\genericSwap(h_<, r, w, \locals) & \coloneqq &\big(h' = (h \setminus D) \oplus \wro(w,r), <'\big ), \locals', \text{ where} \\[1mm]
-			&& \hspace{1cm}D = \{e \ | \ r < e \land (\trans{h}{e},\trans{h}{w})\not\in [\so \cup \wro]^*\} \\[1mm]
+			\genericSwap(h_<, r, t, \locals) & \coloneqq &\big(h' = (h \setminus D) \oplus \wro(t,r), <'\big ), \locals', \text{ where} \\[1mm]
+			&& \hspace{1cm}D = \{e \ | \ r < e \land (\trans{h}{e},t)\not\in [\so \cup \wro]^*\} \\[1mm]
 			&& \hspace{1cm}<' = \big( <\ \downarrow\ (\events{h'}\setminus \events{\trans{h'}{r}}) \big) \cdot \trans{h'}{r} \\[1mm]
 			&& \hspace{1cm}\mbox{$\locals' = \locals \downarrow \events{h'}$.}
 		\end{array}
 	\end{equation*}
 \end{cframed}
 
-Above, $h \setminus D$ denotes the prefix of $\hist$ obtained by deleting all the events in $D$ from its transaction logs; a transaction log is removed all together if it becomes empty. Also, $\hist'' \oplus \wro(w,r)$ denotes an \emph{update} of the $\wro$ relation of $\hist''$ where any pair $(\_,r)$ is replaced by $(w,r)$. Finally, $<'' \cdot\ \trans{h'}{r}$ denotes an extension of the total order $<''$ obtained by appending the events in $\trans{h'}{r}$ according to program order.
+Above, $h \setminus D$ denotes the prefix of $\hist$ obtained by deleting all the events in $D$ from its transaction logs; a transaction log is removed all together if it becomes empty. Also, $\hist'' \oplus \wro(t,r)$ denotes an \emph{update} of the $\wro$ relation of $\hist''$ where any pair $(\_,r)$ is replaced by $(t,r)$. Finally, $<'' \cdot\ \trans{h'}{r}$ denotes an extension of the total order $<''$ obtained by appending the events in $\trans{h'}{r}$ according to program order.
 
-Continuing with the example of Figure~\ref{fig:compute-reordering}, while swapping $t_1$ and $t_4$, every event in transaction $t_2$ and $\wrt{y}{1}$ in $t_1$ belong to $\{e \ | \ r < e \land (\trans{h}{e},\trans{h}{w})\not\in [\so \cup \wro]^*\}$, so it will not belong to the swapped history; as it can be seen in Figure~\ref{fig:compute-reordering:c}. If the other swap is done, no event but the commit in $t_2$ will be deleted (Figure~\ref{fig:compute-reordering:b}).
+Continuing with the example of Figure~\ref{fig:compute-reordering}, while swapping $r_1$ and $t_4$, every event in transaction $t_2$ and $\wrt{y}{1}$ in $t_1$ belong to $D$ and they will be removed. This is shown in Figure~\ref{fig:compute-reordering:c}. Swapping $r_2$ and $t_4$, no event but the commit in $t_2$ will be deleted (Figure~\ref{fig:compute-reordering:b}).
 
 %Following algorithm \ref{algorithm:algo-class}'s schema, we define two functions $\compute, \swap$ that plays the role of $\genericCompute, \genericSwap$ respectively. In addition, for the history $h' = \swap(h, r, w)$ we declare the algorithm order of $h'$, $\leq_{h'}$ as $\leq_{h'} = \leq_{(h \setminus \tr(r) ) \restriction_{h'}} \cup \{\langle e, e' \rangle \ | \ e \in h' \setminus \tr(r), e' \in \tr(r)\} \cup \po_{\tr(r) \restriction_{h'}}$.
 %
@@ -362,7 +366,7 @@ Continuing with the example of Figure~\ref{fig:compute-reordering}, while swappi
 %\end{cframed}
 
 
-\subsection{Avoiding Redundancy}
+\subsection{Ensuring Optimality}\label{ssec:optimality}
 
 %Conversely, adding a $\iwrite$ $w$ is more complicated, multiple events may read this new event; specifically. the number of possible histories is exponential, $2^{|\iread(h)|}$. Moreover, after changing a $\wro$-edge from a $\iread$ $r$, we have no knowledge of the rest of the event's presence: some conditional instruction may be executed after $r$ and it may be meaningless talking about them. Thus, checking for every possible set of $\iread$ events if reading from $w$ leads to something consistent is no reasonable. Therefore, we have to define a criterion to determine whose sets of read events shall be analyzed. One hand, the history $h \bullet w$ where no $\iread$ reads from $w$ has to be explored, with an algorithm order defined in an analogously as for any other aforementioned history. On the other hand, we select one $\iread$ $r$ that will be the first event in $h$ reading from $w$ while the ones that follow $r$ will have to be re-executed. As $r$ had already been executed, what at the end we produce is a swap between the relative orders of $r$ and $w$; so $r$ would be thereinafter called \textit{swapped}.
 
@@ -376,11 +380,155 @@ Continuing with the example of Figure~\ref{fig:compute-reordering}, while swappi
 
 
 
-While extending histories according to $\genericNext$ and recursing on re-ordered histories whenever possible (taking $\genericProtocol$ as $\mathit{true}$) guarantees soundness and completeness, it does not guarantee optimality. There are two sources of redundancy in this trivial algorithm: (1) re-ordering the same read multiple times, and (2) applying $\genericSwap$ on different histories may give the same result.
+Simply extending histories according to $\genericNext$ and making recursive calls on re-ordered histories whenever possible (taking $\genericProtocol$ as $\mathit{true}$) guarantees soundness and completeness, but it does not guarantee optimality. Intuitively, the source of redundancy is related to the fact that applying $\genericSwap$ on different histories may give the same result. 
 
 \begin{figure}[h]
+	\begin{subfigure}[b]{.26\textwidth}
+		\begin{adjustbox}{max width=\textwidth}
+			\begin{tabular}{c||c}
+				\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\footnotesize,escapeinside={(*}{*)}, tabsize=1]
+
+begin;
+write((*$x$*),2);
+commit
+				\end{lstlisting} &
+				\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\footnotesize,escapeinside={(*}{*)}, tabsize=1]
+begin;
+a=read((*$x$*));
+commit
+				\end{lstlisting} 
+				
+				\\
+				\multicolumn{1}{c}{} & \multicolumn{1}{c}{}
+				\\
+				\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\footnotesize,escapeinside={(*}{*)}, tabsize=1]
+begin;
+b=read((*$x$*));
+commit
+	\end{lstlisting} &
+				\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\footnotesize,escapeinside={(*}{*)}, tabsize=1]
+begin;
+write((*$x$*),4);
+commit
+				\end{lstlisting}
+			\end{tabular} 
+		\end{adjustbox}
+		
+		\caption{Program.\\ $ $}
+		\label{fig:non-optimality:prog}
+	\end{subfigure}
+	\centering
+	\begin{subfigure}[b]{.17\textwidth}
+		\resizebox{.95\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t3) at (-3, -3) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0, opacity=0.3, label={[font=\small]50:$t_3$}] (t4) at (-3, -4.5) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, opacity=0.3, label={[font=\small]50:$t_4$}] (t5) at (-3, -6) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
+				
+				\path (t1.south west) edge[above, bend right] node[left] {$\wro$} (t3.north west);
+				%\path (-4.5,-3.75) edge[-,dashed] (-1,-3.75);
+			\end{tikzpicture}  
+			
+		}
+		\caption{Before reading.}
+		\label{fig:non_optimality:a}
+	\end{subfigure}
+	\hspace{.15cm}
+	\centering	
+	\begin{subfigure}[b]{.17\textwidth}
+		\resizebox{1.24\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t3) at (-3, -3) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t4) at (-3, -4.5) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm, label={[font=\small]50:$t_4$}] (t5) at (-3, -6) {\begin{tabular}{l} \textcolor{blue}{$\wrt{x}{4}$} \end{tabular}};
+				
+				%\path (t3) edge node {$\so$} (t5);
+				%\path (t3) edge node {$\po$} (t3);
+				%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
+				%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
+%				\path (t1) edge[above] node[yshift=0,xshift=0] {$\wro$} (t3);
+%				\path (t1) edge[below] node[yshift=-2,xshift=-2] {$\wro$} (t4);
+				\path (t1.south west) edge[above, bend right] node[left] {$\wro$} (t3.north west);
+				\path (t1.south east) edge[below, bend left] node[right] {$\wro$} (t4.north east);
+				%\path (-4.5,-5.25) edge[-,dashed] (-1,-5.25);
+			\end{tikzpicture}  
+			
+		}
+		\caption{$t_3$ reads $\init$.}
+		\label{fig:non_optimality:b}
+	\end{subfigure}
+	\hspace{.15cm}
+	\centering
+	\begin{subfigure}[b]{.17\textwidth}
+		\resizebox{1.24\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t3) at (-3, -3) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t4) at (-3, -4.5) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm, label={[font=\small]50:$t_4$}] (t5) at (-3, -6) {\begin{tabular}{l} \textcolor{blue}{$\wrt{x}{4}$} \end{tabular}};
+				
+				
+				\path (t1.south west) edge[above, bend right] node[left] {$\wro$} (t3.north west);
+				\path (t2.south east) edge[below, bend left] node[right] {$\wro$} (t4.north east);
+				%\path (-4.5,-5.25) edge[-,dashed] (-1,-5.25);
+			\end{tikzpicture}  
+			
+		}
+		\caption{$t_3$ reads $t_2$.}
+		\label{fig:non_optimality:c}
+	\end{subfigure}
+	\hspace{.15cm}
+	\centering
+	\begin{subfigure}[b]{.15\textwidth}
+		\resizebox{.75\textwidth}{!}{
+			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
+				semithick, transform shape]
+				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
+				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t3) at (-3, -4.5) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm,outer sep=0, opacity=0.3, label={[font=\small]50:$t_3$}] (t4) at (-3, -6) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
+				
+				\node[draw, rounded corners=2mm, label={[font=\small]50:$t_4$}] (t5) at (-3, -3) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};				
+				
+				\path (t5) edge[left] node {$\wro$} (t3);
+				
+			\end{tikzpicture}  
+			
+		}
+		\caption{After swap.\\$ $}
+		\label{fig:non_optimality:d}
+	\end{subfigure}
 	
-\begin{subfigure}[b]{.3\textwidth}
+	\caption{Re-ordering events versus optimality. We assume an oracle order orders transaction from left to right, top to bottom in the program. All transaction logs are history-ordered top to bottom according to their position in the figure. Events in gray are not yet added to the history.}
+	\label{fig:non_optimality}	
+\end{figure}
+
+
+As a first example, consider the program in Figure~\ref{fig:non-optimality:prog} with 2 transactions that only read some variable $x$ and 2 transactions that only write on $x$, each transaction in a different session. Assume that $\textsc{explore}$ reaches the ordered history pictured in Figure~\ref{fig:non_optimality:a} and $\genericNext$ is about to return the second reading transaction. $\textsc{explore}$ will be called recursively on the two histories pictured in Figure~\ref{fig:non_optimality:b} and Figure~\ref{fig:non_optimality:c} that differ in the write that this last read is reading from (either the initial write or the first write transaction). On both branches of the recursion, $\genericNext$ will extend the history with the last write transaction written in blue. For both histories, swapping this last write with the first read on $x$ will result in the history pictured in Figure~\ref{fig:non_optimality:d} (cf. the definition of $\genericCompute$ and $\genericSwap$). Therefore, both branches of the recursion will continue extending the same history and optimality is violated. The source of non-optimality is related to $\wro$ dependencies that are \emph{removed} when computing the result of $\genericSwap$. The histories in Figure~\ref{fig:non_optimality:b} and Figure~\ref{fig:non_optimality:c} were different because of the $\wro$ dependency involving the last read, but this difference was discarded during the computation of $\genericSwap$. Therefore, we will restrict the application of $\genericSwap$ on histories where the discarded $\wro$ dependencies relate to some ``fixed'' set of writes, i.e., latest writes (w.r.t. <) that are valid, i.e., preserve consistency with the intended isolation level (see the definition of $\isMaximallyAdded{\_}{\_}$ below). In this example, re-ordering is enabled only when the second read reads from $\ewrt{x,2}$.
+
+
+%Different branches of the recursion may lead to the same history also because $\genericSwap$ may give the same result on 
+%thereby, violating optimality. 
+\begin{figure}[h]
+	
+\begin{subfigure}[b]{.23\textwidth}
 \begin{adjustbox}{max width=\textwidth}
 \begin{tabular}{c||c}
 	\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
@@ -414,7 +562,7 @@ commit
 \label{fig:redundant_Swap:prog}
 \end{subfigure}
 	\centering
-	\begin{subfigure}[b]{.21\textwidth}
+	\begin{subfigure}[b]{.24\textwidth}
 		\resizebox{.6\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
@@ -437,7 +585,7 @@ commit
 	\end{subfigure}
 	\hspace{.25cm}
 	\centering
-	\begin{subfigure}[b]{.21\textwidth}
+	\begin{subfigure}[b]{.17\textwidth}
 		\resizebox{.63\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
@@ -449,7 +597,7 @@ commit
 				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t3) at (-3, -3) {\begin{tabular}{l} $\wrt{y}{3}$ \end{tabular}};
 				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_4$}] (t4) at (-3, -6) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};
 				
-				\path (t0.south west) edge[above, bend right] node[left] {$\wro$} (t3.north west);
+%				\path (t0.south west) edge[above, bend right] node[left] {$\wro$} (t3.north west);
 				\path (t3.south) edge node[left] {$\wro$} (t2.north);
 				\path (t0.south) edge node[left] {$\wro$} (t1.north);
 				%\path (t0.south east) edge[above, bend left] node[left] {$\wro$} (t4.north east);
@@ -461,20 +609,20 @@ commit
 	\end{subfigure}
 	\hspace{.25cm}
 	\centering
-	\begin{subfigure}[b]{.21\textwidth}
+	\begin{subfigure}[b]{.17\textwidth}
 		\resizebox{.65\textwidth}{!}{
 			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
 				semithick, transform shape]
 				\node[draw, rounded corners=2mm,outer sep=0] (t0) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
 				
 				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t1) at (-3, -3) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t2) at (-3, -4.5) {\begin{tabular}{l} $\rd{y}$ \end{tabular}};
+%				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t2) at (-3, -4.5) {\begin{tabular}{l} $\rd{y}$ \end{tabular}};
 				
-				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t3) at (-3, -6) {\begin{tabular}{l} $\wrt{y}{3}$ \end{tabular}};
+%				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t3) at (-3, -6) {\begin{tabular}{l} $\wrt{y}{3}$ \end{tabular}};
 				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_4$}] (t4) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};
 				
 				%\path (t0.south west) edge[above, bend right] node[left] {$\wro$} (t3.north west);
-				\path (t0.south west) edge[above, bend right] node[left] {$\wro$} (t2.north west);
+%				\path (t0.south west) edge[above, bend right] node[left] {$\wro$} (t2.north west);
 				\path (t4.south) edge node[left] {$\wro$} (t1.north);
 				%\path (t0.south) edge node[left] {$\wro$} (t4.north);
 			\end{tikzpicture}  
@@ -483,155 +631,16 @@ commit
 		\caption{Swap $t_1$ and $t_4$.}
 		\label{fig:redundant_swap:c}
 	\end{subfigure}\hspace{.5cm}
-	\caption{Two possible computable histories starting from a current one. The four transactions belong each one to a different independent thread.}
+	\caption{Re-ordering the same read on different branches of the recursion.}
 	\label{fig:redundant_swap}
 	%\vspace{-3mm}
 \end{figure}
 
-For example, under the program depicted in Figure~\ref{fig:redundant_Swap:prog} with four independent threads, the algorithm may compute the history $h_1$ pictured in figure \ref{fig:redundant_swap:a}. Therefore, two different histories will also be computed via swapping two transactions: $h_2$ if we swap $t_2$ and $t_3$  (Figure~\ref{fig:redundant_swap:b}) and $h_3$ if we swap $t_1$ and $t_4$ (Figure~\ref{fig:redundant_swap:c}). However, from $h_2$ we can also swap $t_1$ and $t_4$ to produce a history that can be extended to $h_3$; obtaining twice the same history.
-
-
+%there are two sources of redundancy in this case: (1) re-ordering the same read on different branches of the recursion, and (2) applying $\genericSwap$ on different histories may give the same result.
 %TODO GIVE AN EXAMPLE FOR THE 1ST ISSUE. JUSTIFYING THE SWAPPED CONDITION. 
-
-\begin{figure}[h]
-	\begin{subfigure}[b]{.22\textwidth}
-		\begin{adjustbox}{max width=\textwidth}
-			\begin{tabular}{c||c}
-				\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
-
-begin;
-write((*$x$*),2);
-commit
-				\end{lstlisting} &
-				\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
-begin;
-a=read((*$x$*));
-commit
-				\end{lstlisting} 
-				
-				\\
-				\multicolumn{1}{c}{} & \multicolumn{1}{c}{}
-				\\
-				\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
-begin;
-b=read((*$x$*));
-commit
-	\end{lstlisting} &
-				\begin{lstlisting}[xleftmargin=5mm,basicstyle=\ttfamily\scriptsize,escapeinside={(*}{*)}, tabsize=1]
-begin;
-write((*$x$*),4);
-commit
-				\end{lstlisting}
-			\end{tabular} 
-		\end{adjustbox}
-		
-		\caption{Program.\\ $ $}
-		\label{fig:non-optimality:prog}
-	\end{subfigure}
-	\centering
-	\begin{subfigure}[b]{.15\textwidth}
-		\resizebox{.95\textwidth}{!}{
-			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
-				semithick, transform shape]
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
-				
-				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t3) at (-3, -3) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
-				
-				\node[draw, rounded corners=2mm,outer sep=0, opacity=0.3, label={[font=\small]50:$t_3$}] (t4) at (-3, -4.5) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0, opacity=0.3, label={[font=\small]50:$t_4$}] (t5) at (-3, -6) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
-				
-				\path (t1.south west) edge[above, bend right] node[left] {$\wro$} (t3.north west);
-				%\path (-4.5,-3.75) edge[-,dashed] (-1,-3.75);
-			\end{tikzpicture}  
-			
-		}
-		\caption{Before reading.}
-		\label{fig:non_optimality:a}
-	\end{subfigure}
-	\hspace{.15cm}
-	\centering	
-	\begin{subfigure}[b]{.15\textwidth}
-		\resizebox{1.24\textwidth}{!}{
-			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
-				semithick, transform shape]
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
-				
-				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t3) at (-3, -3) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
-				
-				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t4) at (-3, -4.5) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
-				
-				\node[draw, rounded corners=2mm, opacity=0.3, label={[font=\small]50:$t_4$}] (t5) at (-3, -6) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};
-				
-				%\path (t3) edge node {$\so$} (t5);
-				%\path (t3) edge node {$\po$} (t3);
-				%\path (t1) edge[below] node[yshift=-4,xshift=-4] {$\wro$} (t3_2);
-				%\path (t2) edge[below] node[yshift=-4,xshift=4] {$\wro$} (t4_2);
-%				\path (t1) edge[above] node[yshift=0,xshift=0] {$\wro$} (t3);
-%				\path (t1) edge[below] node[yshift=-2,xshift=-2] {$\wro$} (t4);
-				\path (t1.south west) edge[above, bend right] node[left] {$\wro$} (t3.north west);
-				\path (t1.south east) edge[below, bend left] node[right] {$\wro$} (t4.north east);
-				%\path (-4.5,-5.25) edge[-,dashed] (-1,-5.25);
-			\end{tikzpicture}  
-			
-		}
-		\caption{$t_3$ reads from $\init$.}
-		\label{fig:non_optimality:b}
-	\end{subfigure}
-	\hspace{.15cm}
-	\centering
-	\begin{subfigure}[b]{.15\textwidth}
-		\resizebox{1.24\textwidth}{!}{
-			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
-				semithick, transform shape]
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
-				
-				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t3) at (-3, -3) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
-				
-				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_3$}] (t4) at (-3, -4.5) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
-				
-				\node[draw, rounded corners=2mm, opacity=0.3, label={[font=\small]50:$t_4$}] (t5) at (-3, -6) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};
-				
-				
-				\path (t1.south west) edge[above, bend right] node[left] {$\wro$} (t3.north west);
-				\path (t2.south east) edge[below, bend left] node[right] {$\wro$} (t4.north east);
-				%\path (-4.5,-5.25) edge[-,dashed] (-1,-5.25);
-			\end{tikzpicture}  
-			
-		}
-		\caption{$t_3$ reads from $t_2$.}
-		\label{fig:non_optimality:c}
-	\end{subfigure}
-	\hspace{.15cm}
-	\centering
-	\begin{subfigure}[b]{.15\textwidth}
-		\resizebox{.75\textwidth}{!}{
-			\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=3cm,
-				semithick, transform shape]
-				\node[draw, rounded corners=2mm,outer sep=0] (t1) at (-3, 0) {\begin{tabular}{l} $\init$ \end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_1$}] (t2) at (-3, -1.5) {\begin{tabular}{l} $\wrt{x}{2}$ \end{tabular}};
-				\node[draw, rounded corners=2mm,outer sep=0, label={[font=\small]50:$t_2$}] (t3) at (-3, -4.5) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
-				
-				\node[draw, rounded corners=2mm,outer sep=0, opacity=0.3, label={[font=\small]50:$t_3$}] (t4) at (-3, -6) {\begin{tabular}{l} $\rd{x}$ \end{tabular}};
-				
-				\node[draw, rounded corners=2mm, label={[font=\small]50:$t_4$}] (t5) at (-3, -3) {\begin{tabular}{l} $\wrt{x}{4}$ \end{tabular}};				
-				
-				\path (t5) edge[left] node {$\wro$} (t3);
-				
-			\end{tikzpicture}  
-			
-		}
-		\caption{After swap.\\$ $}
-		\label{fig:non_optimality:d}
-	\end{subfigure}
-	
-	\caption{Re-ordering events versus optimality. We assume an oracle order orders transaction from left to right, top to bottom in the program. All transaction logs are history-ordered top to bottom according to their position in the figure. Events in gray are not yet added to the history.}
-	\label{fig:non_optimality}	
-\end{figure}
-
-Without further restrictions on swaps, it is also possible that different branches of the recursion lead to the same history, thereby, violating optimality. As an example, consider a program with 2 transactions that only read some variable $x$ and 2 transactions that only write on $x$. Assume that $\textsc{explore}$ reaches the ordered history pictured in Figure~\ref{fig:non_optimality:a} and $\genericNext$ is about to return the second reading transaction. $\textsc{explore}$ will recurse on the two histories pictured in Figure~\ref{fig:non_optimality:b} and Figure~\ref{fig:non_optimality:c} that differ in the write that this last read is reading from (either the initial write or the first write transaction). On both branches of the recursion, $\genericNext$ will extend the history with the last write transaction. For both histories, swapping this last write with the first read on $x$ will result in the history pictured in Figure~\ref{fig:non_optimality:d} (cf. the definition of $\genericCompute$ and $\genericSwap$). Therefore, both branches of the recursion will continue extending the same history and optimality is violated. The source of non-optimality is related to $\wro$ dependencies that are \emph{removed} when computing the result of $\genericSwap$. The histories in Figure~\ref{fig:non_optimality:b} and Figure~\ref{fig:non_optimality:c} were different because of the $\wro$ dependency involving the last read, but this difference was discarded during the computation of $\genericSwap$. Therefore, we will restrict the application of $\genericSwap$ on histories where the discarded $\wro$ dependencies relate to some ``fixed'' set of writes, i.e., latest writes (w.r.t. <) that are valid, i.e., preserve consistency with the intended isolation level (see the definition of $\isMaximallyAdded{\_}{\_}$ below), e.g., when the second read reads from $\ewrt{x,2}$.
+The restriction above is not sufficient, because the two histories for which $\genericSwap$ gives the same result may not be generated during the same recursive call, i.e., for different $\wro$ choices when extending with a read event.
+For example, consider the program in Figure~\ref{fig:redundant_Swap:prog} that has four sessions each containing a single transaction. $\textsc{explore}$ may compute the history $h$ pictured in Figure~\ref{fig:redundant_swap:a}. Before adding transaction $t_4$, $\textsc{explore}$ can re-order $t_3$ and $t_2$ and then extend with $t_4$ and arrive at the history $h_1$ in Figure~\ref{fig:redundant_swap:b}. Also, after adding $t_4$, it can re-order $t_1$ and $t_4$ and arrive at the history $h_2$ in Figure~\ref{fig:redundant_swap:c}. However, swapping the same $t_1$ and $t_4$ in $h_1$ leads to the same history $h_2$, thereby, having two recursive branches that end up with the same input and violate optimality. In this case, swapping $t_1$ and $t_4$ in $h_1$ should not be enabled because the $\erd{y}$ to be removed by $\genericSwap$ has been already swapped in the past. Removing it makes it possible that this recursive branch explores that $\wro$ choice for $\erd{y}$ again.
+%Therefore, two different histories will also be computed via swapping two transactions: $h_2$ if we swap $t_2$ and $t_3$  (Figure~\ref{fig:redundant_swap:b}) and $h_3$ if we swap $t_1$ and $t_4$(Figure~\ref{fig:redundant_swap:c}). However, from $h_2$ we can also swap $t_1$ and $t_4$ to produce a history that can be extended to $h_3$; obtaining twice the same history.
 
 %Let's suppose we have a program $\mathcal{P}$ as depicted in figure \ref{fig:non_optimality}, assuming $\leq_{\ora}$ order transactions as presented from left to right, top to bottom. Then, the algorithm computes histories \ref{fig:non_optimality:a}, $h$, and \ref{fig:non_optimality:b}, $h'$. After adding $T_4$ in both $h,h'$ we can produce a swap between $r_a \coloneqq a \gets \rd{x}$ and $w_4 \coloneqq \wrt{x}{4}$; deleting the event $r_b \coloneqq b \gets \rd{x}$ as $\lnot(\tr(r_b) \ [\wro \cup \so]^+ \ \tr(w_4)) $. Therefore, after the swap in both cases we arrive to the history depicted in Figure~\ref{fig:non_optimality:c}; obtaining a non-optimal situation. 
 
@@ -641,7 +650,7 @@ The $\genericProtocol$ condition, which restricts re-orderings, requires that ev
 \begin{cframed}[pinegreen]
 	\begin{equation*}
 		\begin{array}{l}
-			\protocol(h_<, r, w) \coloneqq 
+			\genericProtocol(h_<, r, t) \coloneqq 
 %			\begin{array}{l}
 %				\forall r'\in \readOp{h}. \ (r,r')\in \po^* \implies \lnot \swapped{h_<}{r'}\\[1mm]
 %				\land\ 

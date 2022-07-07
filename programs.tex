@@ -1,5 +1,5 @@
 %!TEX root = main.tex
-\section{Transactional Programs}
+\section{Transactional Programs}\label{sec:prelims}
 
 \newcommand{\icommit}{\mathtt{commit}}
 
@@ -319,7 +319,7 @@ where $\phi$ is a property relating $\tr_2$ and $\tau$ (i.e., the read or the
 transaction reading from $\tr_1$) that varies from one axiom to another.\footnote{These formulas are interpreted on tuples $\tup{\hist,\co}$ of a history $\hist$ and a commit order $\co$ on the transactions in $\hist$ as usual.}  Intuitively, this axiom schema states the following: in order for $\tau$ to read specifically $t_1$'s write on $k$, it must be the case that every $t_2$ that also writes $k$ and satisfies $\phi(t_2,\tau)$ was committed before $t_1$. 
 %Note that in all cases we consider, $\phi(t_2,\tau)$ already ensures that $t_2$ is committed before the read $\tau$, so this axiom schema ensures that $t_2$ is furthermore committed before $t_1$'s write.
 The property $\phi$ relates $\tr_2$ and $\tau$ using the relations in a history and the commit order. 
-Figure~\ref{fig:consistency_defs} shows four axioms which correspond to their homonymous isolation levels: \textit{Read Committed} ($\RC$), \textit{Read Atomic} ($\RA$), \textit{Causal Consistency} ($\CC$), and \textit{Serializability} ($\SER$). The conjunction of the other two axioms Conflict and Prefix defines \textit{Snapshot Isolation} ($\SI$). 
+Figure~\ref{fig:consistency_defs} shows four axioms which correspond to their homonymous isolation levels: \textit{Read Committed} ($\RC$), \textit{Read Atomic} ($\RA$), \textit{Causal Consistency} ($\CC$), and \textit{Serializability} ($\SER$). The conjunction of the other two axioms Conflict and Prefix defines \textit{Snapshot Isolation} ($\SI$). Note that $\SER$ is stronger than $\SI$ (i.e., every history satisfying $\SER$ satisfies $\SI$ as well), $\SI$ is stronger than $\CC$, $\CC$ is stronger than $\RA$, and $\RA$ is stronger than $\RC$.
 % as the model where prefix and conflict axioms both hold. 
 %We say a history $h$ satisfies an isolation level $I$ if there is a total order called \callout{commit order} $\co$ that extend $\so \cup \wro$ and satisfies its axioms. However, by the definition of $\RC, \RA$ and $\CC$, it is clear that for every history $h$ s.t. the relation $\co$ deduced from $\so \cup \wro$ is acyclic exists a commit order for those isolation levels.
 %Figure~\ref{fig:consistency_defs} shows the axioms defining Read Committed, Causal Consistency, and Serializability (see \citet{DBLP:journals/pacmpl/BiswasE19} for axioms defining Read Atomic, Prefix, and Snapshot Isolation). 
@@ -378,7 +378,7 @@ Figure~\ref{fig:consistency_defs} shows four axioms which correspond to their ho
 % \label{cc_example:1}
 \end{subfigure}
 %\vspace{-3mm}
-  \caption{Causal Consistency violation.}
+  \caption{Causal Consistency violation. Boxes group events from the same transaction.}
   \label{counter_example:1}
 %\vspace{-3mm}
 \end{figure}
@@ -430,7 +430,7 @@ A history that satisfies an isolation level $I$ is called $I$-consistent.
   \begin{mathpar}
     \inferrule[spawn]{\tr \mbox{ fresh}\quad e \mbox{ fresh}\quad  \mathsf{P}(j) = \ibegin; \mathsf{Body}; \icommit; \mathsf{S} \quad \vec{\mathsf{B}}(j) = \epsilon}{
       \hist,\vec{\gamma},\vec{\mathsf{B}},\mathsf{P}
-      \Rightarrow
+      \Rightarrow_I
       \hist \oplus_j \tup{\tr,\{\tup{e,\ebegin}\},\emptyset},\vec{\gamma}[j\mapsto \emptyset],\vec{\mathsf{B}}[j\mapsto \mathsf{Body}; \icommit],\mathsf{P}[j\mapsto \mathsf{S}]
     } 
 
@@ -438,7 +438,7 @@ A history that satisfies an isolation level $I$ is called $I$-consistent.
     \vec{\mathsf{B}}(j) = \iif{\psi(\vec{x})}{\mathsf{Instr}};\mathsf{B}
     }{
       \hist,\vec{\gamma},\vec{\mathsf{B}}, \mathsf{P}
-      \Rightarrow
+      \Rightarrow_I
       \hist,\vec{\gamma},\vec{\mathsf{B}}[j\mapsto \mathsf{Instr};\mathsf{B}],\mathsf{P}
     } 
 
@@ -446,14 +446,14 @@ A history that satisfies an isolation level $I$ is called $I$-consistent.
     \vec{\mathsf{B}}(j) = \iif{\psi(\vec{x})}{\mathsf{Instr}};\mathsf{B}
     }{
       \hist,\vec{\gamma},\vec{\mathsf{B}}, \mathsf{P}
-      \Rightarrow
+      \Rightarrow_I
       \hist,\vec{\gamma},\vec{\mathsf{B}}[j\mapsto \mathsf{B}],\mathsf{P}
     } 
 
     \inferrule[local]{v = \vec{\gamma}(j)(e) \\ \vec{\mathsf{B}}(j) = a := e;\mathsf{B}
     }{
       \hist,\vec{\gamma},\vec{\mathsf{B}}, \mathsf{P}
-      \Rightarrow
+      \Rightarrow_I
       \hist,\vec{\gamma}[(j,\xvar)\mapsto \val],\vec{\mathsf{B}}[j\mapsto \mathsf{B}],\mathsf{P}
     } 
 
@@ -461,7 +461,7 @@ A history that satisfies an isolation level $I$ is called $I$-consistent.
     \vec{\mathsf{B}}(j) = \iwrite(\key,\xvar);\mathsf{B}\quad \hist \oplus_j \tup{e,\ewrt{\key,\val}}\mbox{ satisfies $I$}
     }{
       \hist,\vec{\gamma},\vec{\mathsf{B}}, \mathsf{P}
-      \Rightarrow
+      \Rightarrow_I
       \hist \oplus_j \tup{e,\ewrt{\key,\val}},\vec{\gamma},\vec{\mathsf{B}}[j\mapsto \mathsf{B}], \mathsf{P}
     } 
 
@@ -471,7 +471,7 @@ A history that satisfies an isolation level $I$ is called $I$-consistent.
     \vec{\mathsf{B}}(j) = \xvar := \iread(\key);\mathsf{B}
     }{
       \hist,\vec{\gamma},\vec{\mathsf{B}}, \mathsf{P}
-      \Rightarrow
+      \Rightarrow_I
       \hist \oplus_j \tup{e,\erd{\key}},\vec{\gamma}[(j,\xvar)\mapsto \val],\vec{\mathsf{B}}[j\mapsto \mathsf{B}],\mathsf{P}
     } 
 
@@ -485,7 +485,7 @@ A history that satisfies an isolation level $I$ is called $I$-consistent.
     \hist' = (\hist \oplus_j \tup{e,\erd{\key}}) \oplus \wro(\tr',e) \\
     \hist' \mbox{ satisfies }I }{
       \hist,\vec{\gamma},\vec{\mathsf{B}}, \mathsf{P}
-      \Rightarrow
+      \Rightarrow_I
       \hist',\vec{\gamma}[(j,\xvar)\mapsto \val],\vec{\mathsf{B}}[j\mapsto \mathsf{B}],\mathsf{P}
     } 
 
@@ -493,7 +493,7 @@ A history that satisfies an isolation level $I$ is called $I$-consistent.
     \vec{\mathsf{B}}(j) = \icommit 
     }{
       \hist,\vec{\gamma},\vec{\mathsf{B}}, \mathsf{P}
-      \Rightarrow
+      \Rightarrow_I
       \hist \oplus_j \tup{e,\icommit},\vec{\gamma},\vec{\mathsf{B}}[j\mapsto \epsilon], \mathsf{P}
     } 
   \end{mathpar}
@@ -502,7 +502,7 @@ A history that satisfies an isolation level $I$ is called $I$-consistent.
   \label{fig:op:sem:baseline}
 \end{figure}
 
-We define a small-step operational semantics for transactional programs, which is parametrized by an isolation level $I$. The semantics keeps a history of previously executed database accesses in order to maintain conformance to $I$. 
+We define a small-step operational semantics for transactional programs, which is parametrized by an isolation level $I$. The semantics keeps a history of previously executed database accesses in order to maintain consistency with $I$. 
 
 For readability, we define a program as a partial function $\prog:\mathsf{SessId}\rightharpoonup \mathsf{Sess}$ that associates session identifiers in $\mathsf{SessId}$ with concrete code as defined in Figure~\ref{fig:syntax} (i.e., sequences of transactions). Similarly, the session order $\so$ in a history is defined as a partial function $\so:\mathsf{SessId}\rightharpoonup \mathsf{Tlogs}^*$ that associates session identifiers with sequences of transaction logs. Two transaction logs are ordered by $\so$ if one occurs before the other in some sequence $\so(j)$ with 
 $j\in \mathsf{SessId}$.
@@ -517,8 +517,8 @@ Formally, the operational semantics is defined as a transition relation $\Righta
 
 
 
-Before presenting the definition of $\Rightarrow_I$, we introduce some notation. Let $\hist$ be a history that contains a representation of $\so$ as above. We use $\hist\oplus_j \tup{\tr,E,\po}$ to denote a history where $\tup{\tr,E,\po}$ is appended to $\so(j)$. 
-Also, for a event $e$, $\hist\oplus_j e$ is the history obtained from $\hist$ by adding $e$ to the last transaction log in $\so(j)$ and as a last event in the program order of this log (i.e.,  if $\so(j)=\sigma; \tup{t,E,\po}$, then the session order $\so'$ of $\hist\oplus_j e$ is defined by $\so'(k)=\so(k)$ for all $k\neq j$ and $\so(j) =\sigma; \tup{t,E\cup\{e\},\po\cup \{(e',e): e'\in E\}}$). Finally, for a history $\hist = \tup{T, \so, \wro}$, $\hist\oplus\wro(\tr,e)$ is the history obtained from $\hist$ by adding $(\tr,e)$ to the write-read relation.
+Before presenting the definition of $\Rightarrow_I$, we introduce some notation. Let $\hist$ be a history that contains a representation of $\so$ as above. We use $\hist\oplus_j \tup{\tr,E,\po_t}$ to denote a history where $\tup{\tr,E,\po_t}$ is appended to $\so(j)$. 
+Also, for an event $e$, $\hist\oplus_j e$ is the history obtained from $\hist$ by adding $e$ to the last transaction log in $\so(j)$ and as a last event in the program order of this log (i.e.,  if $\so(j)=\sigma; \tup{t,E,\po_t}$, then the session order $\so'$ of $\hist\oplus_j e$ is defined by $\so'(k)=\so(k)$ for all $k\neq j$ and $\so(j) =\sigma; \tup{t,E\cup\{e\},\po_t\cup \{(e',e): e'\in E\}}$). Finally, for a history $\hist = \tup{T, \so, \wro}$, $\hist\oplus\wro(\tr,e)$ is the history obtained from $\hist$ by adding $(\tr,e)$ to the write-read relation.
 
 Figure~\ref{fig:op:sem:baseline} lists the rules defining $\Rightarrow_I$. %(the others can be defined in a similar manner). 
 \textsc{spawn} starts a new transaction in a session $j$ provided that this session has no live transaction ($\vec{\mathsf{B}}(j) = \epsilon$). It adds a transaction log with a single $\ebegin$ event to the history and schedules the body of the transaction. \textsc{if-true} and \textsc{if-false} check the truth value of a Boolean condition of an $\mathtt{if}$ conditional. \textsc{local} models the execution of an assignment to a local variable which does not impact the stored history. \textsc{read-local} and \textsc{read-extern} concern read instructions. \textsc{read-local} handles the case where the read follows a write on the variable $x$ in the same transaction: the read returns the value written by the last write on $x$ in that transaction. Otherwise, \textsc{read-extern} corresponds to reading a value written in another transaction $\tr'$. The transaction $\tr'$ is chosen non-deterministically as long as extending the current history with the write-read dependency associated to this choice leads to a history that still satisfies $I$. \textsc{read-extern} applies only when the executing transaction contains no write on the same variable.

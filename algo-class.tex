@@ -1,11 +1,11 @@
 %!TEX root = main.tex
-\section{Swapping-Based Model Checking Algorithms}
+\section{Swapping-Based Model Checking Algorithms}\label{sec:algs}
 
 %\subsection{Definition}
 
 %The above-mentioned classes are, notwithstanding, quite dense and contain lots of algorithms we are not interested in (as non-DPOR algorithms for example). In particular, our work focuses on the collection of algorithms defined by the schema \ref{algorithm:algo-class} for some functions $\genericNext, \genericEvaluate, \genericValidWrites, \genericCompute, \genericProtocol, \genericSwap$ to be defined. %Thanks to this approach we will show the existence of some sound and complete algorithms and easily prove some of their properties.
 
-We present a class of model checking algorithms for enumerating executions of a given transactional program, that we call \emph{swapping-based algorithms}. Section~\ref{sec:CC-algorithm} will describe a concrete instance that applies to isolation levels that are prefix-closed and causally extensible.
+We define a class of stateless model checking algorithms for enumerating executions of a given transactional program, that we call \emph{swapping-based algorithms}. Section~\ref{sec:CC-algorithm} will describe a concrete instance that applies to isolation levels that are prefix-closed and causally extensible.
 
 These algorithms are defined by the recursive function \textsc{explore} listed in Algorithm~\ref{algorithm:algo-class}. The function \textsc{explore} receives as input a program $\prog$, an \emph{ordered history} $\hist_<$, which is a pair $(\hist,<)$ of a history and a total order $<$ on all the events in $\hist$, and a mapping $\locals$ that associates each event $e$ in $\hist$ with the valuation of local variables in the transaction of $e$ ($\trans{h}{e}$) just before executing $e$. For an ordered history $(\hist,<)$ with $\hist=\tup{T, \so, \wro}$, we assume that $<$ is consistent with $\po$, $\so$, and $\wro$, i.e., $e_1 < e_2$ if $(\trans{h}{e_1},\trans{h}{e_2})\in (\so\cup\wro)^+$ or $(e_1,e_2)\in\po$. Initially, the ordered history and the mapping $\locals$ are empty.
 
@@ -56,7 +56,7 @@ These algorithms are defined by the recursive function \textsc{explore} listed i
 	%\caption{Generic method for exploring every possible history $h$ of a program $\mathcal{P}$ running under a database with $\mathcal{M}$ as isolation level.}
 \end{algorithm}
 
-The function \textsc{explore} calls $\genericNext$ to obtain an event representing the next database access in some pending transaction of the input program. A typical implementation of $\genericNext$ would choose one of the pending transactions, execute all local instructions until the next database instruction in that transaction (applying the transition rules \textsc{if-true}, \textsc{if-false}, and \textsc{local} from Figure~\ref{fig:op:sem:baseline}) and return the event $e$ corresponding to that database instruction and the current local state $\gamma$. $\genericNext$ may also return $\bot$ if the program finished.
+The function \textsc{explore} starts by calling $\genericNext$ to obtain an event representing the next database access in some pending transaction of the input program, or a $\eend$ event for completing a transaction, or a $\ebegin$ event for a new transaction. This event is associated to some session $j$. For example, a typical implementation of $\genericNext$ would choose one of the pending transactions (in some session $j$), execute all local instructions until the next database instruction in that transaction (applying the transition rules \textsc{if-true}, \textsc{if-false}, and \textsc{local} from Figure~\ref{fig:op:sem:baseline}) and return the event $e$ corresponding to that database instruction and the current local state $\gamma$. $\genericNext$ may also return $\bot$ if the program finished.
 %or if the history $\hist$ is not consistent with the intended isolation level. 
 If $\genericNext$ returns $\bot$, then the function $\genericEvaluate$ can be used to filter executions that satisfy the intended isolation level before outputting the current history and local states. 
 %the history satisfies the consistency requirements
@@ -117,7 +117,7 @@ A concrete implementation of \textsc{explore} is called:
 	\item \emph{$I$-sound} if it outputs only histories in $\histOf[I]{\prog}$ for every program $\prog$,
 	\item \emph{$I$-complete} if it outputs every history in $\histOf[I]{\prog}$ for every program $\prog$,
 	\item \emph{optimal} if it does not output the same history twice,
-	\item \emph{strongly optimal} if it is optimal and never engages in fruitless explorations, i.e., \textsc{explore} is never called (recursively) on a history $\hist$ that does not satisfy $I$, and every call to \textsc{explore} results in an output or a recursive call to \textsc{explore}.
+	\item \emph{strongly optimal} if it is optimal and never engages in fruitless explorations, i.e., \textsc{explore} is never called (recursively) on a history $\hist$ that does not satisfy $I$, and every call to \textsc{explore} results in an output or another recursive call to \textsc{explore}.
 \end{itemize}
 
 

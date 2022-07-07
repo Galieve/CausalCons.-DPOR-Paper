@@ -1,5 +1,5 @@
 %!TEX root = main.tex
-\section{Weak DPOR algorithms for Snapshot Isolation and Serializability}
+\section{Weak DPOR algorithms for Snapshot Isolation and Serializability}\label{sec:ser}
 
 As show in section \ref{sec:proofs-algorithm}, algorithm \ref{algorithm:optimal-instantiated}'s completeness proof (theorem \ref{theorem:completeness}) is model-depending, as it heavily relies on its causal-extensibility. Immediately, the question of the algorithm's extensibility to stricter isolation levels arise. For understanding the difference between the formers and $\SI$ or $\SER$, let's analyze how algorithm \ref{algorithm:optimal-instantiated} behaves for the program depicted in figure \ref{fig:ser-non-optimal:a} under them. We study this example as it has exactly two consistent executions but a dead-lock one under $\SI$ and $\SER$.
 
