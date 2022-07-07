@@ -1,4 +1,7 @@
+%!TEX root = main.tex
 \subsection{Completeness}
+
+By definition, $\textsc{explore-ce}$ is $I$-complete if for any given program $\prog$, it outputs every history in $\histOf[I]{\prog}$. Since $\textsc{explore-ce}$ tracks \emph{ordered} histories, it is useful 
 
 In our algorithm's context, completeness means being able to compute every total consistent history. However, our algorithm works with an extended version of histories where their events are totally ordered. For proving this property, we will need to furnish every history with a total order that coincides with the algorithm's one.
 
