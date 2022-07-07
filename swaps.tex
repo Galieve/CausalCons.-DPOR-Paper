@@ -377,10 +377,7 @@ Continuing with the example of Figure~\ref{fig:compute-reordering}, while swappi
 %Our protocol is defined as follows: we will select one $\iread$ event that will be the first event in $h$ reading from $w$ while the ones that proceed $r$ will be marked as postponed; they will have to be re-executed. As in a more formal way definition \ref{def:swapped} states, This read $r$ would be thereinafter called \textit{swapped}:
 
 %, and we will enforce the following properties: no event before $r$ will read from $w$, $r$ reads from $w$, every read after $r$ may or may not read from $w$. 
-
-
-
-Simply extending histories according to $\genericNext$ and making recursive calls on re-ordered histories whenever possible (taking $\genericProtocol$ as $\mathit{true}$) guarantees soundness and completeness, but it does not guarantee optimality. Intuitively, the source of redundancy is related to the fact that applying $\genericSwap$ on different histories may give the same result. 
+Simply extending histories according to $\genericNext$ and making recursive calls on re-ordered histories whenever they are $I$-consistent guarantees soundness and completeness, but it does not guarantee optimality. Intuitively, the source of redundancy is related to the fact that applying $\genericSwap$ on different histories may give the same result. 
 
 \begin{figure}[h]
 	\begin{subfigure}[b]{.26\textwidth}
@@ -646,16 +643,18 @@ For example, consider the program in Figure~\ref{fig:redundant_Swap:prog} that h
 
 %In conclusion, we cannot swap transactions without any restriction. As the example in figure \ref{fig:non_optimality} shows, the key of redundancy lies in every $\wro$ edge that is going to be modified or erased: if two histories only differ on those, the resultant history is the same.
 
-The $\genericProtocol$ condition, which restricts re-orderings, requires that every read that will be deleted by $\genericSwap$ or the re-ordered read $r$ (whose $\wro$ dependency will be modified) is not already swapped and it reads from a latest valid write ($D$ has the same definition as in $\genericSwap$):
+The $\genericProtocol$ condition, which restricts re-orderings, requires that the re-ordered history be $I$-consistent and that every read that will be deleted by $\genericSwap$ or the re-ordered read $r$ (whose $\wro$ dependency will be modified) is not already swapped and it reads from a latest valid write ($D$ has the same definition as in $\genericSwap$):
 \begin{cframed}[pinegreen]
 	\begin{equation*}
 		\begin{array}{l}
-			\genericProtocol(h_<, r, t) \coloneqq 
-%			\begin{array}{l}
+			\genericProtocol(h_<, r, t, \locals) \coloneqq 
+			\begin{array}{l}
 %				\forall r'\in \readOp{h}. \ (r,r')\in \po^* \implies \lnot \swapped{h_<}{r'}\\[1mm]
 %				\land\ 
-				\forall r'\in \readOp{h}\cap (D\cup\{r\}). \lnot \swapped{h_<}{r'}\land \isMaximallyAdded{h_<}{r'} \\[2mm]
-%			\end{array} \\[4mm]
+				\mbox{the history returned by }\genericSwap(h_<, r, t, \locals) \mbox{ satisfies }I\\[1mm]
+				\land\ \forall r'\in \readOp{h}\cap (D\cup\{r\}). \\[1mm]
+				\hspace{2.5cm}\lnot \swapped{h_<}{r'}\land \isMaximallyAdded{h_<}{r'} \\
+			\end{array} 
 %			\hspace{2cm}\text{where }  D = \{e \ | \ r < e \land (\trans{h}{e},\trans{h}{w})\not\in [\so \cup \wro]^*\} %  \\ \multicolumn{3}{c}{
  		\end{array}
 	\end{equation*}

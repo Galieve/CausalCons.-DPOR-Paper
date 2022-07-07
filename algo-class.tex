@@ -24,7 +24,7 @@ These algorithms are defined by the recursive function \textsc{explore} listed i
 %		\State \Return
 		\ElsIf{$\mathit{type}(e) = \iread$}
 		
-		\ForAll{$w \in \genericValidWrites(h,e)$} %\writeVar{w}{x}
+		\ForAll{$w \in \genericValidWrites(h,e)$} 
 		\State $h'_< \gets h_< \oplus_j e \oplus \wro(w,e)$
 		
 		\State $\textsc{explore}(\prog, h'_< , \locals')$
@@ -44,7 +44,7 @@ These algorithms are defined by the recursive function \textsc{explore} listed i
 %		\State $e \gets \laste(\hist_<)$
 		\State $l \gets \genericCompute(h_<)$		
 		\ForAll{$(\alpha, \beta) \in l$}
-		\If{$\genericProtocol(h_<, \alpha, \beta)$}
+		\If{$\genericProtocol(h_<, \alpha, \beta,\locals)$}
 		\State $\textsc{explore}(\prog,\genericSwap(h_<, \alpha, \beta, \locals))$	
 		
 		\EndIf
@@ -71,7 +71,7 @@ Concerning notations, we extend $\oplus_j$ to ordered histories in a straightfor
 Moreover, once an event is added to the current history, the algorithm may explore other histories obtained by re-ordering events in the current one. Such re-orderings are required for completeness. As explained above, new read events can only read from writes executed in the past which limits the set of explored histories to the scheduling imposed by $\genericNext$. Without re-orderings, write events scheduled later by $\genericNext$ cannot be read by read events executed in the past, even-though this may be permitted by the intended isolation level. 
 %TODO GIVE AN EXAMPLE (PROGRAM, CURRENT HISTORY, NEXT RETURNING A WRITE, THERE EXISTS A HISTORY WHERE THE WRITE CAN BE READ BY A READ IN THE CURRENT HISTORY).
 
-The function $\textsc{exploreSwaps}$ calls $\genericCompute$ to compute pairs of sequences of events $\alpha, \beta$ that should be re-ordered; $\alpha$ and $\beta$ are \emph{contiguous and disjoint} subsequences of the total order $<$, and $\alpha$ should end before $\beta$ (since $\beta$ will be re-ordered before $\alpha$). Typically, $\alpha$ should contain a read event $r$ and $\beta$ a write event $w$ such that re-ordering the two enables $r$ to read from $w$.  Avoiding redundancy, i.e., exploring the same history multiple times, may require restricting the application of such re-orderings. This is modeled by the Boolean condition called $\genericProtocol$. If this condition holds, the new explored histories are computed by the function $\genericSwap$. This function returns local states as well, which are necessary for continuing the exploration. 
+The function $\textsc{exploreSwaps}$ calls $\genericCompute$ to compute pairs of sequences of events $\alpha, \beta$ that should be re-ordered; $\alpha$ and $\beta$ are \emph{contiguous and disjoint} subsequences of the total order $<$, and $\alpha$ should end before $\beta$ (since $\beta$ will be re-ordered before $\alpha$). Typically, $\alpha$ should contain a read event $r$ and $\beta$ a write event $w$ such that re-ordering the two enables $r$ to read from $w$. Ensuring soundness and avoiding redundancy, i.e., exploring the same history multiple times, may require restricting the application of such re-orderings. This is modeled by the Boolean condition called $\genericProtocol$. If this condition holds, the new explored histories are computed by the function $\genericSwap$. This function returns local states as well, which are necessary for continuing the exploration. 
 %A typical implementation of this function would return ordered histories where the events in $\beta$ and their $\so$ or $\wro$ dependencies 
 %%($(\so\cup\wro)^*$ predecessors) 
 %are ordered before the events in $\alpha$. 
