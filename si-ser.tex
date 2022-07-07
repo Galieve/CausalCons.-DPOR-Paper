@@ -1,7 +1,8 @@
 %!TEX root = main.tex
-\section{Weak DPOR algorithms for Snapshot Isolation and Serializability}\label{sec:ser}
+\section{Swapping-based model checking for Snapshot Isolation and Serializability}\label{sec:ser}
 
-As show in section \ref{sec:proofs-algorithm}, algorithm \ref{algorithm:optimal-instantiated}'s completeness proof (theorem \ref{theorem:completeness}) is model-depending, as it heavily relies on its causal-extensibility. Immediately, the question of the algorithm's extensibility to stricter isolation levels arise. For understanding the difference between the formers and $\SI$ or $\SER$, let's analyze how algorithm \ref{algorithm:optimal-instantiated} behaves for the program depicted in figure \ref{fig:ser-non-optimal:a} under them. We study this example as it has exactly two consistent executions but a dead-lock one under $\SI$ and $\SER$.
+%As show in section \ref{sec:proofs-algorithm}, algorithm \ref{algorithm:optimal-instantiated}'s completeness proof (theorem \ref{theorem:completeness}) is model-depending, as it heavily relies on its causal-extensibility. Immediately, the question of the algorithm's extensibility to stricter isolation levels arise. For understanding the difference between the formers and $\SI$ or $\SER$, let's analyze how algorithm \ref{algorithm:optimal-instantiated} behaves for the program depicted in figure \ref{fig:ser-non-optimal:a} under them. We study this example as it has exactly two consistent executions but a dead-lock one under $\SI$ and $\SER$.
+For $\textsc{explore-ce}$, the part of strong optimality concerning \emph{not} engaging in fruitless explorations was a direct consequence of causal extensibility (of the isolation level). However, isolation levels such as SI and SER are \emph{not} causally extensible (see Section~\ref{ssec:causal_ext}). Therefore, the question we investigate in this section is whether there exists another implementation of $\textsc{explore}$ that can ensure strong optimality along with $I$-soundness and $I$-completeness for $I$ being SI or SER. We answer this question in the negative, and as a result, propose an SMC algorithm that extends $\textsc{explore-ce}$ by just filtering histories at the end before outputting to be consistent with SI or SER.
 
 \begin{figure}[t]
 	\centering
@@ -284,7 +285,7 @@ commit
 	%\vspace{-3mm}
 \end{figure}
 
-\begin{theorem}
+\begin{theorem}\label{th:impos}
 If $I$ is \textit{Snapshot Isolation} or \textit{Serializability}, there exists no $\textsc{explore}$ algorithm that is $I$-sound, $I$-complete, and strongly optimal.
 \end{theorem}
 \begin{proof}
@@ -337,13 +338,25 @@ From $\hist_2$, $\textsc{explore}$ can be called recursively on $\hist_{21}$ in 
 %
 %In particular, the program in figure \ref{fig:ser-non-optimal} shows that both $\SI$ and $\SER$ are actually not causally-extensible. Nevertheless, we present a swapping-based $\mathcal{M}$-sound, complete, weakly optimal algorithm employing polynomial memory based on \ref{algorithm:optimal-instantiated}:
 
-\textcolor{red}{Present code}
+Given the negative result in Theorem~\ref{th:impos}, for an isolation level $I\in\{SI,SER\}$, we define an implementation of $\textsc{explore}$ that ensures optimality instead of strong optimality, along with soundness, completeness, and polynomial space bound. Therefore, let $\textsc{explore-ce}(I_0)$ be an instance of $\textsc{explore-ce}$ parametrized by $I_0\in \{\RC,\RA,\CC\}$. We define an implementation of $\textsc{explore}$ for $I$, denoted by $\textsc{explore-ce}^*(I_0,I)$, which is exactly $\textsc{explore-ce}(I_0)$ except that 
+% extension of any instance of $\textsc{explore-ce}$ parametrized by a prefix-closed and causally-extensible isolation level $I$ which is weaker than SI, which is only optimal and not strongly optimal.
+% that for isolation levels $I$ like SI and SER has the same guarantees except that it is only optimal and not strongly optimal.
+%any $\textsc{explore-ce}$ parametrized isolation level $I$, which 
+instead of $\genericEvaluate(\hist) ::= true$, it uses 
+\begin{cframed}[pinegreen]
+	\begin{equation*}
+		\begin{array}{ccc}
+			\genericEvaluate(\hist) & \coloneqq & \hist \mbox{ satisfies }I
+		\end{array}
+	\end{equation*}
+\end{cframed}
+$\textsc{explore-ce}^*(I_0,I)$ enumerates exactly the same histories as $\textsc{explore-ce}(I_0)$ except that it outputs only histories consistent with $I$. The following is a direct consequence of Theorem~\ref{th:corr} because the set of histories admitted by a program under $I\in\{SI,SER\}$ is a subset of the set of histories admitted under $I_0\in \{\RC,\RA,\CC\}$.
 
-\begin{theorem}
-Algorithm \textcolor{red}{cite SER's algo} belongs to $\mathcal{S}_{\mathcal{M}} \cap \mathcal{W}_{\mathcal{M}}$ for model $\mathcal{M}$, $\mathcal{M} \in \{\SI, \SER\}$.
-\end{theorem}
+\begin{corollary}
+For any $I_0\in \{\RC,\RA,\CC\}$ and $I\in\{SI,SER\}$, $\textsc{explore-ce}^*(I_0,I)$ is $I$-sound, $I$-complete, optimal, and polynomial space.
+\end{corollary}
 
-\textcolor{red}{Discuss the exponential total branches ditched}
+%\textcolor{red}{Discuss the exponential total branches ditched}
 %The reason why theorem \ref{theorem:si-ser-bad-models} holds for $\SI$ and $\SER$ but not for the rest of isolation levels described in \ref{fig:consistency_defs} is due to the lack of causal-extensibility. Nevertheless, weakening
 
 % Under any of them the event $\wrt{x}{2}$ would always be eligible to be added to the aforementioned history $h$, and therefore any final dead-lock would be reached.
