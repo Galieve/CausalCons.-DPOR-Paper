@@ -374,6 +374,7 @@ commit
 
 
 \begin{definition}
+\label{def:causally-extensible}
 An isolation level $I$ is called \emph{causally-extensible} if for every $I$-consistent history $h$, every $(\so \cup \wro)^*$-maximal pending transaction $t$ in $h$, and every event $e$, there exists a causal extension of $t$ with $e$ that is $I$-consistent.
 %	can be extended with an event from a $\so \cup \wro$-maximal pending transaction $T$ in $h$. Moreover, if that event $r$ is a $\iread$, it can always read from a $\iwrite$ event $w$ s.t. in $h$ $\tr(w) \ [\so \cup \wro]^* \ \tr(r)$.
 \end{definition}

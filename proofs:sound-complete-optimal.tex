@@ -3,15 +3,11 @@
 
 \textcolor{red}{Introduction}
 
-%As we are going to prove the completeness of algorithm \ref{algorithm:stmc}, the first property we want to prove is its equivalence with its recursive counterpart, \ref{algorithm:stmc2}. Here, line \ref{algorithm:stmc:inner_loop} refers to 
-\subsection{Soundness}
 
-\begin{theorem}
-Algorithm \ref{algorithm:optimal-instantiated} is sound.
-\begin{proof}
-We prove this theorem by induction on the number of steps a reachable history needs in a computable path to be reached. If this number is zero, the history is $\emptyset$, which is consistent; so let us prove the inductive step, assuming that in any computable path of length at most $n$ every history is consistent. Let $h$ computed in a $n+1$ path, and let $h_p$ the immediate predecessor of $h$, which is consistent, and $a = \nextEvent(h_p)$. If $a$ is not a $\iread$ event and $h = h_p \bullet a$, by $\nextEvent$'s definition along with the model's causal-extensibility, $a$ is a $\so \cup \wro$-maximal event so $h$ is consistent. Otherwise, if $a$ is a $\iread$ event and $h = h_p \bullet_w a$ for some $\iwrite$ event $w$, by $\validWrites$'s definition we know that $h$ is consistent. Finally, if $h = \swap(h_p, r, w)$ for some events $r, w$, as $\protocol(h_p, r, w)$ is satisfied, $h$ is consistent.
-\end{proof}
-\end{theorem}
+\textcolor{red}{The proofs are written when no local state was added, as otherwise I have to assign to every history a local state (randomness is allowed? in that case not one but a set of local states...)}
+%As we are going to prove the completeness of algorithm \ref{algorithm:stmc}, the first property we want to prove is its equivalence with its recursive counterpart, \ref{algorithm:stmc2}. Here, line \ref{algorithm:stmc:inner_loop} refers to 
+\input{soundness}
+
 
 \input{completeness}
 

@@ -1,0 +1,63 @@
+\subsubsection{Oracle-respectful histories} $ $\\
+
+The second step in this proof is characterize all reachable histories with some general property that can be generalized to every total history. For doing so, we will show that for reachable histories any history order coincide with its canonical order; so any property based on a history order can be generalized to be based on its canonical order.
+\textcolor{red}{I know events may ``disappear'' in an execution and maybe they even have no meaning but I need to reason globally, thinking about the future execution in some way... }
+
+\textcolor{red}{TODO: assume for the moment that every event will appear (no ifs) and then see how can we express this definition for the more general case.}
+
+\begin{definition}
+	\label{def:oracle-respectful}
+	A reachable history $h$ is \callout{$\ora$-respectful} if it has at most one pending transaction log and for every pair of events $e \in \prog, e' \in h$ s.t. $e \leq_{\ora} e'$, either $e \leq_h e'$ or $\exists e'' \in h, \trans{h}{e''} \leq_{\ora} \trans{h}{e}$ s.t. $\trans{h}{e'} \ [\so \cup \wro]^* \ \trans{h}{e''}$, $e'' \leq_h e$ and $\swapped{h}{e''}$; where if $e \not\in h$ we state $e' \leq_h e$ always hold but $e \leq_h e'$ never does. We will denote it by $R^{\ora}(h)$. %\textcolor{olive}{REVISAR EL CAMBIO DEL $e'' < e$ -> $T'' < T$.}
+\end{definition}
+
+\textcolor{red}{I know that in histories the history order does not have subindexes, but I think the proofs remain clearer with them.}
+
+\textcolor{red}{I definitely think transactions shouldn't have histories as an operator, make things confusing in this proof.}
+
+\textcolor{red}{TODO: Add soundness of swappable}
+\begin{lemma}
+\label{lemma:reachable-or-respectful}
+	Every reachable history is $\ora$-respectful.
+\end{lemma}
+\begin{proof}
+	
+For proving this property, we will show that in any computable path every history is $\ora$-respectful; and we will prove it by induction on the number of histories this path has. The base case, the empty path, trivially holds; so let us prove the inductive case: for every path of at most length $n$ the property holds. Let $p$ a path of length $n+1$ and $h$ the last reachable history of this path. As $p \setminus \{h\}$ is a computable path of length $n$, the immediate predecessor of $h$ in $p$, $h_p$ is $\ora$-respectful. Let $e = \nextEvent(h_p)$.
+
+Firstly, if $e$ is not a $\iread$ nor a $\ibegin$ event and $h = h_p \oplus e$, as $\leq_h$ is an extension of $\leq_{h_p}$, $e$ belongs to the only pending transactions and oracle order orders transactions completely, we can deduce that $h$ is $\ora$-respectful. In addition, if $e$ is a $\ibegin$ event and $h = h_p \oplus e$, let $a \in \prog, b \in h$ s.t. $a <_{\ora} b$. If $a \in h_p$ or $b \neq e$, as $\leq_{h}$ is an extension of $\leq_{h_p}$ and $R^{\ora}(h_p)$ holds, $R^{\ora}(h)$ also does it. Moreover, as $e = \min_{\ora} \prog \setminus h_p$, there is no event $a \in \prog \setminus h_p$ s.t. $a \leq_{\ora} e$; so $h$ is $\ora$-respectful.
+
+Moreover, if $e$ is a $\iread$ event and $h = h_p \oplus \wro(e, t)$ for some transaction log $t$, let us call $a \in \prog, b \in h$ s.t. $a <_{\ora} b$. Once again, if $a \in h$ or $b \neq e$ the property holds; so let's suppose $a \in \prog \setminus h_p$ and $b = e$. Let $d = \ibegin(\trans{h}{e})$, that also belongs to $h_p$. As $R^{\ora}(h_p)$ and $a \not\in h_p$, $a \leq_{\ora} d$; so there exists $c \in h_p$, $\trans{h}{c} \leq_{\ora} \trans{h}{a}$ s.t. $\trans{h}{d} \ [\so \cup \wro]^* \ \trans{h}{c}$, $c \leq_h d$ and $\swapped{h}{c}$. As $\trans{h}{r} = \trans{h}{d}$, we conclude $R^{\ora}(h)$.
+
+But if any previous case holds, it is because $h = \swap(h_p \oplus e, r, t)$ for some $r, t \in h_p$ s.t. $\protocol(h_p \oplus e, r, t)$ holds. Let $a, b$ two events s.t. $a \leq_{\ora} b $. On one hand, if $a \leq_{h} b$ or $a \not\leq_{h_p} b$, as $R^{\ora}(h_p)$ and $\protocol(h_p \oplus e, r, t)$ holds, the property is satisfied. On the other hand, if $b <_{h} a$ and $a \leq_{h_p} b$, $a$ has to be a deleted event so $a \in \prog \setminus h \cup \{r\}$. As $r \leq_{h_p} a$, if $a \leq_{\ora} r$, there would exist a $c \in h $, $\trans{h}{c} \leq_{\ora} \trans{h}{a} \leq_{\ora} \trans{h}{r}$ s.t. $\trans{h}{r} \ [\so \cup \wro]^* \ \trans{h}{c}$ and $\swapped{h}{c}$. However, this contradicts $\protocol(h_p \oplus e, r, t)$; so $r \leq_{\ora} a$. Taking $e'' = r$ the property is witnessed. 
+	%The only transaction in the history whose relative order has changed is $\trans{h}{r}$, so $b \in \trans{h}{r}$. In that setting, we can take $r$ as a
+\end{proof}
+
+%For proving this property, we will show that in any computable path every history is $\ora$-respectful; and we will prove it by induction on the number of histories this path has. The base case, the empty path, trivially holds; so let us prove the inductive case: for every path of at most length $n$ the property holds. Let $p$ a path of length $n+1$ and $h$ the last reachable history of this path. As $p \setminus \{h\}$ is a computable path of length $n$, the immediate predecessor of $h$ in $p$, $h_p$ is $\ora$-respectful. Let $e = \nextEvent(h_p)$.
+
+\begin{proposition}
+	\label{proposition:orders-coincide}
+	For any reachable history $h$, $\leq^h \equiv \leq_h$.
+\end{proposition}
+\begin{proof}
+For proving this equivalence, we will show that in any computable path $t \leq_h t'$, then $t \leq^h t'$, as by lemma \ref{lemma:canonincal-total-order} $\leq^h$ is a total order and therefore they have to coincide; and we will prove it by induction on the number of histories this path has. The base case, the empty path, trivially holds; so let us prove the inductive case: for every path of at most length $n$ the property holds. Let $p$ a path of length $n+1$ and $h$ the last reachable history of this path. As $p \setminus \{h\}$ is a computable path of length $n$, the immediate predecessor of $h$ in $p$, $\leq^{h_p} \equiv \leq_{h_p}$. Let $e = \nextEvent(h_p)$.
+	\begin{itemize}
+		\item \underline{$h = h_p \oplus e$ and $e$ is a $ \iend, \iwrite$:} As $h_p$ and $h$ are edge-wise identical, $\leq^h \equiv \leq_h$.
+		
+		\item \underline{$h = h_p \oplus e$ and $e$ is a $\ibegin$:} As $\dep(h_p, t, \bot) = \dep(h, t, \bot)$ for every transaction in $h_p$, if $t \leq^{h_p} t'$, then $t \leq^h t'$. Moreover, $\dep(h, \trans{h}{e}, \bot) = \{e\}= \min_{\ora} \prog \setminus h_p$. By lemma \ref{lemma:reachable-or-respectful} $h$ is $\ora$-respectful, so for every $t$, $\min_{\ora} \dep(h, t, \bot) <_{\ora} e$; which implies $t <^h \trans{h}{e}$. By lemma \ref{lemma:canonincal-total-order}, $\leq^h$ is a total order, so it coincides with $\leq_h$.
+		
+		\item \underline{$h = h_p \oplus \wro(e, t)$ for some $t \in h_p$ and $e$ is a $\iread$:} As no transaction depends on $\trans{h}{e}$ and $\trans{h}{e} = \last{h_p}$, if we prove that for every pair of transactions $\minimalDependency(h_p, t', t'', \bot) $ $= \minimalDependency(h, t', t'', \bot)$, the lemma would hold. On one hand, $\dep(h, \trans{h}{e}, \bot) = \dep(h_p, \trans{h}{e}, \bot) = \trans{h}{e}$ and in the other hand, by lemma \ref{lemma:reachable-or-respectful}, $\min_{\ora} \dep(h_p, t, \bot) <_{\ora} \trans{h}{e}$. Finally, as $e \not\in \dep(h, \hat{t}, e')$, for every $\hat{t} \neq \trans{h}{e}, e' \neq \bot$, for every pair of transactions $t', t''$, $\minimalDependency(h_p, t', t'' \bot) = \minimalDependency(h, t', t'', \bot)$. 
+		
+		\item \underline{$h = \swap(h_p, r, t)$, where $t = \trans{h}{e}$:} As $\protocol(h \oplus e, r, t)$ is satisfied and $h$ is $\ora$-respectful, for every event $e'$ and transaction $t'$, $\min_{\ora} \dep(h_p, t', e') = \min_{\ora} \dep(h, t', e')$, so for every pair of transactions $\minimalDependency(h_p, t', t'', \bot) = \minimalDependency(h, t', t'', \bot)$. In particular, this implies $t' \leq^{h_p} t''$ if and only if $t' \leq^h t''$ for every  pair $t', t''$ and $t' \leq^h \trans{h}{r}$; so $\leq^h \equiv \leq_h$. 
+	\end{itemize}
+\end{proof}
+
+
+Proposition \ref{proposition:orders-coincide} is a very interesting result as it express the following fact: regardless of the computable path that leads to a history, the final order between events will be the same. This result will have a key role during both completeness and optimality, as it restricts the possible histories that precede another while describing the computable path leading to it. In addition, proposition \ref{proposition:orders-coincide} together with lemma \ref{lemma:reachable-or-respectful} justify enlarging definition \ref{def:oracle-respectful} with the canonical order instead the computable order; and it is this new shape the one we will be using during the rest of proof.  
+
+%As $\leq^h \equiv \leq_h$ for any reachable history, we will extend $R^{\ora}(h)$ to any history changing $\leq_h$ to $\leq^h$ in \ref{def:oracle-respectful} whenever it is needed. This property is not something reachable histories satisfy but also, as next lemma shows, total histories with $\leq^h$ order do; which justify it as an useful tool for proving completeness.
+\begin{lemma}
+	\label{lemma:total-respectful}
+	Any total history is $\ora$-respectful.
+	\begin{proof}
+		Let $h$ be a total history and $t, t'$ a pair of transactions s.t. $t \leq_{\ora} t'$. If $t \leq^h t'$, then the statement is satisfied; so let's assume the contrary: $t' \leq^h t$. If $t' \ [\so \cup \wro]^* \ t$, then for every $e \in t, e' \in t'$ $\exists c \in h$ s.t. $\trans{h}{c} \leq_{\ora} \trans{h}{e}$, $\trans{h}{e'} \ [\so \cup \wro]^* \tr(c)$, $\swapped{h}{c}$ and $c \leq^h e$; so the property is satisfied. Otherwise, by definition of $\minimalDependency$, there exists $r' \in h$ s.t. $t' \ [\so \cup \wro]^* \ \trans{h}{r'}$ and $\trans{h}{r'} \leq_{\ora} T$. Moreover, by \textsc{canonicalOrder}'s definition, $\trans{h}{r} \leq^h T$. Finally $\swapped{h}{r'}$ holds as it is the minimum element according $\ora$. To sum up, $R^{\ora}(h)$ holds.
+	\end{proof}
+\end{lemma}
