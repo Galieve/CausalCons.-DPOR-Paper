@@ -36,7 +36,7 @@ $\genericNext$ returns a new event of the transaction that is not already comple
 This implementation of $\genericNext$ is deterministic and it prioritizes the completion of pending transactions. The latter is useful to maintain the invariant that any history explored by the algorithm has at most one pending transaction. Preserving this invariant requires that the histories given as input to $\genericNext$ also have at most one pending transaction. This is discussed further when explaining the process of re-ordering events in Section~\ref{subsection:SwappingHistories}.
 %Thanks to this function, we will be able to extend any history $h = \langle E, \so, \wro \rangle$ in a deterministic way. Moreover, by its definition, we observe that $\nextEvent$ always propose to complete pending transactions before starting new ones. Therefore, it is a reasonable candidate as $\genericNext$ function in a algorithm \ref{algorithm:algo-class} instance.
 
-\begin{figure}[H]
+\begin{figure}[t]
 	\centering
 	\begin{subfigure}[b]{.32\textwidth}
 		\begin{adjustbox}{max width=\textwidth}
@@ -181,7 +181,7 @@ commit
 For example, consider the program in Figure~\ref{fig:oracle-order:prog} and the history $h$ as depicted in Figure~\ref{fig:oracle_order:a}. Since the local state of the pending transaction on the left stores $3$ to the local variable $a$ (as a result of the previous $\erd{x}$ event) and the Boolean condition in \texttt{if} holds, $\genericNext$ will return the event $\wrt{y}{1}$ when called with history $\hist$.
 % history $h$ in Figure~\ref{fig:oracle_order:a}, as in the local state of the first thread, $d = 2$, the boolean condition in transaction $t_1$ is satisfied and the second database call ($\wrt{y}{1}$) can be executed. Thus, $\nextEvent(h)$ would return the event $\wrt{y}{1}$ as its transaction is pending.
 
-\begin{figure}[H]
+\begin{figure}[t]
 
 \begin{subfigure}[b]{.24\textwidth}
 %	\resizebox{\textwidth}{!}{

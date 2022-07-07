@@ -13,7 +13,7 @@ For a relation $R\subseteq A\times A$, the restriction of $R$ to $A'\times A'$, 
 A \emph{prefix} of a transaction log $\tup{t,E, \po_t}$ is a transaction log $\tup{t,E', \po_t \downarrow E'\times E'}$ such that $E'$ is $\po_t$-downward closed. 
 A \emph{prefix} of a history $\hist=\tup{T, \so, \wro}$ is a history $\hist'=\tup{T',\so\downarrow T'\times T',\wro\downarrow T'\times T'}$ such that every transaction log in $T'$ is a prefix of a different transaction log in $T$ but carrying the same id, $\events{\hist'}\subseteq\events{\hist}$, and $\events{\hist'}$ is $(\po\cup \so \cup \wro)^*$-downward closed.
 
-\begin{figure}[H]
+\begin{figure}[t]
 %		\centering
 %	\begin{subfigure}[b]{.25\textwidth}
 %		\begin{adjustbox}{max width=\textwidth}
@@ -158,7 +158,7 @@ Let $\hist$ be a history that satisfies one of these isolation levels, and let $
 
 \subsection{Causal Extensibility}\label{ssec:causal_ext}
 
-\begin{figure}[H]
+\begin{figure}[t]
 	
 	\centering
 	\begin{subfigure}[b]{.28\textwidth}
@@ -239,7 +239,7 @@ Formally, let  $\hist=\tup{T, \so, \wro}$ be a history. A transaction $t$ is cal
 \item the other elements of $\hist$ remain unchanged.
 \end{itemize}
 
-\begin{figure}[H]
+\begin{figure}[t]
 %	\centering
 %	\begin{subfigure}[b]{.25\textwidth}
 %		\begin{adjustbox}{max width=\textwidth}
@@ -432,7 +432,7 @@ If $e$ is not a read event let $h' = h \oplus e$ and otherwise $h' = h \oplus \w
 \end{proof}
 
 \end{comment}
-\begin{figure}[H]
+\begin{figure}[t]
 %	\centering
 %	\begin{subfigure}[b]{.3\textwidth}
 %		\begin{adjustbox}{max width=\textwidth}

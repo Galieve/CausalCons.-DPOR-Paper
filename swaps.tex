@@ -379,7 +379,7 @@ Continuing with the example of Figure~\ref{fig:compute-reordering}, while swappi
 %, and we will enforce the following properties: no event before $r$ will read from $w$, $r$ reads from $w$, every read after $r$ may or may not read from $w$. 
 Simply extending histories according to $\genericNext$ and making recursive calls on re-ordered histories whenever they are $I$-consistent guarantees soundness and completeness, but it does not guarantee optimality. Intuitively, the source of redundancy is related to the fact that applying $\genericSwap$ on different histories may give the same result. 
 
-\begin{figure}[h]
+\begin{figure}[t]
 	\begin{subfigure}[b]{.26\textwidth}
 		\begin{adjustbox}{max width=\textwidth}
 			\begin{tabular}{c||c}
