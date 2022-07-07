@@ -1,1 +1,16 @@
 \section{Experimental evaluation}
+
+We consider a set of benchmarks inspired in real-world applications and evaluate them under different types of programs and isolation levels; both implemented following the aforementioned specifications. We provide also examples of different behaviors depending on the isolation level for each applications.
+
+\subsection{Applications}
+
+\forceindent
+\textit{Shopping Cart}. This application models a web page for shopping. It allows users to add, get and remove items from their shopping cart and modifying the quantities of the items present in the cart. We employ only one table, $\texttt{cart}$, in this application. Given a program that add an item in one section and deletes it in another one, we may observe, depending on the isolation level, that at the end of the execution the cart contains either zero, one or two items.
+
+\textit{Twitter}. Application based on the popular social-network that allow users to follow other users, publish tweets and get their followers, tweets and tweets published by other followers. We model twitter with four tables: $\texttt{users}, \texttt{tweets}, \texttt{followed}, \texttt{followers}$. Under weak isolation levels, it is possible that one user can publish a tweet and not being able to obtain it from a different session. We can also detect other behaviors as users following another users in one session but the latter not being able to find the former as a follower.
+
+\textit{Courseware}. Courseware is an application for managing the enrollment of students in courses in a institution. It allows to open, close and delete courses, enroll students and get all enrollments. One student can only enroll to a course if it is open and its capacity has not reached a fixed limit. It employs three tables, $\texttt{student}, \texttt{course}$ and $\texttt{enrollments}$. Under weak isolation levels, two students in different sessions may enroll to a course with only one free place or being able to enroll into a course that has been deleted in another session.
+
+\textit{Wikipedia}. Application based on the well-known online encyclopedia Wikipedia that allow users to get the content of a page (registered or not), add or remove pages to their watching list and update pages. It employs ten tables, but the vast majority of procedures only access to a small subset of them. Under weak isolation levels, one change in a page may be overwritten by another one done in a different session as well as the watching list may contain a variable number of pages if they are added/deleted from different sessions.
+
+\textit{TPC-C}. TPC-C model any online shopping application with five methods: know the stock of a product, creating a new order, getting its status, paying it and delivering it. TPC-C employs nine tables and all its procedures read and write several variables. Under weak isolation level two orders may be created from different sessions or the account balance may be inconsistent if some order is payed twice.
