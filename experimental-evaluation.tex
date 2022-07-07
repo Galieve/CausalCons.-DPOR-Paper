@@ -14,3 +14,79 @@ We consider a set of benchmarks inspired in real-world applications and evaluate
 \textit{Wikipedia}. Application based on the well-known online encyclopedia Wikipedia that allow users to get the content of a page (registered or not), add or remove pages to their watching list and update pages. It employs ten tables, but the vast majority of procedures only access to a small subset of them. Under weak isolation levels, one change in a page may be overwritten by another one done in a different session as well as the watching list may contain a variable number of pages if they are added/deleted from different sessions.
 
 \textit{TPC-C}. TPC-C model any online shopping application with five methods: know the stock of a product, creating a new order, getting its status, paying it and delivering it. TPC-C employs nine tables and all its procedures read and write several variables. Under weak isolation level two orders may be created from different sessions or the account balance may be inconsistent if some order is payed twice.
+
+\subsection{Experiments}
+
+We conducted all experiments on a MacBook Pro 13-inch with \textcolor{red}{add data of my mac}
+
+\textcolor{red}{If there is time, put the whole data in an appendix.}
+We have run three type of experiments to determine the algorithm's scalability. Firstly, for each application we have designed two programs with three threads each and three transactions per thread; where one contains only one transaction that writes per thread instead of the two writing transactions the second program have (in the case of TPC-C we discriminate transactions depending on the number of variables they write). Those programs have been executed for algorithms $\textsc{explore-ce}$ under $\CC$ and $\RA$ and $\textsc{explore-ce}^*$ under the tuples $(\RA, \CC), (\CC, \SI)$ and $(\CC, \SER)$. 
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.49\linewidth}
+		\centering
+		\includegraphics[width=\textwidth]{figures/RA-CC.eps}
+		\caption{Evolution of the execution time per benchmark. The running time for the last benchmark is $25' 17''$ under $\RA$ and $33' 3''$ under $(\RA, \CC)$ (out of the figure). The execution time of both $\CC, (\CC, \SI), (\CC, \SER)$ coincide.}
+		\label{fig:results-ra-cc}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.49\linewidth}
+		\centering
+		\includegraphics[width=\textwidth]{figures/Histories.eps}
+		\caption{Number of histories per benchmark. For the last benchmark, we find $12433$ consistent histories under $\RA$, $2309$ under $\CC$ and $1605$ under $\SI$. \\\\}
+		\label{fig:results-histories}
+	\end{subfigure}
+
+	\caption{Execution of the algorithm under different isolation levels. The order between benchmarks does not coincide in both figures.}
+	\label{fig:results1}
+\end{figure}
+The results obtained in Figure~\ref{fig:results-ra-cc} show that algorithm $\textsc{explore-ce}^*$ under $(I_0, I)$ will always have a worse performance than $\textsc{explore-ce}$ under $I$. Moreover, it can be even worse than simply $\textsc{explore-ce}$ under $I_0$ if the $\evaluate$'s cost for isolation level $I$ is higher than the cost of checking if $h$ satisfies $I_0$. Moreover, as seen in Figure~\ref{fig:results-histories}, we notice that even for isolation levels with thousands of histories, the algorithm terminates in a reasonable time (no longer than one hour). As $\CC$ have a reasonable performance under this experiment, in the following we will work only with this isolation level.
+
+Our second experiment measures the algorithm's performance under $\CC$. We design three types of performance situations, optimistic, realistic and pessimistic; and for each of them, we analyze five TPC-C programs, with a different number of threads each, between $1$ and $5$, with only one transaction per thread.
+
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[b]{0.49\linewidth}
+		\centering
+		\includegraphics[width=\textwidth]{figures/Threads-time.eps}
+		\caption{Evolution of the execution time depending on the number of threads. The running time for the benchmark ``Heavy'' with $5$ threads is $20' 40''$.}
+		\label{fig:results-threads}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.49\linewidth}
+		\centering
+		\includegraphics[width=\textwidth]{figures/Threads-histories.eps}
+		\caption{Number of histories depending on the number of threads. For the benchmark ``Heavy'', the number of histories when there is $5$ threads is $1296$.}
+		\label{fig:results-threads-histories}
+	\end{subfigure}
+	
+	\caption{Execution of the algorithm under $\CC$ with different types of programs; differing in the number of threads and their qualitative description.}
+	\label{fig:results2}
+\end{figure}
+
+In Figure~\ref{fig:results2} we can observe that, in general, the running time of this algorithm is moderate, even if the number of histories is potentially big. However, this does not mean that particular types of program may have an exponential number of histories, forcing an exponential running time overall.
+
+Our third experiment consists on, fixed the number of threads per program, studying how the algorithm performance when those programs have different number of transactions. Analogously to the previous situation, we design three types of performance situations, optimistic, realistic and pessimistic; and for each of them, we analyze five TPC-C programs with different number of transactions, from $1$ to $5$.
+
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[b]{0.49\linewidth}
+		\centering
+		\includegraphics[width=\textwidth]{figures/Transactions-time.eps}
+		\caption{Evolution of the execution time depending on the number of transactions. The running time for the benchmark ``Heavy'' with $4$ transactions is $10' 58''$ and $29' 31''$ with $5$.}
+		\label{fig:results-transactions}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.49\linewidth}
+		\centering
+		\includegraphics[width=\textwidth]{figures/Transactions-histories.eps}
+		\caption{Number of histories depending on the number of transactions. The number of histories when there is $5$ transactions is $420$ for the benchmark ``Medium'' and $633$ for the benchmark ``Heavy''.}
+		\label{fig:results-transactions-histories}
+	\end{subfigure}
+	
+	\caption{Execution of the algorithm under $\CC$ with different types of programs; differing in the number of transactions and their qualitative description.}
+	\label{fig:results3}
+\end{figure}
+
+The results in Figure~\ref{fig:results3}, on the other hand shows that we can easily reach high running times even if the number of transactions per thread is small; not only in programs with several updates but even in standard use cases.
