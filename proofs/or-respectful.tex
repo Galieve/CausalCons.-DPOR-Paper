@@ -1,16 +1,11 @@
 \subsubsection{Oracle-respectful histories} $ $\\
 
 The second step in this proof is characterize all reachable histories with some general invariant that can be generalized to every total history. For doing so, we will show that for reachable histories any history order coincide with its canonical order; so any property based on a history order can be generalized to be based on its canonical order.
-\textcolor{red}{I know events may ``disappear'' in an execution and maybe they even have no meaning but I need to reason globally, thinking about the future execution in some way... }
-
-\textcolor{red}{TODO: assume for the moment that every event will appear (no ifs) and then see how can we express this definition for the more general case.}
 
 \begin{definition}
 \label{def:oracle-respectful}
 An ordered history $(h, \leq)$ is \callout{$\ora$-respectful} with respect to $\leq$ if it has at most one pending transaction log and for every pair of events $e \in \prog, e' \in h$ s.t. $e \leq_{\ora} e'$, either $e \leq e'$ or $\exists e'' \in h, \trans{h}{e''} \leq_{\ora} \trans{h}{e}$ s.t. $\trans{h}{e'} \ [\so \cup \wro]^* \ \trans{h}{e''}$, $e'' \leq e$ and $\swapped{h}{e''}$; where if $e \not\in h$ we state $e' \leq e$ always hold but $e \leq e'$ never does. We will denote it by $\oraRespectful{h}{\leq}$. %\textcolor{olive}{REVISAR EL CAMBIO DEL $e'' < e$ -> $T'' < T$.}
 \end{definition}
-
-\textcolor{red}{I definitely think transactions shouldn't have histories as an operator, make things confusing in this proof.}
 
 \begin{lemma}
 \label{lemma:reachable-or-respectful}
