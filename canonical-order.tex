@@ -2,7 +2,7 @@
 
 \subsubsection{Canonical order} $ $\\
 
-For achieving that both orders coincide, we focus on how the algorithm orders transaction logs in a history. In particular, we observe that if two transactions $t, t'$ have a $(\so \cup \wro)^*$ dependency, the history order in the algorithm orders them analogously. But if they are $(\so \cup \wro)^*$-incomparable, the algorithm prioritizes the one that is read by a smaller $\iread$ event according $\ora$. Combining both arguments recursively we obtain a \textit{canonical order} for a history, which is formally defined with the function presented below.
+As mentioned, we need to formally define a total order for every history that coincide on reachable histories with the history order. For achieving it, we analyze how the algorithm orders transaction logs in a history. In particular, we observe that if two transactions $t, t'$ have a $(\so \cup \wro)^*$ dependency, the history order in the algorithm orders them analogously. But if they are $(\so \cup \wro)^*$-incomparable, the algorithm prioritizes the one that is read by a smaller $\iread$ event according $\ora$. Combining both arguments recursively we obtain a \textit{canonical order} for a history, which is formally defined with the function presented below.
 
 \begin{algorithm}[H]
 	\caption{\textsc{Canonical order}}

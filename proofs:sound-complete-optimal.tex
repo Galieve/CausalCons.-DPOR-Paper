@@ -46,6 +46,14 @@ Let's suppose such a pair of histories exist a
 
 \end{comment}
 
+\begin{corollary}
+	\label{corollary:soundness-swapped}
+	Let $h_< = \swap((h_p, <_{h_p}), r, t)$, where $h_p$ is a reachable history. If $\genericProtocol((h_p, <_{h_p}), r, t)$ holds, then also $\swapped{h'}{r}$ does.
+\end{corollary}
+\begin{proof}
+	As the last event in $h$ is $r$ and by definition of $\swap$ function no event reads from $r$ in $h$ besides $r$, to prove $\swapped{h}{r}$ holds we just need to show that $t >_{\ora} r$. By lemma \ref{lemma:reachable-or-respectful}, $\oraRespectful{h_p}{<_{h_p}}$ holds. As $r <_{h_p} t$, $\genericProtocol((h_p, <_{h_p}), r, t)$ holds and $t$ is $(\so \cup \wro)^+$-maximal, we conclude that $r <_{\ora} t$.
+\end{proof}
+
 \begin{lemma}
 \label{lemma:soundness-isswappable}
 For every two histories $h_1, h_2$ with the same set of events and $\iread$ event $r$, if $\protocol(h_i, r, w)$ holds for $i \in \{1,2\}$ and $\leq_{h_1} \equiv \leq_{h_2}$, for every $\iread$ event $r'$ s.t. $r \leq_{h_i} r'$ and $ \lnot(\tr(r') \ [\so \cup \wro]^+ \tr(w))$ we have $h_1.\wro(r') = h_2.\wro(r')$.
