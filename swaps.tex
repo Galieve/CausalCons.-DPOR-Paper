@@ -174,7 +174,7 @@ To enforce histories with at most one pending transaction, the function $\generi
 \begin{cframed}[pinegreen]
 	\begin{equation*}
 		\begin{array}{lcl}
-			\genericCompute(h_<) & \coloneqq & \{(r,t) \in \Events \times T \ | \ r \in \readOp{T} \land \writeVar{t}{\mathit{var}(r)}\\[1mm]
+			\genericCompute(h_<) & \coloneqq & \{(r,t) \in \Events \times T \ | \ r \in \readOp{T} \land \writeVar{t}{\variable{r}}\\[1mm]
 			%&& \hspace{1.9cm} \land\  \\ [1mm]
 			&& \hspace{1.7cm} \land\ \trans{h}{r} < t\land (\trans{h}{r},t)\not\in [\so \cup \wro]^* \\[1mm]
 			&& \hspace{1.7cm} \land\ \mbox{$t$ is the transaction log of the last event in $<$} \\[1mm]
@@ -685,7 +685,7 @@ We say that a read $r$ is \emph{swapped} in $\hist_<$ when (1) it reads from a w
 				\land \\
 				\forall r' \in \readOp{h}.\ (t,r')\in\wro \implies (r',r)\not\in \po  %\trans{h}{w'} \neq \trans{h}{w}
 			\end{array} \\[11mm]
-			&&\mbox{where $w$ is the write event such that $(w,r)\in\wro$}
+			&&\mbox{where $t$ is the transaction such that $(t,r)\in\wro$}
 		\end{array}
 	\end{equation*}
 \end{cframed}
