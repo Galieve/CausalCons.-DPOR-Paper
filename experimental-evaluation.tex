@@ -1,8 +1,29 @@
-\section{Experimental evaluation}
+%!TEX root = main.tex
+\section{Experimental evaluation}\label{sec:exp}
+
+We evaluate an implementation of $\textsc{explore-ce}$ and $\textsc{explore-ce}^*$ in the context of Java Pathfinder (JPF)~\cite{DBLP:conf/issta/VisserPK04}, a modelchecker for Java concurrent programs. As benchmark, we use bounded-size clients of a number of database-backed applications drawn from the literature of distributed systems and databases.
+
+\subsection{Implementation}
+
+We implemented our algorithms as an extension of the \texttt{DFSearch} class in JPF. For performance reasons, we implemented an iterative version of these algorithms where roughly, inputs to recursive calls are maintained as a collection of histories instead of relying on the call stack. For checking consistency of a history with a given isolation level, we implemented the  algorithms proposed by \citet{DBLP:journals/pacmpl/BiswasE19}. 
+
+%$\textsc{explore-ce}$ and $\textsc{explore-ce}^*$ on top of JPF and an implementation of the algorithms proposed by \citet{DBLP:journals/pacmpl/BiswasE19} for checking consistency of a history with a given isolation level. For performance issues, we implemented an iterative version of these algorithms 
+
+%\ref{algorithm:algo-class} for reducing the actual memory consumption. We employ an annotated stack of database states that is modified in each $\textsc{explore-ce}$ call; and we consider the algorithm works with list instead of simply sets.
+%At every step where we execute a $\iread$, we annotate which $\iwrite$ event is reading from and  when the state pops from the stack, we change the $\wro$-dependency. Analogously, at every step we produce a swap, we annotate which tuple given by $\compute$ we used in the swap for selecting a different tuple when the state is popped out.
+Our tool takes as input a Java program and isolation levels as parameters. We assume that the program uses a fixed API for interacting with the database which is similar to a key-value store interface. This API consists of specific methods for starting or ending a transaction, reading or writing a global variable. The fixed API is required for being able to maintain the database state separately from the JVM state (the state of the Java program) and update the current history in each database access. This relies on a mechanism for ``transferring'' values read from the database to the JVM state.
+% a verification tool for Java concurrent programs. We admit as input a Java program that (1) can be parsed and executed by JPF and (2) employs the API according to the specifications. Our tool is parametric in the isolation levels employed.
+
+The API provided allow $\ibegin, \iwrite, \iread$ and $\icommit$ operations. Thanks to this API, we can maintain the database state separately from JPF's internal state and update the current history in each database call. We do not rely on any concrete database but store the information as a collection of String, one per write API call executed; along with the $\so$, $\wro$-dependencies between the events associated to them. Any time there is a need to connect data from the local state to the database one or viceversa we copy and store the concrete String value from one state to the other. %Altogether, we are able to simulate from simple variables to actual tables provided the client has proper methods to transform from one to the other representative.
+
+Our implementation is compatible with JPF's standards, as both algorithm are instances of DFSearch; a JPF for DFS exploring algorithms. Moreover, we built consistency checkers based on the algorithm's presented in \textcolor{red}{Ranadeep and Enea's paper} for different isolation levels to ensure database's soundness. 
+
+However, for performance issues, we developed an iterative version of the algorithm \ref{algorithm:algo-class} for reducing the actual memory consumption. We employ an annotated stack of database states that is modified in each $\textsc{explore-ce}$ call; and we consider the algorithm works with list instead of simply sets.
+At every step where we execute a $\iread$, we annotate which $\iwrite$ event is reading from and  when the state pops from the stack, we change the $\wro$-dependency. Analogously, at every step we produce a swap, we annotate which tuple given by $\compute$ we used in the swap for selecting a different tuple when the state is popped out. % In addition, as JPF is not designed for supporting database operations, we developed an API that simulates every database instruction. operations, but they have been proved expressive enough both during our experiments and in real time applications. We admit any Java program that (1) can be parsed and executed by JPF and (2) has an equivalent translation into a program written with the syntax defined in Figure~\ref{fig:syntax}.
+
+\subsection{Benchmark}
 
 We consider a set of benchmarks inspired in real-world applications and evaluate them under different types of programs and isolation levels; both implemented following the aforementioned specifications. We provide also examples of different behaviors depending on the isolation level for each applications.
-
-\subsection{Applications}
 
 \forceindent
 \textit{Shopping Cart}. This application models a web page for shopping. It allows users to add, get and remove items from their shopping cart and modifying the quantities of the items present in the cart. We employ only one table, $\texttt{cart}$, in this application. Given a program that add an item in one section and deletes it in another one, we may observe, depending on the isolation level, that at the end of the execution the cart contains either zero, one or two items.
@@ -15,7 +36,7 @@ We consider a set of benchmarks inspired in real-world applications and evaluate
 
 \textit{TPC-C}. TPC-C model any online shopping application with five methods: know the stock of a product, creating a new order, getting its status, paying it and delivering it. TPC-C employs nine tables and all its procedures read and write several variables. Under weak isolation level two orders may be created from different sessions or the account balance may be inconsistent if some order is payed twice.
 
-\subsection{Experiments}
+\subsection{Experimental Results}
 
 \textit{Experimental setting:} We conducted all experiments on a MacBook Pro 13-inch with $8$ cores and $16$ GB of RAM.
 

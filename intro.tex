@@ -113,7 +113,7 @@ Our contributions and outline are summarized as follows:
 	\item[\S~\ref{sec:algs}] defines a generic class of swapping based SMC algorithms based on DPOR which are parametrized by a given isolation level.
 	\item[\S~\ref{sec:CC-algorithm}] defines a swapping based SMC algorithm which is sound, complete, strongly-optimal, and polynomial space, for any isolation level that is prefix-closed and causally-extensible.
 	\item[\S~\ref{sec:ser}] shows that there exists no swapping based algorithm for Snapshot Isolation and Serializability, which is sound, complete, and strongly-optimal at the same time, and proposes a swapping based algorithm which satisfies ``plain'' optimality (along with soundness, completeness, and polynomial space complexity bounds).
-	\item[\S~\ref{}] reports on an implementation and evaluation of these algorithms in the context of a number of interesting case studies.
+	\item[\S~\ref{sec:exp}] reports on an implementation and evaluation of these algorithms in the context of a number of interesting case studies.
 \end{itemize}
 
 Section~\ref{sec:prelims} recalls the formalization of isolation levels of \citet{DBLP:journals/pacmpl/BiswasE19,DBLP:journals/pacmpl/BiswasKVEL21}, while Sections~\ref{sec:related} and~\ref{sec:conc} conclude with a discussion of related work and concluding remarks.
