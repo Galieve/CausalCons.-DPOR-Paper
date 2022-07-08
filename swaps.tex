@@ -512,9 +512,10 @@ commit
 		\caption{After swap.\\$ $}
 		\label{fig:non_optimality:d}
 	\end{subfigure}
-	
+\vspace{-3mm}	
 	\caption{Re-ordering events versus optimality. We assume an oracle order orders transaction from left to right, top to bottom in the program. All transaction logs are history-ordered top to bottom according to their position in the figure. Events in gray are not yet added to the history.}
 	\label{fig:non_optimality}	
+\vspace{-4mm}
 \end{figure}
 
 
@@ -523,7 +524,7 @@ As a first example, consider the program in Figure~\ref{fig:non-optimality:prog}
 
 %Different branches of the recursion may lead to the same history also because $\genericSwap$ may give the same result on 
 %thereby, violating optimality. 
-\begin{figure}[h]
+\begin{figure}[t]
 	
 \begin{subfigure}[b]{.23\textwidth}
 \begin{adjustbox}{max width=\textwidth}
@@ -628,9 +629,10 @@ commit
 		\caption{Swap $t_1$ and $t_4$.}
 		\label{fig:redundant_swap:c}
 	\end{subfigure}\hspace{.5cm}
+\vspace{-2mm}
 	\caption{Re-ordering the same read on different branches of the recursion.}
 	\label{fig:redundant_swap}
-	%\vspace{-3mm}
+	\vspace{-5mm}
 \end{figure}
 
 %there are two sources of redundancy in this case: (1) re-ordering the same read on different branches of the recursion, and (2) applying $\genericSwap$ on different histories may give the same result.
