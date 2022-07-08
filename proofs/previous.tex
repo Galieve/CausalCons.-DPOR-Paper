@@ -17,7 +17,7 @@ As a third and final step in our proof, we define the function \textit{previous}
 		\If{$\lnot \swapped{h}{a}$}
 		\State \Return $h \setminus a$
 		\Else
-		\Let $t$ s.t. $(r,t) \in \wro$.
+		\Let $t$ s.t. $(t,r) \in \wro$.
 		\State \Return $\maxCompletion(h\setminus a, \{e \ | \ e \not\in (h \setminus a) \land e <_{\ora} t \})$
 		\EndIf
 		\EndProcedure
@@ -37,8 +37,8 @@ As a third and final step in our proof, we define the function \textit{previous}
 		\If{$\mathit{type}(e) \neq \iread$}
 		\State \Return $\maxCompletion(h \oplus e, D \setminus \{e\})$
 		\Else
-		\Let $t$ s.t. $\isMaximallyAdded{h \oplus \wro(e, t)}{e}$ holds
-		\State \Return $\maxCompletion(h \oplus \wro(e,t), D \setminus \{e\})$
+		\Let $t$ s.t. $\isMaximallyAdded{h \oplus \wro(t, e)}{e}$ holds
+		\State \Return $\maxCompletion(h \oplus \wro(t, e), D \setminus \{e\})$
 		\EndIf
 		
 		\Else
@@ -89,7 +89,7 @@ Next, we have to prove that previous is a sound function, i.e. the composition b
 	For every consistent history $\ora$-respectful $h$, if $\prev(h)$ is reachable, then $h$ is also reachable.
 \end{lemma}
 \begin{proof}
-	Let suppose $h \neq \emptyset$, $h_p = \prev(h)$ and $a = \last{h}$. If $\lnot \swapped{h}{a}$, let $h_n = h_p \oplus a$ if $a$ is not a read and $h_n = h_p \oplus \wro(a, t)$, where $t$ is the transaction s.t. $(r, t) \in \wro$, otherwise. Either way, $h_n$ is always reachable and it coincides with $h$. On the contrary, if $\swapped{h}{a}$, $a$ is a $\iread$ event and it swapped; so let us call $t$ to the transaction s.t. $(r, t) \in \wro$. Firstly, as $\swapped{h}{a}$, $a <_{\ora} t$, and by lemma \ref{lemma:reachable-or-respectful}, $\oraRespectfulCanon{h_p}$ holds, so $a <_{h_p} t$ does; which let us conclude $\compute(h_p)$ will always return $(a, t)$ as a possible swap pair. In addition, all transactions in $h_p$ are non-pending, so in particular $\last{h_p}$ is an $\iend$ event. If we call $h_s = \swap(h_p, a, t)$, and we prove that $h_p \setminus h = h_p \setminus h_s$ holds, then we would deduce $h = h_s$ as $\wro(a, t)$ in both $h_p, h_s$ and $h \subseteq h_p, h_s \subseteq h_p$; which would allow us to conclude $h$ is reachable from $h_p$.
+	Let suppose $h \neq \emptyset$, $h_p = \prev(h)$ and $a = \last{h}$. If $\lnot \swapped{h}{a}$, let $h_n = h_p \oplus a$ if $a$ is not a read and $h_n = h_p \oplus \wro(t, a)$, where $t$ is the transaction s.t. $(t, r) \in \wro$, otherwise. Either way, $h_n$ is always reachable and it coincides with $h$. On the contrary, if $\swapped{h}{a}$, $a$ is a $\iread$ event and it swapped; so let us call $t$ to the transaction s.t. $(t, r) \in \wro$. Firstly, as $\swapped{h}{a}$, $a <_{\ora} t$, and by lemma \ref{lemma:reachable-or-respectful}, $\oraRespectfulCanon{h_p}$ holds, so $a <_{h_p} t$ does; which let us conclude $\compute(h_p)$ will always return $(a, t)$ as a possible swap pair. In addition, all transactions in $h_p$ are non-pending, so in particular $\last{h_p}$ is an $\iend$ event. If we call $h_s = \swap(h_p, a, t)$, and we prove that $h_p \setminus h = h_p \setminus h_s$ holds, then we would deduce $h = h_s$ as $\wro(t, a)$ in both $h_p, h_s$ and $h \subseteq h_p, h_s \subseteq h_p$; which would allow us to conclude $h$ is reachable from $h_p$.
 	
 	On one hand, if $e \in h_p \setminus h$, we deduce that $e \not\in h$ and $e <_{\ora} t$. In particular, $\lnot (\trans{h}{e} \ [\so \cup \wro]^* \ t)$. Moreover, if $ e \leq_{\ora} a$, by $\oraRespectfulCanon{h}$, either $e \leq^h a$ or $\exists e''\in h, e'' \leq_{\ora} e$ s.t. $\tr(a) \ [\so \cup \wro]^* \trans{h}{e''}$, $e'' \leq^h e$ and $\swapped{h}{e''}$; both impossible situations as $e \not\in h$ and $a = \last{h}$; so $a \leq_{\ora} e$. In other words, $e \in h_p \setminus h_s$.
 	
@@ -99,7 +99,7 @@ Next, we have to prove that previous is a sound function, i.e. the composition b
 
 \begin{corollary}
 	\label{corollary:prev-swap-identity}
-	In a consistent $\ora$-respectful history $h$ whose previous history is reachable, if $a = \last{h}$, $\swapped{h}{a}$ and $t$ is a transaction such that $(a, t) \in \wro$, $h$ coincides with $\swap(\prev(h), a, t)$.
+	In a consistent $\ora$-respectful history $h$ whose previous history is reachable, if $a = \last{h}$, $\swapped{h}{a}$ and $t$ is a transaction such that $(t, a) \in \wro$, $h$ coincides with $\swap(\prev(h), a, t)$.
 \end{corollary}
 \begin{proof}
 	It comes straight away from the proof of lemma \ref{lemma:soundness-prev}.
@@ -114,9 +114,9 @@ Once proven that $\prev$ is sound, let us prove that for every history we can co
 	\begin{proof}
 		Let $a = \last{h}$ and $h' = h \setminus a$. If $\lnot(\swapped{h}{a})$, then $h_p = h'$ and the lemma holds trivially. Otherwise, as $h_p =  \maxCompletion(h')$, we will show that every event not belonging to $h_p \setminus h'$ is not swapped by induction on every recursive call to $\maxCompletion$. Let us call $D = \{e \ | \ e \not\in h' \land e <_{\ora} \}$. This set, intuitively, contain all the events that would have been deleted from a reachable history $h$ to produce $h_p$. In this setting, let us call $h_{|D|} = h'$, $D_{|D|} = D$ and $D_k = D_{k+1} \setminus \{\min_{<_{\ora}} D_{k+1}\}, \; e_k = \min_{<_{\ora}}D_k$ for every $k, 0 \leq k < |D|$ (i.e. $D_k = D_{k+1} \setminus \{ e_{k+1}\}$). We will prove the lemma by induction on $n = |D| - k$, constructing a collection of histories $h_k$, $0 \leq k < |D|$, such that each one is an extension of its predecessor with a non-swapped event.
 		
-		The base case, $h_{|D|}$ is trivial as by its definition it corresponds with $h'$. Let's prove the inductive case: $\{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$. If $e_{k+1}$ is not a $\iread$ event, $h_k = h_{k+1} \oplus e_{k+1}$ and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$; as only $\iread$ events can be swapped. Otherwise, $e_{k+1}$ is a read event. By the isolation level's causal-extensibility there exists a transaction $f_{k+1}$ that writes the same variable as $e_{k+1}$, $f_{k+1} \ [\so \cup \wro]^* \ \trans{h}{e_{k+1}}$ and $h_{k+1} \oplus \wro( e_{k+1}, f_{k+1})$ is consistent. Moreover, by corollary \ref{corollary:soundness-swapped} $ \{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h_{k+1} \oplus \wro(e_{k+1}, f_{k+1})}{e}\}$ holds. 
+		The base case, $h_{|D|}$ is trivial as by its definition it corresponds with $h'$. Let's prove the inductive case: $\{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$. If $e_{k+1}$ is not a $\iread$ event, $h_k = h_{k+1} \oplus e_{k+1}$ and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$; as only $\iread$ events can be swapped. Otherwise, $e_{k+1}$ is a read event. By the isolation level's causal-extensibility there exists a transaction $f_{k+1}$ that writes the same variable as $e_{k+1}$, $f_{k+1} \ [\so \cup \wro]^* \ \trans{h}{e_{k+1}}$ and $h_{k+1} \oplus \wro( f_{k+1}, e_{k+1})$ is consistent. Moreover, by corollary \ref{corollary:soundness-swapped} $ \{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h_{k+1} \oplus \wro(f_{k+1}, e_{k+1})}{e}\}$ holds. 
 		
-		Let $E_{k+1} = \{t \ | \ h_{k+1} \oplus (e_{k+1}, t) \text{ is consistent }  \land \{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h_{k+1} \oplus \wro(e_{k+1}, t) }{e}\}\}$ and let $t_{k+1} = \max_{\leq^{h_{k+1}}} E_{k+1}$. This element is well defined as $f_{k+1}$ belongs to $E_{k+1}$. Therefore, $h_k = h_{k+1} \oplus (e_{k+1}, t_{k+1})$ is consistent and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$. Moreover, let's remark that as $t_{k+1}$ is the maximum transaction according to $\leq_{h_{k+1}}$ s.t. is consistent and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$. In addition, as $\oraRespectfulCanon{h}$ holds, it also satisfies $\isMaximallyAdded{h_{k}}{ e_{k+1}, w_{k+1}}$. Altogether, we obtain $h_p = h_0$; which let us conclude $\{e \in h_p \ | \ \swapped{h_p}{e}\} = \{e \in h' \ | \ \swapped{h'}{e}\} = \{e \in h \ | \ \swapped{h}{e}\}\setminus \{a\}$.
+		Let $E_{k+1} = \{t \ | \ h_{k+1} \oplus \wro(t, e_{k+1}) \text{ is consistent }  \land \{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h_{k+1} \oplus \wro(t, e_{k+1}) }{e}\}\}$ and let $t_{k+1} = \max_{\leq^{h_{k+1}}} E_{k+1}$. This element is well defined as $f_{k+1}$ belongs to $E_{k+1}$. Therefore, $h_k = h_{k+1} \oplus \wro(t_{k+1}, e_{k+1})$ is consistent and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$. Moreover, let's remark that as $t_{k+1}$ is the maximum transaction according to $\leq_{h_{k+1}}$ s.t. is consistent and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$. In addition, as $\oraRespectfulCanon{h}$ holds, it also satisfies $\isMaximallyAdded{h_{k}}{ e_{k+1}, w_{k+1}}$. Altogether, we obtain $h_p = h_0$; which let us conclude $\{e \in h_p \ | \ \swapped{h_p}{e}\} = \{e \in h' \ | \ \swapped{h'}{e}\} = \{e \in h \ | \ \swapped{h}{e}\}\setminus \{a\}$.
 	\end{proof}
 \end{lemma}
 
