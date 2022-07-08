@@ -4,7 +4,7 @@
 
 As mentioned, we need to formally define a total order for every history that coincide on reachable histories with the history order. For achieving it, we analyze how the algorithm orders transaction logs in a history. In particular, we observe that if two transactions $t, t'$ have a $(\so \cup \wro)^*$ dependency, the history order in the algorithm orders them analogously. But if they are $(\so \cup \wro)^*$-incomparable, the algorithm prioritizes the one that is read by a smaller $\iread$ event according $\ora$. Combining both arguments recursively we obtain a \textit{canonical order} for a history, which is formally defined with the function presented below. 
 
-\begin{algorithm}[H]
+\begin{algorithm}[h]
 	\caption{\textsc{Canonical order}}
 	\begin{algorithmic}[1]
 		
@@ -14,7 +14,6 @@ As mentioned, we need to formally define a total order for every history that co
 		\State \qquad $(\lnot(t' \ [\so \cup \wro]^* \ t) \land \minimalDependency(h, t, t', \bot)$
 		\EndProcedure
 		
-		\Statex
 		\Procedure{\minimalDependency}{$h, t, t', e$}
 		\Let $a = \min_{<_{\ora}} \dep(h, t, e)$; $a' = \min_{<_{\ora}} \dep(h, t', e)$
 		\If{$a \neq a'$}
@@ -24,7 +23,6 @@ As mentioned, we need to formally define a total order for every history that co
 		\EndIf
 		\EndProcedure
 		
-		\Statex
 		\Procedure{\dep}{$h, t, e$}
 		\State \Return $\{r \ | \exists t' \text{ s.t. } t \ [\so \cup \wro]^* \ t' \land \ t' \ [\wro] \ r \land \trans{h}{r} \ [\so \cup \wro]^+ \trans{h}{e} \} \cup t$ 
 		\EndProcedure	

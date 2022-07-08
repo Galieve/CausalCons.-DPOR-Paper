@@ -32,20 +32,6 @@ Let's suppose such a pair of histories exist a
 
 \end{comment}
 
-\begin{corollary}
-	\label{corollary:soundness-swapped}
-	Let $h_p$ a reachable history and let $h$ a immediate successor of $h_p$ whose last event $r$ is a $\iread$. Then $h_< = \swap((h_p, <_{h_p}), r, t)$ if and only if $\swapped{h}{r}$ does.
-\end{corollary}
-\begin{proof}
-	\underline{$\implies$}
-	
-	Let's suppose that $h_< = \swap((h_p, <_{h_p}), r, t)$ for some $t$ transaction. As the last event in $h$ is $r$ and by definition of $\swap$ function no event reads from $r$ in $h$ besides $r$, to prove $\swapped{h}{r}$ holds we just need to show that $t >_{\ora} r$. By lemma \ref{lemma:reachable-or-respectful}, $\oraRespectfulCanon{h_p}$ holds. As $r <_{h_p} t$, $\genericProtocol((h_p, <_{h_p}), r, t)$ holds and $t$ is $(\so \cup \wro)^+$-maximal, we conclude that $r <_{\ora} t$.
-	
-	\underline{$\impliedby$}
-	Let's suppose that $h = h_p \oplus \wro(r, t)$ for some transaction $t$. Let's suppose that $r <_{\ora} t$. As $\oraRespectfulCanon{h_p}$, there exists some event $e''$ s.t. $\trans{h_p}{e''} \lor \trans{h}{r}$, $t \ [\so \cup \wro]^* \trans{h}{e''}$ and $e'' \leq r$ so $\lnot(\swapped{h}{r})$.
-	
-\end{proof}
-
 \begin{theorem}
 	Algorithm \textup{\textsc{explore-ce}} is strongly optimal.
 	\begin{proof}

@@ -3,7 +3,7 @@ $ $\\
 
 As a third and final step in our proof, we define the function \textit{previous} that, for a every history $h$, if $\prev(h)$ is reachable, then $h$ is also reachable. Moreover, $\prev(h)$ will belong to the same computable path.
 
-\begin{algorithm}[H]
+\begin{algorithm}[h]
 		\label{algorithm:prev}
 	\caption{\textsc{prev}}
 	\begin{algorithmic}[1]
@@ -20,17 +20,7 @@ As a third and final step in our proof, we define the function \textit{previous}
 		\Let $t$ s.t. $(t,r) \in \wro$.
 		\State \Return $\maxCompletion(h\setminus a, \{e \ | \ e \not\in (h \setminus a) \land e <_{\ora} t \})$
 		\EndIf
-		\EndProcedure
-\algstore{myalg}
-\end{algorithmic}
-\end{algorithm}
-
-%gap maybe needed to split algorithms in two parts. 
-
-\begin{algorithm}[H]                   
-\begin{algorithmic} [1]                   % enter the algorithmic environment
-\algrestore{myalg}			
-		\Statex
+		\EndProcedure		
 		\Procedure{\maxCompletion}{$h, D$}
 		\If{$D \neq \emptyset$}
 		\State $e \gets \min_{<_{\ora}} D$
@@ -70,7 +60,7 @@ First, we show that the invariant of our algorithm is preserved via $\prev$.
 	For every $\ora$-respectful history $h$, $\prev(h)$ is also $\ora$-respectful.
 \end{lemma}
 \begin{proof}
-	Let suppose $h \neq \emptyset$, $h_p = \prev(h)$, $a = \last{h}$, $e \in \prog$ and $ e' \in h_p$ s.t. $e \leq_{\ora} e'$. We explore different cases depending if $e, e'$ belong to $h$ or not. If $e' \in h_p \setminus h$, $\lnot(\swapped{h_p}{e})$ and $ \lnot(\swapped{h_p}{e'})$ holds. As $\min_{<_{\ora}} \dep(h, \trans{h}{e'}, \bot) = \ibegin(\trans{h}{e'})$, we obtain that $\min_{<_{\ora}}\dep(h,\trans{h}{e'}) \leq_{\ora} e' \leq_{\ora} \ibegin(\trans{h}{e'})$. Therefore, as $e' \in h_p \in h$, $\lnot(\trans{h}{e'} \ [\so \cup \wro]^+ \ \trans{h}{e})$, so $e \leq^h e'$. And if $e' \in h$, either $e \leq^h e'$ or $e' \leq^h e$. In the former case, both are in $h$ and therefore, in $h_p$. As it cannot happen that $e' \in \trans{h}{a}$ and $e \leq^{h_p} a$ because $\swapped{h}{a}$ and $e \leq_{\ora} e'$, we conclude that $e \leq^h e'$ ($\leq_{h_p}$ keeps the relative orders between transactions different from $\trans{h}{a}$ and by lemma \ref{reachable-or-respectful} they coincide). In the latter case,  by $\oraRespectfulCanon{h}$, there exists $e''$ that witness it. In particular, $\swapped{h}{e''}$ holds, so $e'' \in h_p$. $e''$ witness $\oraRespectfulCanon{h_p}$ holds. In the three cases we deduce that $\oraRespectfulCanon{h_p}$.
+	Let suppose $h \neq \emptyset$, $h_p = \prev(h)$, $a = \last{h}$, $e \in \prog$ and $ e' \in h_p$ s.t. $e \leq_{\ora} e'$. We explore different cases depending if $e, e'$ belong to $h$ or not. If $e' \in h_p \setminus h$, $\lnot(\swapped{h_p}{e})$ and $ \lnot(\swapped{h_p}{e'})$ holds. As $\min_{<_{\ora}} \dep(h, \trans{h}{e'}, \bot) = \ibegin(\trans{h}{e'})$, we obtain that $\min_{<_{\ora}}\dep(h,\trans{h}{e'}) \leq_{\ora} e' \leq_{\ora} \ibegin(\trans{h}{e'})$. Therefore, as $e' \in h_p \in h$, $\lnot(\trans{h}{e'} \ [\so \cup \wro]^+ \ \trans{h}{e})$, so $e \leq^h e'$. And if $e' \in h$, either $e \leq^h e'$ or $e' \leq^h e$. In the former case, both are in $h$ and therefore, in $h_p$. As it cannot happen that $e' \in \trans{h}{a}$ and $e \leq^{h_p} a$ because $\swapped{h}{a}$ and $e \leq_{\ora} e'$, we conclude that $e \leq^h e'$ ($\leq_{h_p}$ keeps the relative orders between transactions different from $\trans{h}{a}$ and by lemma \ref{lemma:reachable-or-respectful} they coincide). In the latter case,  by $\oraRespectfulCanon{h}$, there exists $e''$ that witness it. In particular, $\swapped{h}{e''}$ holds, so $e'' \in h_p$. $e''$ witness $\oraRespectfulCanon{h_p}$ holds. In the three cases we deduce that $\oraRespectfulCanon{h_p}$.
 	%As $\oraRespectfulCanon{h}$ is satisfied, either $e \leq^h e'$ or $\exists e'' \in h, \trans{h}{e''} \leq_{\ora} \trans{h}{e}$, $e'' \leq^h e$, $\trans{h}{e'} \ [\so \cup \wro]^* \trans{h}{e''}$ and $\swapped{h}{e''}$. If $\lnot \swapped{h}{a}$, $h = h_p \oplus a$. Therefore, if $e \leq^h e'$, we have that $e \leq^{h_p} e'$ holds, but if not, $e'' \in h_p$ and witness the property. In both case $\oraRespectfulCanon{h_p}$ holds.
 	
 	%and every other event $\hat{e}'$ s.t. $\hat{e}' \in \dep(h, \trans{h}{\hat{e}}, \bot)$, we know that $\trans{h}{\hat{e}} \leq_{\ora} \trans{h}{\hat{e}'}$ as neither $\hat{e}$ nor any event after it in $h$ is swapped in $h$.
