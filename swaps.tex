@@ -677,11 +677,11 @@ We say that a read $r$ is \emph{swapped} in $\hist_<$ when (1) it reads from a w
 		\begin{array}{lcl}
 			\swapped{h_<}{r} & \coloneqq & 
 			\begin{array}{c}
-				w < r \land w >_{\ora} r \\
+				t < r \land t >_{\ora} r \\
 				\land \\
-				\forall e \in h. \trans{h}{e} <_{\ora} \trans{h}{r} \implies (r < e  \lor (\trans{h}{w},\trans{h}{e})\not\in [\so \cup \wro]^+) \\
+				\forall t' \in h. t' <_{\ora} \trans{h}{r} \implies (r < t'  \lor (t,t')\not\in [\so \cup \wro]^+) \\
 				\land \\
-				\forall r' \in \readOp{h}.\ (\trans{h}{w},r')\in\wro \implies (r',r)\not\in \po  %\trans{h}{w'} \neq \trans{h}{w}
+				\forall r' \in \readOp{h}.\ (t,r')\in\wro \implies (r',r)\not\in \po  %\trans{h}{w'} \neq \trans{h}{w}
 			\end{array} \\[11mm]
 			&&\mbox{where $w$ is the write event such that $(w,r)\in\wro$}
 		\end{array}
@@ -701,8 +701,8 @@ A read $r$ reads from a latest valid write, denoted as $\isMaximallyAdded{h_<}{r
 				%\forall r'\in \readOp{h}.\ \ (r,r')\in\po^* \implies 
 %				\lnot \swapped{h_<}{r}\\
 %				\land \\
-				\forall w' \in \writeOp{h}.\ \ w < w' < r \implies 
-				(h \setminus \{e \ | \ r < e\}) \oplus \wro(w',r)\not\models I)
+				\forall t' \in \writeOp{h}.\ \ t < t' < r \implies 
+				(h \setminus \{e \ | \ r < e\}) \oplus \wro(t',r)\not\models I)
 %				\text{where } D = \{e \ | \ r \leq_h e\}
 				%\left(\text{where } %h' = h \land 
 				%\left\{\begin{array}{cc}
@@ -710,7 +710,7 @@ A read $r$ reads from a latest valid write, denoted as $\isMaximallyAdded{h_<}{r
 				%	h'.\wro(e) = w & \text{otherwise} \\ 
 				%\end{array}\right\}\right)
 			\end{array} \\[2mm]
-			&&\mbox{where $w$ is the write event such that $(w,r)\in\wro$}
+			&&\mbox{where $t$ is the transaction that $(t,r)\in\wro$}
 		\end{array}
 	\end{equation*}
 \end{cframed}

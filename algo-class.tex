@@ -24,8 +24,8 @@ These algorithms are defined by the recursive function \textsc{explore} listed i
 %		\State \Return
 		\ElsIf{$\mathit{type}(e) = \iread$}
 		
-		\ForAll{$w \in \genericValidWrites(h,e)$} 
-		\State $h'_< \gets h_< \oplus_j e \oplus \wro(w,e)$
+		\ForAll{$t \in \genericValidWrites(h,e)$} 
+		\State $h'_< \gets h_< \oplus_j e \oplus \wro(t,e)$
 		
 		\State $\textsc{explore}(\prog, h'_< , \locals')$
 		\label{algorithm:algo-class:exploreRead}

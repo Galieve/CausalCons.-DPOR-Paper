@@ -17,7 +17,7 @@ As a third and final step in our proof, we define the function \textit{previous}
 		\If{$\lnot \swapped{h}{a}$}
 		\State \Return $h \setminus a$
 		\Else
-		\Let $t$ s.t. $(r,t) \in \wro$.
+		\Let $t$ s.t. $(t,r) \in \wro$.
 		\State \Return $\maxCompletion(h\setminus a, \{e \ | \ e \not\in (h \setminus a) \land e <_{\ora} t \})$
 		\EndIf
 		\EndProcedure
@@ -37,8 +37,8 @@ As a third and final step in our proof, we define the function \textit{previous}
 		\If{$\mathit{type}(e) \neq \iread$}
 		\State \Return $\maxCompletion(h \oplus e, D \setminus \{e\})$
 		\Else
-		\Let $w$ s.t. $\isMaximallyAdded{h \bullet_w e, e}$
-		\State \Return $\maxCompletion(h \oplus \wro(e,t), D \setminus \{e\})$
+		\Let $t$ s.t. $\isMaximallyAdded{h \oplus \wro(t, e)}{e}$ holds
+		\State \Return $\maxCompletion(h \oplus \wro(t, e), D \setminus \{e\})$
 		\EndIf
 		
 		\Else
@@ -68,49 +68,64 @@ First, we show that the invariant of our algorithm is preserved via $\prev$.
 \begin{lemma}
 	\label{lemma:prev-respectful}
 	For every $\ora$-respectful history $h$, $\prev(h)$ is also $\ora$-respectful.
-	\begin{proof}
-		Let suppose $h \neq \emptyset$, $h_p = \prev(h)$, $a = \last{h}$, $e \in \prog$ and $ e' \in h_p$ s.t. $e \leq_{\ora} e'$. As $\oraRespectfulCanon{h}$ is satisfied, either $e \leq^h e'$ or $\exists e'' \in h, \trans{h}{e''} \leq_{\ora} \trans{h}{e}$, $e'' \leq^h e$, $\trans{h}{e'} \ [\so \cup \wro]^* \trans{h}{e''}$ and $\swapped{h}{e''}$. If $\lnot \swapped{h}{a}$, $h = h_p \oplus a$. Therefore, if $e \leq^h e'$, we have that $e \leq^{h_p} e'$ holds, but if not, $e'' \in h_p$ does, so $\oraRespectfulCanon{h_p}$ holds. 
-		
-		Otherwise, $\swapped{h}{a}$ holds, and we distinguish between the sets $e$ and $e'$ belong to. Firstly, for every pair of events $\hat{e} \in h_p \setminus h$, $\hat{e}' \in \dep(h, \tr(\hat{e}, \bot))$, we know that $\tr(\hat{e}) \leq_{\ora} \tr(\hat{e}')$. Therefore, $\min_{<_{\ora}} \dep(h, \tr(\hat{e}, \bot)) = \ibegin(\tr(\hat{e}))$. In addition, by construction of $\prev(h)$ and $\ora$-respectfulness of h, for every $\hat{e} \in h, e'' \in h$, $\min_{<_{\ora}} \dep(h_p, \tr(\hat{e}), e'') = \min_{<_{\ora}} \dep(h, \tr(\hat{e}), e'')$. Combining both results, if $e'$ belong to $h$, either $e \leq^{h_p} e'$ or exists a $e'' \in h$ s.t. $e'' \leq^{h_p} e$ and witness $\oraRespectfulCanon{h}$ for $e,e'$ (regardless of $e$'s belonging to $h$, $e'' \leq^{h_p} e$). On the contrary, as $h_p$ has no pending transactions, if $e' \not\in h$, $\lnot (\trans{h}{e'} \ [\so \cup \wro]^* \ \trans{h}{e})$, so regardless if $\trans{h}{e} \ [\so \cup \wro]^* \trans{h}{e'}$, $e \leq^{h_p} e'$. To sum up, $\oraRespectfulCanon{h_p}$ holds.
-	\end{proof}
 \end{lemma}
+\begin{proof}
+	Let suppose $h \neq \emptyset$, $h_p = \prev(h)$, $a = \last{h}$, $e \in \prog$ and $ e' \in h_p$ s.t. $e \leq_{\ora} e'$. We explore different cases depending if $e, e'$ belong to $h$ or not. If $e' \in h_p \setminus h$, $\lnot(\swapped{h_p}{e})$ and $ \lnot(\swapped{h_p}{e'})$ holds. As $\min_{<_{\ora}} \dep(h, \trans{h}{e'}, \bot) = \ibegin(\trans{h}{e'})$, we obtain that $\min_{<_{\ora}}\dep(h,\trans{h}{e'}) \leq_{\ora} e' \leq_{\ora} \ibegin(\trans{h}{e'})$. Therefore, as $e' \in h_p \in h$, $\lnot(\trans{h}{e'} \ [\so \cup \wro]^+ \ \trans{h}{e})$, so $e \leq^h e'$. And if $e' \in h$, either $e \leq^h e'$ or $e' \leq^h e$. In the former case, both are in $h$ and therefore, in $h_p$. As it cannot happen that $e' \in \trans{h}{a}$ and $e \leq^{h_p} a$ because $\swapped{h}{a}$ and $e \leq_{\ora} e'$, we conclude that $e \leq^h e'$ ($\leq_{h_p}$ keeps the relative orders between transactions different from $\trans{h}{a}$ and by lemma \ref{reachable-or-respectful} they coincide). In the latter case,  by $\oraRespectfulCanon{h}$, there exists $e''$ that witness it. In particular, $\swapped{h}{e''}$ holds, so $e'' \in h_p$. $e''$ witness $\oraRespectfulCanon{h_p}$ holds. In the three cases we deduce that $\oraRespectfulCanon{h_p}$.
+	%As $\oraRespectfulCanon{h}$ is satisfied, either $e \leq^h e'$ or $\exists e'' \in h, \trans{h}{e''} \leq_{\ora} \trans{h}{e}$, $e'' \leq^h e$, $\trans{h}{e'} \ [\so \cup \wro]^* \trans{h}{e''}$ and $\swapped{h}{e''}$. If $\lnot \swapped{h}{a}$, $h = h_p \oplus a$. Therefore, if $e \leq^h e'$, we have that $e \leq^{h_p} e'$ holds, but if not, $e'' \in h_p$ and witness the property. In both case $\oraRespectfulCanon{h_p}$ holds.
+	
+	%and every other event $\hat{e}'$ s.t. $\hat{e}' \in \dep(h, \trans{h}{\hat{e}}, \bot)$, we know that $\trans{h}{\hat{e}} \leq_{\ora} \trans{h}{\hat{e}'}$ as neither $\hat{e}$ nor any event after it in $h$ is swapped in $h$.
+	  
+	
+	
+	 %as $e' \leq^{h_p} e$, there exists a $e'' \in h$ s.t. $e'' \leq^{h} e$ that witness $\oraRespectfulCanon{h}$ for $e,e'$. Thus, as $e \in h_p$, $e'' \in h_p$; and therefore, $\oraRespectful{h_p}{e'}$ holds.
+	
+	%Combining both results, if $e'$ belong to $h$, either $e \leq^{h_p} e'$, so $\oraRespectful{h_p}{e'}$ holds or exists a $e'' \in h$ s.t. $e'' \leq^{h_p} e$ and witness $\oraRespectfulCanon{h}$ for $e,e'$. Thus, as $e \in h_p$, $e'' \in h_p$; and therefore, $\oraRespectful{h_p}{e'}$ holds. But if not, $e' \in h_p \setminus h$. As $h_p$ has no pending transactions, $\lnot (\trans{h}{e'} \ [\so \cup \wro]^* \ \trans{h}{e})$, so regardless if $\trans{h}{e} \ [\so \cup \wro]^* \trans{h}{e'}$, $e \leq^{h_p} e'$. To sum up, $\oraRespectfulCanon{h_p}$ holds.
+\end{proof}
+
+Next, we have to prove that previous is a sound function, i.e. the composition between $\textsc{explore-ce}$ and $\prev$ give us the identity. For doing so, in the case a history is a swap, we deduce that both histories should not contain the same elements and they read the same; so they have to coincide.
 
 \begin{lemma}
 	\label{lemma:soundness-prev}
 	For every consistent history $\ora$-respectful $h$, if $\prev(h)$ is reachable, then $h$ is also reachable.
-	\begin{proof}
-		Let suppose $h \neq \emptyset$, $h_p = \prev(h)$ and $a = \last{h}$. If $\lnot \swapped{h}{a}$, let $h_n = h_p \bullet a$ if $a$ is not a read, $h_n = h_p \bullet_{h.\wro(a)} a$ in the other case. Either way, $h_n$ is always reachable and it coincides with $h$. Otherwise, $a$ is a $\iread$ event and it swapped; so let us call $w = h.\wro(a)$. Firstly, as $\swapped{h}{a}$, $a <_{\ora} w$, and by lemma \ref{lemma:reachable-or-respectful}, $\oraRespectfulCanon{h_p}$ holds, so $a <_{h_p} w$ does; which let us conclude $\compute(h_p)$ will always return $(a, w)$ as a possible swap pair. In addition, all transactions in $h_p$ are non-pending, so in particular $\last{h_p}$ is an $\iend$ event. If we call $h_s = \swap(h_p, a, w)$, and $h_p \setminus h = h_p \setminus h_s$ would hold, as $h \subseteq h_p, h_s \subseteq h_p$, then $h = h_s$; which would allow us to conclude $h$ is reachable from $h_p$.
-		
-		On one hand, if $e \in h_p \setminus h$, $e \not\in h$ and $e <_{\ora} w$. In particular, $\lnot (\trans{h}{e} \ [\so \cup \wro]^* \ \tr(w))$. Moreover, if $ e \leq_{\ora} a$, by $\oraRespectfulCanon{h}$, either $e \leq^h a$ or $\exists e''\in h, e'' \leq_{\ora} e$ s.t. $\tr(a) \ [\so \cup \wro]^* \trans{h}{e''}$, $e'' \leq^h e$ and $\swapped{h}{e''}$; both impossible situations as $e \not\in h$ and $a = \last{h}$; so $a \leq_{\ora} e$. In other words, $e \in h_p \setminus h_s$.
-		
-		On the other hand, $e \in h_p \setminus h_s$ if and only if $\lnot (\trans{h}{e} \ [\so \cup \wro]^* \ \tr(w))$ and $a <_{\ora} e <_{\ora} w$. If $e \in h$ then $e \leq^{h} a$, and as $h$ is $\ora$-respectful and $a \leq_{\ora} e$, we deduce there exists a $e'' \in h$ s.t. $\trans{h}{e''} \leq_{\ora} \tr(a)$, $\trans{h}{e} \ [\so \cup \wro]^* \trans{h}{e''}$ and $\swapped{h}{e''}$. Moreover, as $c \in h$, $c \in h_p$; but as $\swapped{h_p}{c}$ and $\protocol(h, a, w)$ hold, $c \in h_s$ and so $e$ does. This result leads to a contradiction, so $e \not\in h$; i.e. $e \in h_p \setminus h$.
-	\end{proof}
 \end{lemma}
+\begin{proof}
+	Let suppose $h \neq \emptyset$, $h_p = \prev(h)$ and $a = \last{h}$. If $\lnot \swapped{h}{a}$, let $h_n = h_p \oplus a$ if $a$ is not a read and $h_n = h_p \oplus \wro(t, a)$, where $t$ is the transaction s.t. $(t, r) \in \wro$, otherwise. Either way, $h_n$ is always reachable and it coincides with $h$. On the contrary, if $\swapped{h}{a}$, $a$ is a $\iread$ event and it swapped; so let us call $t$ to the transaction s.t. $(t, r) \in \wro$. Firstly, as $\swapped{h}{a}$, $a <_{\ora} t$, and by lemma \ref{lemma:reachable-or-respectful}, $\oraRespectfulCanon{h_p}$ holds, so $a <_{h_p} t$ does; which let us conclude $\compute(h_p)$ will always return $(a, t)$ as a possible swap pair. In addition, all transactions in $h_p$ are non-pending, so in particular $\last{h_p}$ is an $\iend$ event. If we call $h_s = \swap(h_p, a, t)$, and we prove that $h_p \setminus h = h_p \setminus h_s$ holds, then we would deduce $h = h_s$ as $\wro(t, a)$ in both $h_p, h_s$ and $h \subseteq h_p, h_s \subseteq h_p$; which would allow us to conclude $h$ is reachable from $h_p$.
+	
+	On one hand, if $e \in h_p \setminus h$, we deduce that $e \not\in h$ and $e <_{\ora} t$. In particular, $\lnot (\trans{h}{e} \ [\so \cup \wro]^* \ t)$. Moreover, if $ e \leq_{\ora} a$, by $\oraRespectfulCanon{h}$, either $e \leq^h a$ or $\exists e''\in h, e'' \leq_{\ora} e$ s.t. $\tr(a) \ [\so \cup \wro]^* \trans{h}{e''}$, $e'' \leq^h e$ and $\swapped{h}{e''}$; both impossible situations as $e \not\in h$ and $a = \last{h}$; so $a \leq_{\ora} e$. In other words, $e \in h_p \setminus h_s$.
+	
+	On the other hand, $e \in h_p \setminus h_s$ if and only if $\lnot (\trans{h}{e} \ [\so \cup \wro]^* \ \tr(w))$ and $a <_{\ora} e <_{\ora} w$. If $e$ would belong to $h$ then $e \leq^{h} a$. As $h$ is $\ora$-respectful and $a \leq_{\ora} e$, we deduce there exists a $e'' \in h$ s.t. $\trans{h}{e''} \leq_{\ora} \tr(a)$, $\trans{h}{e} \ [\so \cup \wro]^* \trans{h}{e''}$ and $\swapped{h}{e''}$. Moreover, as $e'' \in h$, $e'' \in h_p$. By corollary \ref{corollary:soundness-swapped} $\swapped{h_p}{e''}$ and $\genericProtocol(h_p, a, t)$ hold,  $e'' \in h_s$ and so $e$ does. This result leads to a contradiction, so $e \not\in h$; i.e. $e \in h_p \setminus h$.
+\end{proof}
+
 
 \begin{corollary}
 	\label{corollary:prev-swap-identity}
-	In a consistent $\ora$-respectful history $h$ whose previous history is reachable, if its last event $a$ is swapped, $h$ coincides with $\swap(\prev(h), a, h.\wro(a))$.
-	\begin{proof}
-		It comes straight away from the proof of lemma \ref{lemma:soundness-prev}.
-	\end{proof}
+	In a consistent $\ora$-respectful history $h$ whose previous history is reachable, if $a = \last{h}$, $\swapped{h}{a}$ and $t$ is a transaction such that $(t, a) \in \wro$, $h$ coincides with $\swap(\prev(h), a, t)$.
 \end{corollary}
+\begin{proof}
+	It comes straight away from the proof of lemma \ref{lemma:soundness-prev}.
+\end{proof}
+
+Once proven that $\prev$ is sound, let us prove that for every history we can compose $\prev$ a finite number of times obtaining the empty history. We are going to prove it by induction on the number of swapped events, so we prove first the recursive composition finishes in finite time and then we conclude our claim.
 
 \begin{lemma}
 	\label{lemma:prev-reduces-one}
 	For every non-empty consistent $\ora$-respectful history $h$, $h_p = \prev(h)$ and $a = \last{h}$, if $\swapped{h}{a}$ then $\{e \in h_p \ | \ \swapped{h_p}{e}\} = \{e \in h \ | \ \swapped{h}{e}\} \setminus \{a\}$, otherwise $h_p = h \setminus a$.
 	%Let $h$ a history, $h' = \prev(h)$ and at some state $s$, $h'$ appear at line \ref{algorithm:stmc:outer_loop}, from $s$ the algorithm will compute some state $s'$ such that $h$ will also appear at line \ref{algorithm:stmc:outer_loop}.`
 	\begin{proof}
-		Let $a = \last{h}$ and $h' = h \setminus a$. If $a$ is not swapped, then $h_p = h'$, so the lemma holds immediately. Otherwise, as $h_p =  \maxCompletion(h')$, we will show that every event not belonging to $h_p \setminus h'$ is not swapped by induction on every recursive call to $\maxCompletion$. Let us call $D = \{e \ | \ e \not\in h' \land e <_{\ora} \}$. This set, intuitively, contain all the events that would have been deleted from a reachable history $h$ to produce $h_p$. In this setting, let us call $h_{|D|} = h'$, $D_{|D|} = D$ and $D_k = D_{k+1} \setminus \{\min_{<_{\ora}} D_{k+1}\}, \; e_k = \min_{<_{\ora}}D_k$ for every $k, 0 \leq k < |D|$ (i.e. $D_k = D_{k+1} \setminus \{ e_{k+1}\}$). We will prove the lemma by induction on $n = |D| - k$, constructing a collection of histories $h_k$, $0 \leq k < |D|$, such that each one is an extension of its predecessor with a non-swapped event.
+		Let $a = \last{h}$ and $h' = h \setminus a$. If $\lnot(\swapped{h}{a})$, then $h_p = h'$ and the lemma holds trivially. Otherwise, as $h_p =  \maxCompletion(h')$, we will show that every event not belonging to $h_p \setminus h'$ is not swapped by induction on every recursive call to $\maxCompletion$. Let us call $D = \{e \ | \ e \not\in h' \land e <_{\ora} \}$. This set, intuitively, contain all the events that would have been deleted from a reachable history $h$ to produce $h_p$. In this setting, let us call $h_{|D|} = h'$, $D_{|D|} = D$ and $D_k = D_{k+1} \setminus \{\min_{<_{\ora}} D_{k+1}\}, \; e_k = \min_{<_{\ora}}D_k$ for every $k, 0 \leq k < |D|$ (i.e. $D_k = D_{k+1} \setminus \{ e_{k+1}\}$). We will prove the lemma by induction on $n = |D| - k$, constructing a collection of histories $h_k$, $0 \leq k < |D|$, such that each one is an extension of its predecessor with a non-swapped event.
 		
-		The base case, $h_{|D|}$ is trivial as by its definition it corresponds with $h'$. Let's prove the inductive case: $\{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$. If $e_{k+1}$ is not a $\iread$ event, $h_k = h_{k+1} \bullet e_{k+1}$ and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$; as only $\iread$ events can be swapped. Otherwise, by the model's causal-extensibility there exists a $\iwrite$ event $f_{k+1}$ s.t. writes the same variable and $\isConsistent{h_{k+1} \bullet_{f_{k+1}} e_{k+1}} \land \tr(f_{k+1}) \ [\so \cup \wro]^* \ \tr(e_{k+1})$ holds. $ \{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h_{k+1} \bullet_{f_{k+1}} e_{k+1}}{e}\}$ holds. Let $E_{k+1} = \{w \ | \ \isConsistent{h_{k+1} \bullet_{w} e_{k+1}} \land \{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h_{k+1} \bullet_{w} e_{k+1}}{e}\}\}$ and $w_{k+1} = \max_{\leq^{h_{k+1}}} E_{k+1}$. This element is well defined as $f_{k+1}$ belongs to $E_{k+1}$. Therefore, $h_k = h_{k+1} \bullet_{w_{k+1}} e_{k´+1}$ is consistent and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$. Moreover, let's remark that as $w_{k+1}$ is the maximum write event according to $\leq_{h_{k+1}}$ s.t. $\isConsistent{h_k}$ and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$ and $\oraRespectfulCanon{h}$, it also satisfies $\isMaximallyAdded{h_{k}}{ e_{k+1}, w_{k+1}}$. Altogether, we obtain $h_p = h_0$; which let us conclude $\{e \in h_p \ | \ \swapped{h_p}{e}\} = \{e \in h' \ | \ \swapped{h'}{e}\} = \{e \in h \ | \ \swapped{h}{e}\}\setminus \{a\}$.
+		The base case, $h_{|D|}$ is trivial as by its definition it corresponds with $h'$. Let's prove the inductive case: $\{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$. If $e_{k+1}$ is not a $\iread$ event, $h_k = h_{k+1} \oplus e_{k+1}$ and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$; as only $\iread$ events can be swapped. Otherwise, $e_{k+1}$ is a read event. By the isolation level's causal-extensibility there exists a transaction $f_{k+1}$ that writes the same variable as $e_{k+1}$, $f_{k+1} \ [\so \cup \wro]^* \ \trans{h}{e_{k+1}}$ and $h_{k+1} \oplus \wro( f_{k+1}, e_{k+1})$ is consistent. Moreover, by corollary \ref{corollary:soundness-swapped} $ \{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h_{k+1} \oplus \wro(f_{k+1}, e_{k+1})}{e}\}$ holds. 
+		
+		Let $E_{k+1} = \{t \ | \ h_{k+1} \oplus \wro(t, e_{k+1}) \text{ is consistent }  \land \{e \ | \ \swapped{h_{k+1}}{e}\} = \{e \ | \ \swapped{h_{k+1} \oplus \wro(t, e_{k+1}) }{e}\}\}$ and let $t_{k+1} = \max_{\leq^{h_{k+1}}} E_{k+1}$. This element is well defined as $f_{k+1}$ belongs to $E_{k+1}$. Therefore, $h_k = h_{k+1} \oplus \wro(t_{k+1}, e_{k+1})$ is consistent and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$. Moreover, let's remark that as $t_{k+1}$ is the maximum transaction according to $\leq_{h_{k+1}}$ s.t. is consistent and $\{e \ | \ \swapped{h_{k}}{e}\} = \{e \ | \ \swapped{h'}{e}\}$. In addition, as $\oraRespectfulCanon{h}$ holds, it also satisfies $\isMaximallyAdded{h_{k}}{ e_{k+1}, w_{k+1}}$. Altogether, we obtain $h_p = h_0$; which let us conclude $\{e \in h_p \ | \ \swapped{h_p}{e}\} = \{e \in h' \ | \ \swapped{h'}{e}\} = \{e \in h \ | \ \swapped{h}{e}\}\setminus \{a\}$.
 	\end{proof}
 \end{lemma}
+
 
 \begin{lemma}
 	\label{lemma:prev-leads-empty}
 	For every history $h$ there exists some $k_h \in \mathbb{N}$ such that $\prev^{k_h}(h) = \emptyset$.
 	\begin{proof}
-		This lemma is immediate consequence of lemma \ref{lemma:prev-reduces-one}. Let us call $\xi(h) = |\{e \in h \ | \ \swapped{h}{e}\}$, the number of swapped events in $h$, and let us prove the lemma by induction on $(\xi(h), |h|)$. The base case, $\xi(h) = |h| = 0$ is trivial as $h$ would be $\emptyset$; so let's assume that for every history $h$ such that $\xi(h) < n$ or $\xi(h) =h \land |h| < m$ there exists such $k_h$. Let $h$ then a history s.t. $\xi(h) = n$ and $|h| = m$. $h_p = \prev(h)$. On one hand, if $h_p = h \setminus a$ then $\xi(x_p) = \xi(h)$ and $|h_p| = |h|-1$. On the other hand, if $h_p \neq h \setminus a$, $\xi(h_p) = \xi(h) - 1$. In any case, by induction hypothesis on $h_p$, there exists an integer $k_{h_p}$ such that $\prev^{k_{h_p}}(h_p) = \emptyset$. Therefore, $k_h = k_{h_p}+ 1$ satisfies $\prev^{k_h}(h) = \emptyset$.
+		This lemma is immediate consequence of lemma \ref{lemma:prev-reduces-one}. Let us call $\xi(h) = |\{e \in h \ | \ \swapped{h}{e}\}|$, the number of swapped events in $h$, and let us prove the lemma by induction on $(\xi(h), |h|)$. The base case, $\xi(h) = |h| = 0$ is trivial as $h$ would be $\emptyset$; so let's assume that for every history $h$ such that $\xi(h) < n$ or $\xi(h) =h \land |h| < m$ there exists such $k_h$. Let $h$ then a history s.t. $\xi(h) = n$ and $|h| = m$. $h_p = \prev(h)$. On one hand, if $h_p = h \setminus a$ then $\xi(x_p) = \xi(h)$ and $|h_p| = |h|-1$. On the other hand, if $h_p \neq h \setminus a$, $\xi(h_p) = \xi(h) - 1$. In any case, by induction hypothesis on $h_p$, there exists an integer $k_{h_p}$ such that $\prev^{k_{h_p}}(h_p) = \emptyset$. Therefore, $k_h = k_{h_p}+ 1$ satisfies $\prev^{k_h}(h) = \emptyset$.
 	\end{proof}
 \end{lemma}
 
@@ -124,7 +139,7 @@ First, we show that the invariant of our algorithm is preserved via $\prev$.
 
 \begin{theorem}
 	\label{theorem:completeness}
-	Algorithm \ref{algorithm:optimal-instantiated} is complete.
+	The algorithm \textup{\textsc{explore-ce}} is complete.
 	\begin{proof}
 		By lemma \ref{lemma:total-respectful}, any consistent total history is $\ora$-respectful. As a consequence of proposition \ref{proposition:chain-histories-proof}, there exist a sequence of reachable histories which $h$ belongs to; so in particular, $h$ is reachable.
 	\end{proof}
